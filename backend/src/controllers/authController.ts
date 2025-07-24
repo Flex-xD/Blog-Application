@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User from "../models/userModel";
+import User, { IUser } from "../models/userModel";
 import { StatusCodes } from "http-status-codes";
-import { registerControllerType } from "../types/index.js";
+import { authControllerType } from "../types/index.js";
+import { createUserSchema } from "../schemas/user.schema";
 
 const maxage = 3 * 24 * 60 * 60 * 1000;
 const createtoken = async (userId: string, email: string) => {
@@ -11,10 +12,16 @@ const createtoken = async (userId: string, email: string) => {
 }
 
 export const registerController = async (req: Request, res: Response) => {
-    const { email, username, password } = req.body as registerControllerType;
+
+    const { email, username, password } = req.body as authControllerType;
     if (!email || !username || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields !" });
     }
+    const parsed = createUserSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({msg:"Invalid request data" , errors:parsed.error.issues});
+    }
+    createUserSchema
     const existingUser = await User.findOne({
         $or: [{ email }, { username }]
     });
@@ -31,15 +38,15 @@ export const registerController = async (req: Request, res: Response) => {
         return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Username can only contain lowercase letters, underscores (_), and dots (.)" });
     }
 
-    const user = await User.create({
+    const user: IUser = await User.create({
         email,
         username,
         password,
+        profilePicture: "",
         following: [],
         followers: [],
-        profilePicture: "",
+        saves: [],
         blogs: [],
-        likes:[]
     });
     const token = await createtoken(user._id as string, user.email);
     res.cookie("token", token, {
@@ -54,7 +61,7 @@ export const registerController = async (req: Request, res: Response) => {
 
 export const loginController = async (req: Request, res: Response) => {
     try {
-        const { email, password, username } = req.body as registerControllerType;
+        const { email, password, username } = req.body as authControllerType;
         if (!email && !username || !password) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields!" })
         }

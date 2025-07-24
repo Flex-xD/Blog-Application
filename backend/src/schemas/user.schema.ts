@@ -5,8 +5,9 @@ export const createUserSchema = z.object({
         .string()
         .min(3, 'Username must be at least 3 characters')
         .max(20, 'Username must be less than 20 characters')
-        .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores allowed'),
-    email: z.string().email('Invalid email'),
+        .regex(/^(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/
+            , 'Only letters, numbers, dots and underscores allowed'),
+    email: z.email('Invalid email'),
     password: z
         .string()
         .min(6, 'Password must be at least 6 characters')

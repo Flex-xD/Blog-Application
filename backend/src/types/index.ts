@@ -1,6 +1,6 @@
 
-export type registerControllerType = {
-    email:string ,
-    username:string, 
-    password:string
+export type authControllerType = {
+    email?: string,
+    username?: string,
+    password: string
 }

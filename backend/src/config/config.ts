@@ -7,7 +7,7 @@ const connectDB = async () => {
             throw new Error("Invalid MongoDB URI !")
         }
         const conn = await mongoose.connect(mongoURI);
-        console.log(`DB connected to : ${conn.connection.host}`);
+        console.log(`DB connected to ✅ : ${conn.connection.host}`);
     } catch (error) {
         console.log({error});
     }

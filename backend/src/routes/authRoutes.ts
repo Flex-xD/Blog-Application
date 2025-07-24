@@ -1,7 +1,11 @@
-// import { Router } from "express";
+import { Router } from "express";
+import { loginController, logoutController, registerController } from "../controllers/authController";
+import verifyToken from "../middleware/authMiddleware";
 
-// const authRouter = Router();
+const authRouter = Router();
 
-// authRouter.get("/")
+authRouter.post("/register" , verifyToken, registerController);
+authRouter.post("/login" , verifyToken , loginController);
+authRouter.post("/logout" , verifyToken , logoutController);
 
-// export default authRouter;
+export default authRouter;

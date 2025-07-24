@@ -1,18 +1,17 @@
 import mongoose, { Schema, Document, Types, Model } from 'mongoose'
-import bcypt from "bcryptjs"
-import bcrypt from 'bcryptjs/umd/types'
+import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
     username: string
     email: string
     password: string
+    profilePicture:string
     followers: Types.ObjectId[]
     following: Types.ObjectId[]
-    emails?: string[]
     saves: Types.ObjectId[]     
     blogs: Types.ObjectId[]     
-    createdAt: Date
-    updatedAt: Date
+    createdAt?: Date
+    updatedAt?: Date
 }
 
 const UserSchema = new Schema<IUser>(
@@ -24,7 +23,7 @@ const UserSchema = new Schema<IUser>(
             trim: true,
             minlength: 3,
             maxlength: 20,
-            match: /^[a-zA-Z0-9_]+$/,
+            match: /^(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/,
         },
         email: {
             type: String,
@@ -38,6 +37,9 @@ const UserSchema = new Schema<IUser>(
             required: true,
             minlength: 6,
         },
+        profilePicture : {
+            type:String , 
+        } ,
         followers: [
             {
                 type: Schema.Types.ObjectId,

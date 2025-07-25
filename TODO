@@ -1,0 +1,9 @@
+TODO : 
+
+1. start working on the frontend like create a basic looking UI 
+   . AUTH PAGE
+   . Home Page 
+       > Blog component
+2. after this try fetching some JSON file and display the data via Blog component 
+
+3. start working on the blog related backend (on hold)

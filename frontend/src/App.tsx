@@ -10,9 +10,9 @@ interface IRoute {
   element?: JSX.Element
 }
 
-const withAuth = (element: JSX.Element, isPrivate: boolean, redirectTo: string, allowAuthenticated?: boolean) => {
-  // ? To Identify between Private and Public Routes 
-}
+// const withAuth = (element: JSX.Element, isPrivate: boolean, redirectTo: string, allowAuthenticated?: boolean) => {
+//   // ? To Identify between Private and Public Routes 
+// }
 
 const routes: IRoute[] = [
   { path: "/", isPrivate: false, redirectTo: "", element: <HomePage /> } , 

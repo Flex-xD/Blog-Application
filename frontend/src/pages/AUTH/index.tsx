@@ -1,10 +1,65 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { BookOpen, Feather, Lock, Mail, User } from "react-feather";
+import apiClient from "../../utility/axiosClient";
+import { AUTH_ENDPOINTS } from "../../constants/constants";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [activeField, setActiveField] = useState<string | null>(null);
+
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [username, setUsername] = useState<string>("");
+
+    const validateAuth = (isSignup: boolean = false) => {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email.length) {
+            toast.error("Email is required");
+            return false;
+        }
+        if (!emailPattern.test(email)) {
+            toast.error("Follow the correct email pattern!");
+            return false;
+        }
+        if (!password.length) {
+            toast.error("Password is required!");
+            return false;
+        }
+        if (isSignup && !username.length) {
+            toast.error("Username is required!");
+            return false;
+        }
+        return true;
+    };
+
+    const handleLogin = async (isSignup:boolean = isLogin === false) => {
+        try {
+            if (!validateAuth(isSignup)) return;
+            const endpoint = isSignup ? AUTH_ENDPOINTS.REGISTER : AUTH_ENDPOINTS.LOGIN;
+            const sideData = isSignup ? { email, password, username } : { email, password };
+            const response = await apiClient.post(endpoint, sideData);;
+            if (response.status === 200 || response.status === 201) {
+                toast.success(response.data.msg);
+                console.log("Login successful : ", response.data)
+                setTimeout(() => {
+                    window.location.href = "/";
+                })
+            }
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                console.log({ error });
+                if (error.response || error.response!.data.msg) {
+                    return toast.error(error.response?.data.msg);
+                }
+                return toast.error(`${isSignup ? "Signup" : "Login"} failed!`);
+            } else {
+                toast.error("An error occurred!");
+            }
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center p-4">
@@ -69,6 +124,8 @@ const AuthPage = () => {
                                                     boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
                                                 }}
                                                 type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="your@email.com"
                                                 className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
                                             />
@@ -95,6 +152,8 @@ const AuthPage = () => {
                                         boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
                                     }}
                                     type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     placeholder={isLogin ? "username or email" : "choose a username"}
                                     className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
                                 />
@@ -118,6 +177,8 @@ const AuthPage = () => {
                                         boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
                                     }}
                                     type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
                                 />
@@ -144,10 +205,12 @@ const AuthPage = () => {
                         </div>
 
                         <motion.button
+
                             whileHover={{ y: -1 }}
                             whileTap={{ scale: 0.98 }}
                             className="w-full mt-6 bg-stone-900 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
                         >
+                            onClick={handleLogin(isLogin)}
                             <Feather size={18} />
                             <span>{isLogin ? "Sign in" : "Begin writing"}</span>
                         </motion.button>

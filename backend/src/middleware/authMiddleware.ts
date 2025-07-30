@@ -11,7 +11,7 @@ const verifyToken = (req: IAuthRequest, res: Response, next: NextFunction) => {
         const token = req.cookies.token;
         if (!token) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
-                msg: "Unauthorized access , please login again !"
+                msg: "Unauthorized access , please try again !"
             })
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {userId:string};
@@ -21,7 +21,7 @@ const verifyToken = (req: IAuthRequest, res: Response, next: NextFunction) => {
     } catch (error) {
         console.log("Token verification failed :", error);
         return res.status(StatusCodes.UNAUTHORIZED).json({
-            msg: "Unauthorized access , please login again !"
+            msg: "Unauthorized access , please try again !"
         })
     }
 }

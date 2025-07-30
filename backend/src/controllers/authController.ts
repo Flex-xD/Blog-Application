@@ -19,9 +19,8 @@ export const registerController = async (req: Request, res: Response) => {
     }
     const parsed = createUserSchema.safeParse(req.body);
     if (!parsed.success) {
-        return res.status(StatusCodes.BAD_REQUEST).json({msg:"Invalid request data" , errors:parsed.error.issues});
+        return res.status(StatusCodes.BAD_REQUEST).json({msg:"Invalid request data" , error:parsed.error.issues.map(issue => issue.message)});
     }
-    createUserSchema
     const existingUser = await User.findOne({
         $or: [{ email }, { username }]
     });
@@ -62,7 +61,7 @@ export const registerController = async (req: Request, res: Response) => {
 export const loginController = async (req: Request, res: Response) => {
     try {
         const { email, password, username } = req.body as authControllerType;
-        if (!email && !username || !password) {
+        if ((!email && !username) || !password) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields!" })
         }
         const user = await User.findOne({ $or: [{ email }, { username }] });

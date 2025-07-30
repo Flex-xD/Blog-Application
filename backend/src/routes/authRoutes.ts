@@ -4,8 +4,8 @@ import verifyToken from "../middleware/authMiddleware";
 
 const authRouter = Router();
 
-authRouter.post("/register" , verifyToken, registerController);
-authRouter.post("/login" , verifyToken , loginController);
-authRouter.post("/logout" , verifyToken , logoutController);
+authRouter.post("/register" , registerController);
+authRouter.post("/login"  , loginController);
+authRouter.post("/logout"  , logoutController);
 
 export default authRouter;

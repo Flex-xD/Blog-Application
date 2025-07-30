@@ -14,6 +14,8 @@ const AuthPage = () => {
     const [password, setPassword] = useState<string>("");
     const [username, setUsername] = useState<string>("");
 
+    const [loginIdentifier, setLoginIdentifier] = useState<string>("");
+
     const validateAuth = (isSignup: boolean = false) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email.length) {
@@ -35,7 +37,7 @@ const AuthPage = () => {
         return true;
     };
 
-    const handleLogin = async (isSignup:boolean = isLogin === false) => {
+    const handleLogin = async (isSignup: boolean = isLogin === false) => {
         try {
             if (!validateAuth(isSignup)) return;
             const endpoint = isSignup ? AUTH_ENDPOINTS.REGISTER : AUTH_ENDPOINTS.LOGIN;
@@ -60,6 +62,7 @@ const AuthPage = () => {
             }
         }
     }
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center p-4">
@@ -152,8 +155,22 @@ const AuthPage = () => {
                                         boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
                                     }}
                                     type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    value={isLogin ? loginIdentifier : username}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const value = e.target.value;
+                                        setLoginIdentifier(value);
+                                        if (isLogin) {
+                                            if (value.includes("@")) {
+                                                setEmail(value);
+                                                setUsername("");
+                                            } else {
+                                                setUsername(value);
+                                                setEmail("");
+                                            }
+                                        } else {
+                                            setUsername(value);
+                                        }
+                                    }}
                                     placeholder={isLogin ? "username or email" : "choose a username"}
                                     className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
                                 />
@@ -209,8 +226,9 @@ const AuthPage = () => {
                             whileHover={{ y: -1 }}
                             whileTap={{ scale: 0.98 }}
                             className="w-full mt-6 bg-stone-900 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
+                            onClick={() => handleLogin(!isLogin)}
+
                         >
-                            onClick={handleLogin(isLogin)}
                             <Feather size={18} />
                             <span>{isLogin ? "Sign in" : "Begin writing"}</span>
                         </motion.button>

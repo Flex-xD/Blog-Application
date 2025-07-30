@@ -23,7 +23,6 @@ const UserSchema = new Schema<IUser>(
             trim: true,
             minlength: 3,
             maxlength: 20,
-            match: /^(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/,
         },
         email: {
             type: String,

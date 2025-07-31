@@ -5,6 +5,7 @@ import apiClient from "../../utility/axiosClient";
 import { AUTH_ENDPOINTS } from "../../constants/constants";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -16,13 +17,15 @@ const AuthPage = () => {
 
     const [loginIdentifier, setLoginIdentifier] = useState<string>("");
 
+    const naviagte = useNavigate();
+
     const validateAuth = (isSignup: boolean = false) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email.length) {
-            toast.error("Email is required");
+        if (!isSignup ? !email.length && !username.length : !email.length) {
+            toast.error("All the fields are required !");
             return false;
         }
-        if (!emailPattern.test(email)) {
+        if (!isSignup ? !username.length && !emailPattern.test(email) : !emailPattern.test(email)) {
             toast.error("Follow the correct email pattern!");
             return false;
         }
@@ -37,7 +40,7 @@ const AuthPage = () => {
         return true;
     };
 
-    const handleLogin = async (isSignup: boolean = isLogin === false) => {
+    const handleAuth = async (isSignup: boolean = isLogin === false) => {
         try {
             if (!validateAuth(isSignup)) return;
             const endpoint = isSignup ? AUTH_ENDPOINTS.REGISTER : AUTH_ENDPOINTS.LOGIN;
@@ -47,8 +50,8 @@ const AuthPage = () => {
                 toast.success(response.data.msg);
                 console.log("Login successful : ", response.data)
                 setTimeout(() => {
-                    window.location.href = "/";
-                })
+                    naviagte("/")
+                }, 2000)
             }
         } catch (error) {
             if (error instanceof AxiosError) {
@@ -226,7 +229,7 @@ const AuthPage = () => {
                             whileHover={{ y: -1 }}
                             whileTap={{ scale: 0.98 }}
                             className="w-full mt-6 bg-stone-900 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
-                            onClick={() => handleLogin(!isLogin)}
+                            onClick={() => handleAuth(!isLogin)}
 
                         >
                             <Feather size={18} />

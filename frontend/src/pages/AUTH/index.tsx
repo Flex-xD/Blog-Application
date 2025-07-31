@@ -1,11 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import React, { useState } from "react";
 import { BookOpen, Feather, Lock, Mail, User } from "react-feather";
-import apiClient from "../../utility/axiosClient";
-import { AUTH_ENDPOINTS } from "../../constants/constants";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
-import { useNavigate } from "react-router-dom";
+import useAuthMutation from "@/customHooks/AuthMutation";
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -17,7 +14,7 @@ const AuthPage = () => {
 
     const [loginIdentifier, setLoginIdentifier] = useState<string>("");
 
-    const naviagte = useNavigate();
+    const { mutateAsync, isPending: isLoading } = useAuthMutation(!isLogin);
 
     const validateAuth = (isSignup: boolean = false) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,30 +37,10 @@ const AuthPage = () => {
         return true;
     };
 
-    const handleAuth = async (isSignup: boolean = isLogin === false) => {
-        try {
-            if (!validateAuth(isSignup)) return;
-            const endpoint = isSignup ? AUTH_ENDPOINTS.REGISTER : AUTH_ENDPOINTS.LOGIN;
-            const sideData = isSignup ? { email, password, username } : { email, password };
-            const response = await apiClient.post(endpoint, sideData);;
-            if (response.status === 200 || response.status === 201) {
-                toast.success(response.data.msg);
-                console.log("Login successful : ", response.data)
-                setTimeout(() => {
-                    naviagte("/")
-                }, 2000)
-            }
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                console.log({ error });
-                if (error.response || error.response!.data.msg) {
-                    return toast.error(error.response?.data.msg);
-                }
-                return toast.error(`${isSignup ? "Signup" : "Login"} failed!`);
-            } else {
-                toast.error("An error occurred!");
-            }
-        }
+    const handleAuth = () => {
+        if (!validateAuth(!isLogin)) return;
+        const response = mutateAsync({ email: email, password: password, username: isLogin ? undefined : username });;
+        console.log(response)
     }
 
 
@@ -229,11 +206,12 @@ const AuthPage = () => {
                             whileHover={{ y: -1 }}
                             whileTap={{ scale: 0.98 }}
                             className="w-full mt-6 bg-stone-900 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
-                            onClick={() => handleAuth(!isLogin)}
+                            disabled={isLoading}
+                            onClick={() => handleAuth()}
 
                         >
                             <Feather size={18} />
-                            <span>{isLogin ? "Sign in" : "Begin writing"}</span>
+                            <span>{isLoading ? "Processing ... " : isLogin ? "Sign in" : "Begin writing"}</span>
                         </motion.button>
 
                         <div className="mt-6">

@@ -7,7 +7,8 @@ interface ApiResponse<T> {
     data?: T | null
 }
 
-export const createApiResponse = <T>({ statusCode, success, msg, data }: ApiResponse<T>) => {
+export const createApiResponse = <T>({ statusCode, success, msg, data }: { statusCode: number, success: boolean, msg: string, data?: T | null }): ApiResponse<T> => {
+
     return {
         statusCode,
         success,
@@ -16,9 +17,10 @@ export const createApiResponse = <T>({ statusCode, success, msg, data }: ApiResp
     }
 }
 
+
+
 export const sendResponse = <T>(res: Response, { statusCode, success, msg, data }: { statusCode: number, success: boolean, msg: string, data?: T | null }) => {
-    const response = createApiResponse({ statusCode, success, msg, data });
-    return res.status(statusCode).json(response);
+    return res.status(statusCode).json({statusCode  , success , msg , data});
 }
 
 

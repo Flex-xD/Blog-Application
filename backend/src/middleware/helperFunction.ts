@@ -1,30 +1,43 @@
-export const createApiResponse = <T>({
-    statusCode,
-    message,
-    data = null,
-    success = true,
-    error = null,
-}: {
-    statusCode: number;
-    message: string;
-    data?: T | null;
-    success?: boolean;
-    error?: Error | null;
-}) => {
-    if (error) {
-        console.error("Error occurred:", error.message);
-        return {
-            statusCode,
-            success: false,
-            message: error.message,
-            data: null,
-        };
-    }
+import { Response } from "express";
 
+interface ApiResponse<T> {
+    statusCode: number,
+    success: boolean,
+    msg: string,
+    data?: T | null
+}
+
+export const createApiResponse = <T>({ statusCode, success, msg, data }: ApiResponse<T>) => {
     return {
         statusCode,
         success,
-        message,
-        data,
-    };
+        msg,
+        data
+    }
+}
+
+export const sendResponse = <T>(res: Response, { statusCode, success, msg, data }: { statusCode: number, success: boolean, msg: string, data?: T | null }) => {
+    const response = createApiResponse({ statusCode, success, msg, data });
+    return res.status(statusCode).json(response);
+}
+
+
+export const sendError = (res: Response, {
+    statusCode = 500,
+    message = "Something went wrong",
+    error,
+}: {
+    statusCode?: number;
+    message?: string;
+    error?: unknown;
+}) => {
+    const errorMessage = error instanceof Error ? error.message : message;
+    console.error("❌ Error:", errorMessage);
+
+    return res.status(statusCode).json({
+        statusCode,
+        success: false,
+        message: errorMessage,
+        data: null,
+    });
 };

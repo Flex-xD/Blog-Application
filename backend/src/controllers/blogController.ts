@@ -30,7 +30,7 @@ interface IBlogRequestBody {
 export const createBlogController = async (req: IAuthRequest, res: Response) => {
     try {
         const { title, image, body } = req.body as IBlogRequestBody;
-        if (!title || body) {
+        if (!title || !body) {
             sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, msg: "Title and Body are required !" })
         }
 

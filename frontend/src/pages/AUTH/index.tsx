@@ -37,9 +37,9 @@ const AuthPage = () => {
         return true;
     };
 
-    const handleAuth = () => {
+    const handleAuth = async () => {
         if (!validateAuth(!isLogin)) return;
-        const response = mutateAsync({ email: email, password: password, username: isLogin ? undefined : username });;
+        const response = await mutateAsync({ email: email, password: password, username: isLogin ? undefined : username });;
         console.log(response)
     }
 

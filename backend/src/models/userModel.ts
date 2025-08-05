@@ -2,27 +2,41 @@ import mongoose, { Schema, Document, Types, Model } from 'mongoose'
 import bcrypt from 'bcryptjs';
 import z from "zod";
 
-const zMongooseObjectId = z.string()
+export const zMongooseObjectId = z.string()
     .length(24)
     .regex(/^[a-fA-F0-9]{24}$/, "Invalid ObjectId");
 
 export const ZuserSchema = z.object({
+    _id: zMongooseObjectId.optional(),
     username: z.string(),
     email: z.email(),
-    password: z.string().min(6 , "password length should be atleast 6 character !"),
+    password: z.string().min(6, "password length should be atleast 6 character !"),
     profilePicture: z.string().optional(),
     followers: z.array(zMongooseObjectId),
     following: z.array(zMongooseObjectId),
-    saves:z.array(zMongooseObjectId) , 
-    userBlogs:z.array(zMongooseObjectId) , 
-    createdAt:z.date().optional() , 
-    updatedAt:z.date().optional()
+    saves: z.array(zMongooseObjectId),
+    userBlogs: z.array(zMongooseObjectId),
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional()
 })
 
 export type zUserType = z.infer<typeof ZuserSchema>;
 
+export interface IUser extends Document {
+    username: string;
+    email: string;
+    password: string;
+    profilePicture?: string;
+    followers: Types.ObjectId[];
+    following: Types.ObjectId[];
+    saves: Types.ObjectId[];
+    userBlogs: Types.ObjectId[];
+    createdAt: Date;
+    updatedAt: Date;
+}
 
-const UserSchema = new Schema<zUserType>(
+
+const UserSchema = new Schema<IUser>(
     {
         username: {
             type: String,
@@ -50,29 +64,29 @@ const UserSchema = new Schema<zUserType>(
         followers: [
             {
                 type: Schema.Types.ObjectId,
-                ref: 'User' , 
-                default:[],
+                ref: 'User',
+                default: [],
             },
         ],
         following: [
             {
                 type: Schema.Types.ObjectId,
                 ref: 'User',
-                default:[]
+                default: []
             },
         ],
         saves: [
             {
                 type: Schema.Types.ObjectId,
                 ref: 'Blog',
-                default:[]
+                default: []
             },
         ],
         userBlogs: [
             {
-                type: Schema.Types.ObjectId,
+                type: Types.ObjectId,
                 ref: 'Blog',
-                default:[]
+                default: []
             },
         ],
     },
@@ -88,5 +102,5 @@ UserSchema.pre("save", async function (next) {
     next();
 });
 
-const User: Model<zUserType> = mongoose.model('User', UserSchema);
+const User: Model<IUser> = mongoose.model('User', UserSchema);
 export default User;

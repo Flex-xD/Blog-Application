@@ -7,3 +7,8 @@ TODO :
 2. after this try fetching some JSON file and display the data via Blog component 
 
 3. start working on the blog related backend (on hold)
+
+
+
+<!-- THINGS I HAVE TO FIX : -->
+1. IN the authentication I am not getting the clear msg of password field which requires a number , I am getting "Invalid request data !";

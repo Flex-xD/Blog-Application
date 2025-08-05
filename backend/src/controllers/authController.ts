@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User, { IUser } from "../models/userModel";
+import User, { IUser, zUserType } from "../models/userModel";
 import { StatusCodes } from "http-status-codes";
 import { authControllerType } from "../types/index.js";
-import { createUserSchema } from "../schemas/user.schema";
+import { sendResponse } from "../middleware/helperFunction";
 
 const maxage = 3 * 24 * 60 * 60 * 1000;
 const createtoken = async (userId: string, email: string) => {
@@ -16,10 +16,6 @@ export const registerController = async (req: Request, res: Response) => {
     const { email, username, password } = req.body as authControllerType;
     if (!email || !username || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields !" });
-    }
-    const parsed = createUserSchema.safeParse(req.body);
-    if (!parsed.success) {
-        return res.status(StatusCodes.BAD_REQUEST).json({msg:"Invalid request data" , error:parsed.error.issues.map(issue => issue.message)});
     }
     const existingUser = await User.findOne({
         $or: [{ email }, { username }]
@@ -36,6 +32,14 @@ export const registerController = async (req: Request, res: Response) => {
     if (!usernameRegex.test(username)) {
         return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Username can only contain lowercase letters, underscores (_), and dots (.)" });
     }
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!passwordRegex.test(password)) {
+        return sendResponse(res, {
+            statusCode: StatusCodes.BAD_REQUEST,
+            success: false,
+            msg: "Password must contain at least one letter and one number !"
+        })
+    }
 
     const user: IUser = await User.create({
         email,
@@ -45,7 +49,7 @@ export const registerController = async (req: Request, res: Response) => {
         following: [],
         followers: [],
         saves: [],
-        blogs: [],
+        userBlogs: [],
     });
     const token = await createtoken(user._id as string, user.email);
     res.cookie("token", token, {
@@ -55,7 +59,12 @@ export const registerController = async (req: Request, res: Response) => {
         secure: false
     })
     console.log("User Registered !");
-    return res.status(StatusCodes.CREATED).json({ msg: "User Registered !", user })
+    return sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
+        success: true,
+        msg: "User Registered !",
+        data: user
+    })
 }
 
 export const loginController = async (req: Request, res: Response) => {
@@ -64,7 +73,7 @@ export const loginController = async (req: Request, res: Response) => {
         if ((!email && !username) || !password) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields!" })
         }
-        const user = await User.findOne({ $or: [{ email }, { username }] });
+        const user: IUser | null = await User.findOne({ $or: [{ email }, { username }] });
         if (!user) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "User does not exist !" });
         }
@@ -79,7 +88,12 @@ export const loginController = async (req: Request, res: Response) => {
             sameSite: "strict",
             secure: false
         });
-        return res.status(StatusCodes.OK).json({ msg: "User Logged In !", user });
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "User logged In !",
+            data: user
+        })
     } catch (error) {
 
         console.log({ error });

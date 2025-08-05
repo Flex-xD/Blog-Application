@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { loginController, logoutController, registerController } from "../controllers/authController";
 import verifyToken from "../middleware/authMiddleware";
+import { createBlogController, getUserBlogs } from "../controllers/blogController";
 
 const blogRouter = Router();
 
-blogRouter.post("/get" , verifyToken , registerController);
-blogRouter.post("/create" , verifyToken , loginController);
-blogRouter.post("/delete" , verifyToken , logoutController);
+blogRouter.get("/get-user-feed" , verifyToken , getUserBlogs);
+blogRouter.post("/create" , verifyToken , createBlogController);
+blogRouter.get("/user-blogs" , verifyToken , getUserBlogs);
 
 export default blogRouter;

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import verifyToken from "../middleware/authMiddleware";
-import { createBlogController, getUserBlogs, getUserSavedBlogs } from "../controllers/blogController";
+import { createBlogController, getFeedController, getUserBlogs, getUserSavedBlogs } from "../controllers/blogController";
 
 const blogRouter = Router();
 
 // ? USER'S FEED
-blogRouter.get("/get-user-feed" , verifyToken , getUserBlogs);
+blogRouter.get("/get-user-feed" , verifyToken , getFeedController);
 
 // ? USER'S BLOGS
 blogRouter.get("/user-blogs" , verifyToken , getUserBlogs);

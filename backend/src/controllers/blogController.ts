@@ -3,8 +3,9 @@ import { sendError, sendResponse } from "../middleware/helperFunction";
 import { StatusCodes } from "http-status-codes";
 import User, { IUser, ZuserSchema, zUserType } from "../models/userModel";
 import Blog, { IBlog } from "../models/blogModel";
-import mongoose from "mongoose";
+import mongoose, { PipelineStage, Types } from "mongoose";
 import { success } from "zod";
+import { IBlogWithAuthor, IFeedQuery } from "../types";
 
 interface IAuthRequest extends Request {
     userId?: string
@@ -125,10 +126,151 @@ export const getUserSavedBlogs = async (req: IAuthRequest, res: Response) => {
     }
 }
 
-export const getUserFeed = async (req: IAuthRequest, res: Response) => {
+// ? I still have to test the getFeedController
+export const getFeedController = async (req: IAuthRequest, res: Response) => {
     try {
-        // * GET USER FEED
-        // ? Check wheter user is there or not 
+        const { userId } = req;
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!",
+            });
+        }
+        const user: IUser | null = await User.findById(userId).select("following");
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found",
+            });
+        }
+
+        const { page = "1", limit = "10" } = req.query as IFeedQuery;
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid pagination parameters",
+            });
+        }
+
+        const followLimit = Math.ceil(limitNum * 0.4);
+        const randomLimit = limitNum - followLimit;
+
+        const following: Types.ObjectId[] = [
+            ...user.following,
+            new Types.ObjectId(userId),
+        ];
+
+        const followPipeline: PipelineStage[] = [
+            {
+                $match: {
+                    author: { $in: following },
+                    createdAt: { $lte: new Date() },
+                },
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: (pageNum - 1) * followLimit },
+            { $limit: followLimit },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author",
+                    foreignField: "_id",
+                    as: "authorDetails",
+                },
+            },
+            { $unwind: "$authorDetails" },
+            {
+                $project: {
+                    title: 1,
+                    image: 1,
+                    body: 1,
+                    createdAt: 1,
+                    "authorDetails._id": 1,
+                    "authorDetails.username": 1,
+                    "authorDetails.profileImage": 1,
+                },
+            },
+        ];
+
+        const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
+            followPipeline,
+        );
+
+        const randomPipeline: PipelineStage[] = [
+            {
+                $match: {
+                    author: { $nin: following },
+                    createdAt: { $lte: new Date() },
+                },
+            },
+            { $sample: { size: randomLimit } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author",
+                    foreignField: "_id",
+                    as: "authorDetails",
+                },
+            },
+            { $unwind: "$authorDetails" },
+            {
+                $project: {
+                    title: 1,
+                    image: 1,
+                    body: 1,
+                    createdAt: 1,
+                    "authorDetails._id": 1,
+                    "authorDetails.username": 1,
+                    "authorDetails.profileImage": 1,
+                },
+            },
+        ];
+
+        const randomBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
+            randomPipeline,
+        );
+
+        const blogs = [...followBlogs, ...randomBlogs].sort(
+            () => Math.random() - 0.5,
+        );
+
+        const totalFollowBlogs = await Blog.countDocuments({
+            author: { $in: following },
+            createdAt: { $lte: new Date() },
+        });
+
+        const responseData = {
+            blogs,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total: totalFollowBlogs,
+                hasMore: pageNum * followLimit < totalFollowBlogs,
+            },
+        };
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Feed fetched successfully",
+            data: responseData,
+        });
+    } catch (error) {
+        return sendError(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            error,
+        });
+    }
+};
+
+
+export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
+    try {
         const { userId } = req;
         if (!userId) {
             return sendResponse(res, { statusCode: StatusCodes.UNAUTHORIZED, success: false, msg: "You are unauthorized !" })
@@ -141,30 +283,10 @@ export const getUserFeed = async (req: IAuthRequest, res: Response) => {
                 msg: "User not found",
             });
         }
-
-        if (user.following.length) {
-            return sendResponse(res , {
-                statusCode:StatusCodes.LENGTH_REQUIRED , 
-                success:false , 
-                msg:"User don't have any following !" , 
-            })
-        }
-        for (let i = 0 ; i < user.following.length ; i++) {
-            const userFollowing : IUser | null = await User.findById(i);
-            userFollowing?.userBlogs
-        }
-        user.following
-        // ? Now Check if User's following have uploaded , something ( let followingUploaded )
-        // ? If followingUploaded true and user havn't seen them then show followings blogs and 
-        // ? and then show the latest blogs all over 
-        // ? If followingUploaded false , just show the latest blogs 
+        
     } catch (error) {
         sendError(res, { error });
     }
-}
-
-export const deleteUserBlog = async () => {
-
 }
 
 // * LIKE AND COMMENT AND REPLIES

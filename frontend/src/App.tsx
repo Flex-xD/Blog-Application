@@ -2,8 +2,8 @@ import type { JSX } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/Home';
 import Auth from './pages/AUTH';
-import { UserProfile } from './pages/PROFILE';
 import { UserProfilePage } from './pages/PROFILE/UserProfile';
+import Feed from './pages/FEED';
 
 interface IRoute {
   path: string,
@@ -23,6 +23,7 @@ const routes: IRoute[] = [
   { path: "/", isPrivate: false, redirectTo: "", element: <HomePage /> },
   { path: "/auth", isPrivate: false, redirectTo: "", element: <Auth /> },
   { path: "/profile", isPrivate: false, redirectTo: "", element: <UserProfilePage /> },
+  { path: "/feed", isPrivate: false, redirectTo: "", element: <Feed /> },
 ]
 
 

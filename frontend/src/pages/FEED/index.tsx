@@ -1,16 +1,17 @@
 import { motion } from "framer-motion";
 import { BlogCard } from "./components/BLOG";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Search, Bell, Bookmark, Users, Home, Hash, TrendingUp, Link, Image as ImageIcon } from "lucide-react";
+import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { useAppStore } from "@/store";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");
-    const [showCreateModal, setShowCreateModal] = useState(false);
-
+    const { isCreatingBlog } = useAppStore();
+    const [showCreateModal, setShowCreateModal] = useState(isCreatingBlog === true ? true : false);
     const blogs = [
         {
             id: "1",

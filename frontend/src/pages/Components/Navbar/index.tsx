@@ -13,8 +13,8 @@ const Navbar = () => {
     const scale = useTransform(scrollY, [0, 100], [1, 0.98])
     const navigate = useNavigate();
 
-    const { setIsCreatingBlog} = useAppStore();
-    const navigateToFeedAndOpenModal = (value:boolean) => {
+    const { setIsCreatingBlog } = useAppStore();
+    const navigateToFeedAndOpenModal = (value: boolean) => {
         setIsCreatingBlog(value);
         navigate("/feed")
     }
@@ -64,18 +64,18 @@ const Navbar = () => {
                 <Button
                     variant="default"
                     className="hidden sm:inline-flex bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                    
-                    onClick={()=> navigateToFeedAndOpenModal(true)}
+
+                    onClick={() => navigateToFeedAndOpenModal(true)}
                 >
                     Create Post
                 </Button>
-                    <Link to={"/profile"} className="flex items-center space-x-2 cursor-pointer" >
-                        <Avatar className="border-2 border-indigo-100">
-                            <AvatarImage src="https://github.com/shadcn.png" />
-                            <AvatarFallback>JD</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-gray-700 hidden md:inline">John Doe</span>
-                    </Link>
+                <Link to={"/profile"} className="flex items-center space-x-2 cursor-pointer" >
+                    <Avatar className="border-2 border-indigo-100">
+                        <AvatarImage src="https://github.com/shadcn.png" />
+                        <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-gray-700 hidden md:inline">John Doe</span>
+                </Link>
             </div>
         </motion.nav>
     )

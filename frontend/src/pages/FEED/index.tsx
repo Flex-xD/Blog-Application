@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BlogCard } from "./components/BLOG";
+import { BlogCard } from "../Components/BlogCard";
 import { Button } from "@/components/ui/button";
 import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";

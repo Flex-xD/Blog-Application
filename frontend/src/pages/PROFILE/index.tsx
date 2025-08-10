@@ -7,7 +7,7 @@ import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare } from "lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { BlogCard } from "../FEED/components/BLOG";
+import { BlogCard } from "../Components/BlogCard";
 
 interface UserProfileProps {
     user: {

@@ -1,6 +1,14 @@
 # Ignore all node_modules directories globally
 node_modules/
 
+
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+
 # Ignore all package-lock.json files, even if nested
 **/package-lock.json
 

@@ -2,11 +2,7 @@
 node_modules/
 
 
-.env
-.env.local
-.env.development
-.env.test
-.env.production
+**/.env*
 
 
 # Ignore all package-lock.json files, even if nested

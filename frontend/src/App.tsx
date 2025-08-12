@@ -4,29 +4,24 @@ import HomePage from './pages/Home';
 import Auth from './pages/AUTH';
 import { UserProfilePage } from './pages/PROFILE/UserProfile';
 import Feed from './pages/FEED';
+import WithAuth from './pages/AUTH/components/WithAuthWrapper';
 
 interface IRoute {
   path: string,
   isPrivate: boolean,
   redirectTo: string,
-  element?: JSX.Element
+  element: JSX.Element
+  allowAuthenticated?: boolean
 }
 
-const withAuth = (element: JSX.Element, isPrivate: boolean, redirectTo: string, allowAuthenticated?: boolean) => {
-  if (isPrivate) {
-    
-  }
-  // ? To Identify between Private and Public Routes 
-}
+
 
 const routes: IRoute[] = [
-  { path: "/", isPrivate: false, redirectTo: "", element: <HomePage /> },
-  { path: "/auth", isPrivate: false, redirectTo: "", element: <Auth /> },
-  { path: "/profile", isPrivate: false, redirectTo: "", element: <UserProfilePage /> },
-  { path: "/feed", isPrivate: false, redirectTo: "", element: <Feed /> },
+  { path: "/", isPrivate: false, redirectTo: "/", element: <HomePage />, allowAuthenticated: true },
+  { path: "/auth", isPrivate: false, redirectTo: "/", element: <Auth />, allowAuthenticated: false },
+  { path: "/profile", isPrivate: true, redirectTo: "/auth", element: <UserProfilePage /> },
+  { path: "/feed", isPrivate: true, redirectTo: "/auth", element: <Feed /> },
 ]
-
-
 
 const App = () => {
   return (
@@ -34,11 +29,20 @@ const App = () => {
       <Routes>
         {routes.map((route) => (
           <Route
+            key={route.path}
             path={route.path}
-            element={route.element}
+            element={
+              <WithAuth
+                isPrivate={!!route.isPrivate}
+                redirectTo={route.redirectTo || "/"}
+                allowAuthenticated={route.allowAuthenticated}
+              >
+                {route.element}
+              </WithAuth>
+            }
           />
         ))}
-        <Route path='*' element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

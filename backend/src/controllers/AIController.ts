@@ -54,8 +54,6 @@ export const llmBlogProcessing = async (req: Request, res: Response) => {
         }
 
         const content = data.choices[0].message.content;
-        console.log("Raw AI Response:", content);
-
         let parsedResponse: IParsedAIResponse;
         try {
             const cleanContent = content
@@ -63,7 +61,6 @@ export const llmBlogProcessing = async (req: Request, res: Response) => {
                 .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
                 .trim();
             parsedResponse = JSON.parse(cleanContent);
-            console.log("Parsed JSON Response:", parsedResponse);
         } catch (jsonError) {
             console.error("JSON Parsing Error:", jsonError, "Raw Content:", content);
 

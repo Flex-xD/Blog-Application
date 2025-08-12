@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User, { IUser, zUserType } from "../models/userModel";
+import User, { IUser } from "../models/userModel";
 import { StatusCodes } from "http-status-codes";
 import { authControllerType } from "../types/index.js";
-import { sendResponse } from "../middleware/helperFunction";
+import { sendError, sendResponse } from "../middleware/helperFunction";
+import { IAuthRequest } from "../middleware/authMiddleware";
 
 const maxage = 3 * 24 * 60 * 60 * 1000;
 const createtoken = async (userId: string, email: string) => {
@@ -81,12 +82,15 @@ export const loginController = async (req: Request, res: Response) => {
         if (!match) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid credentials !" });
         }
+        if (req.cookies.token) {
+            res.clearCookie("token" , { httpOnly: true, secure: false, sameSite: "strict" })
+        }
         const token = await createtoken(user._id as string, user.email);
         res.cookie("token", token, {
             httpOnly: true,
             maxAge: maxage,
             sameSite: "strict",
-            secure: false
+            secure:  process.env.NODE_ENV === "production"
         });
         return sendResponse(res, {
             statusCode: StatusCodes.OK,
@@ -101,10 +105,38 @@ export const loginController = async (req: Request, res: Response) => {
     }
 }
 
-export const logoutController = async (req: Request, res: Response) => {
+export const logoutController = async (res: Response) => {
     try {
         res.clearCookie("token", { httpOnly: true, secure: false, sameSite: "strict" });
         return res.status(StatusCodes.OK).json({ msg: "User Logged Out !" });
+    } catch (error) {
+        console.log({ error });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error !" });
+    }
+}
+
+export const getUserInfo = async (req:IAuthRequest , res:Response) => {
+    try {
+        const {userId} = req;
+        if (!userId) {
+            sendResponse(res , {
+                statusCode:StatusCodes.UNAUTHORIZED , 
+                success:false , 
+                msg:"User is not Authenticated !"
+            })
+        }
+        const response  = await User.findById(userId);
+        if (!response) return sendResponse(res , {
+            statusCode:StatusCodes.BAD_REQUEST , 
+            success:false , 
+            msg:"There was an issue fetching user data !"
+        })
+        sendResponse(res , {
+            statusCode:StatusCodes.OK , 
+            success:true , 
+            msg:"User data fetched successfully !" , 
+            data:response
+        })
     } catch (error) {
         console.log({ error });
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error !" });

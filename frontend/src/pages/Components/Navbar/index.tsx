@@ -19,6 +19,7 @@ const Navbar = () => {
         navigate("/feed")
     }
 
+    const {isAuthenticated} = useAppStore();
     return (
         <motion.nav
             style={{ opacity, scale }}
@@ -67,15 +68,15 @@ const Navbar = () => {
 
                     onClick={() => navigateToFeedAndOpenModal(true)}
                 >
-                    Create Post
+                    {isAuthenticated ? "Create Post" : "LOGIN"}
                 </Button>
-                <Link to={"/profile"} className="flex items-center space-x-2 cursor-pointer" >
+                {isAuthenticated && <Link to={"/profile"} className="flex items-center space-x-2 cursor-pointer" >
                     <Avatar className="border-2 border-indigo-100">
                         <AvatarImage src="https://github.com/shadcn.png" />
                         <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
                     <span className="font-medium text-gray-700 hidden md:inline">John Doe</span>
-                </Link>
+                </Link>}
             </div>
         </motion.nav>
     )

@@ -1,12 +1,13 @@
 import { AUTH_ENDPOINTS } from "@/constants/constants";
 import { useAppStore } from "@/store";
 import apiClient from "@/utility/axiosClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const useAuthMutation = (isSignUp: boolean) => {
+    const queryClient = useQueryClient();
     const { setIsAuthenticated } = useAppStore();
     const navigate = useNavigate();
     return useMutation({
@@ -18,10 +19,10 @@ const useAuthMutation = (isSignUp: boolean) => {
         onSuccess: (data: undefined) => {
             if (data === undefined || null) return;
             console.log(data);
-
+            queryClient.invalidateQueries({queryKey:["profile"]})
             setIsAuthenticated(true);
             toast.success(isSignUp ? "Registerd Successfully!" : "Logged In Successfully!");
-            setTimeout(() => {
+            return setTimeout(() => {
                 navigate("/");
             }, 1500)
         },
@@ -32,7 +33,7 @@ const useAuthMutation = (isSignUp: boolean) => {
                 const data = (error as AxiosError).response?.data as { msg?: string };
                 message = data?.msg || message;
             }
-            toast.error(message);
+            return toast.error(message);
         }
     })
 }

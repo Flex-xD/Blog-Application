@@ -1,26 +1,5 @@
 import mongoose, { Schema, Document, Types, Model } from 'mongoose'
 import bcrypt from 'bcryptjs';
-import z from "zod";
-
-export const zMongooseObjectId = z.string()
-    .length(24)
-    .regex(/^[a-fA-F0-9]{24}$/, "Invalid ObjectId");
-
-export const ZuserSchema = z.object({
-    _id: zMongooseObjectId.optional(),
-    username: z.string(),
-    email: z.email(),
-    password: z.string().min(6, "password length should be atleast 6 character !"),
-    profilePicture: z.string().optional(),
-    followers: z.array(zMongooseObjectId),
-    following: z.array(zMongooseObjectId),
-    saves: z.array(zMongooseObjectId),
-    userBlogs: z.array(zMongooseObjectId),
-    createdAt: z.date().optional(),
-    updatedAt: z.date().optional()
-})
-
-export type zUserType = z.infer<typeof ZuserSchema>;
 
 export interface IUser extends Document {
     username: string;
@@ -34,7 +13,6 @@ export interface IUser extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-
 
 const UserSchema = new Schema<IUser>(
     {

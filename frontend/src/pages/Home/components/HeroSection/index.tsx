@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+
+
 const HeroSection = () => {
+
     return (
         <section className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
             <motion.div

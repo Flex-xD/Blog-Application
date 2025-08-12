@@ -8,3 +8,7 @@ export const AUTH_ENDPOINTS = {
     REGISTER : `${BASE_URL}/auth/register` , 
     LOGOUT : `${BASE_URL}/auth/logout` , 
 }
+
+export const userEndPoint = {
+    GET_USER_DATD:`${BASE_URL}/user-data`
+}

@@ -8,7 +8,7 @@ export interface IAuthRequest extends Request {
 
 const verifyToken = (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
-        const token = req.cookies.token;
+        const {token} = req.cookies;
         if (!token) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 msg: "Unauthorized access , please try again !"

@@ -1,5 +1,6 @@
 import { AUTH_ENDPOINTS } from "@/constants/constants";
 import { useAppStore } from "@/store";
+import type { IUser } from "@/types";
 import apiClient from "@/utility/axiosClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -16,7 +17,7 @@ const useAuthMutation = (isSignUp: boolean) => {
             const response = await apiClient.post(endpoint, formData);
             return response.data;
         },
-        onSuccess: (data: undefined) => {
+        onSuccess: (data: IUser) => {
             if (data === undefined || null) return;
             console.log(data);
             queryClient.invalidateQueries({queryKey:["profile"]})

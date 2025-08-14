@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { BookOpen, Feather, Lock, Mail, User } from "react-feather";
 import { toast } from "sonner";
 import useAuthMutation from "@/customHooks/AuthMutation";
+import { Loader } from "lucide-react";
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -42,7 +43,7 @@ const AuthPage = () => {
         await mutateAsync({ email: email, password: password, username: isLogin ? undefined : username });;
     }
 
-
+    if (isLoading) return <div className='h-screen w-screen flex items-center justify-center'><Loader /></div>
     return (
         <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center p-4">
             <motion.div

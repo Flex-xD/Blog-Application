@@ -15,7 +15,7 @@ const WithAuth = ({ isPrivate, redirectTo, allowAuthenticated, children }: WithA
     if (isPrivate) {
         return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
     } else {
-        if (!allowAuthenticated && isAuthenticated) {
+        if (allowAuthenticated === false && isAuthenticated) {
             return <Navigate to={redirectTo} replace />;
         }
         return children;

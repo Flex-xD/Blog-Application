@@ -7,8 +7,6 @@ export const AUTH_ENDPOINTS = {
     LOGIN : `${BASE_URL}/auth/login` , 
     REGISTER : `${BASE_URL}/auth/register` , 
     LOGOUT : `${BASE_URL}/auth/logout` , 
+    GET_USER_DATA:`${BASE_URL}/auth/user-data`
 }
 
-export const userEndPoint = {
-    GET_USER_DATD:`${BASE_URL}/user-data`
-}

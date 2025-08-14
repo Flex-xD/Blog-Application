@@ -5,6 +5,8 @@ import Auth from './pages/AUTH';
 import { UserProfilePage } from './pages/PROFILE/UserProfile';
 import Feed from './pages/FEED';
 import WithAuth from './pages/AUTH/components/WithAuthWrapper';
+import { useUserProfileData } from './customHooks/UserDataFetching';
+import { Loader } from 'lucide-react';
 
 interface IRoute {
   path: string,
@@ -14,8 +16,6 @@ interface IRoute {
   allowAuthenticated?: boolean
 }
 
-
-
 const routes: IRoute[] = [
   { path: "/", isPrivate: false, redirectTo: "/", element: <HomePage />, allowAuthenticated: true },
   { path: "/auth", isPrivate: false, redirectTo: "/", element: <Auth />, allowAuthenticated: false },
@@ -24,6 +24,9 @@ const routes: IRoute[] = [
 ]
 
 const App = () => {
+  const {data , isLoading} = useUserProfileData();
+  if (isLoading) return <div className='h-screen w-screen flex items-center justify-center'><Loader/></div>
+  console.log(data)
   return (
     <BrowserRouter>
       <Routes>

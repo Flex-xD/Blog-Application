@@ -4,7 +4,7 @@ import verifyToken from "../middleware/authMiddleware";
 
 const authRouter = Router();
 
-authRouter.get("/user-info" , verifyToken , getUserInfo);
+authRouter.get("/user-data" , verifyToken , getUserInfo);
 authRouter.post("/register" , registerController);
 authRouter.post("/login"  , loginController);
 authRouter.post("/logout"  , logoutController);

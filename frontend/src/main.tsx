@@ -1,9 +1,9 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
+import { useUserProfileData } from './customHooks/UserDataFetching/index.ts'
 
 const queryCleint = new QueryClient({
   defaultOptions: {
@@ -17,11 +17,11 @@ const queryCleint = new QueryClient({
   }
 })
 
+// const {data , isLoading} = useUserProfileData();
+
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryCleint}>
-      <App />
-      <Toaster position="top-right" richColors />
-    </QueryClientProvider>
-  </StrictMode>,
+  <QueryClientProvider client={queryCleint}>
+    <App />
+    <Toaster position="top-right" richColors />
+  </QueryClientProvider>
 )

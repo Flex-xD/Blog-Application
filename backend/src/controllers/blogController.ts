@@ -1,10 +1,9 @@
 import { Request, response, Response } from "express"
 import { sendError, sendResponse } from "../middleware/helperFunction";
 import { StatusCodes } from "http-status-codes";
-import User, { IUser, ZuserSchema, zUserType } from "../models/userModel";
+import User, { IUser } from "../models/userModel";
 import Blog, { IBlog } from "../models/blogModel";
 import mongoose, { PipelineStage, Types } from "mongoose";
-import { success } from "zod";
 import { IBlogWithAuthor, IFeedQuery } from "../types";
 
 interface IAuthRequest extends Request {
@@ -37,18 +36,6 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
                     statusCode: StatusCodes.NOT_FOUND,
                     success: false,
                     msg: "User not found",
-                });
-            }
-            const safeUser = ZuserSchema.safeParse({
-                ...user.toObject(),
-                _id: (user._id as mongoose.Types.ObjectId).toString()
-            });
-            if (!safeUser.success) {
-                return sendResponse(res, {
-                    statusCode: 400,
-                    success: false,
-                    msg: "Invalid user data",
-                    data: safeUser.error.issues,
                 });
             }
             const userBlog = new Blog({
@@ -121,6 +108,26 @@ export const getUserSavedBlogs = async (req: IAuthRequest, res: Response) => {
             msg: savedBlogs.length ? "User Blogs found !" : "You haven't saved any blogs yet !",
             data: savedBlogs
         })
+    } catch (error) {
+        sendError(res, { error });
+    }
+}
+
+export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        if (!userId) {
+            return sendResponse(res, { statusCode: StatusCodes.UNAUTHORIZED, success: false, msg: "You are unauthorized !" })
+        }
+        const user: IUser | null = await User.findById(userId).populate("userBlogs");
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found",
+            });
+        }
+        
     } catch (error) {
         sendError(res, { error });
     }
@@ -269,25 +276,7 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
 };
 
 
-export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
-    try {
-        const { userId } = req;
-        if (!userId) {
-            return sendResponse(res, { statusCode: StatusCodes.UNAUTHORIZED, success: false, msg: "You are unauthorized !" })
-        }
-        const user: IUser | null = await User.findById(userId).populate("userBlogs");
-        if (!user) {
-            return sendResponse(res, {
-                statusCode: StatusCodes.NOT_FOUND,
-                success: false,
-                msg: "User not found",
-            });
-        }
-        
-    } catch (error) {
-        sendError(res, { error });
-    }
-}
+
 
 // * LIKE AND COMMENT AND REPLIES
 

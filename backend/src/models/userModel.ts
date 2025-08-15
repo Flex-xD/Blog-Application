@@ -5,6 +5,7 @@ export interface IUser extends Document {
     username: string;
     email: string;
     password: string;
+    bio:string , 
     profilePicture?: string;
     followers: Types.ObjectId[];
     following: Types.ObjectId[];
@@ -39,6 +40,12 @@ const UserSchema = new Schema<IUser>(
         profilePicture: {
             type: String,
         },
+        bio:{
+            type: String,
+            default: function(this: IUser) {
+                return `Hey, I am ${this.username ?? ''}`;
+            }
+        },
         followers: [
             {
                 type: Schema.Types.ObjectId,
@@ -67,6 +74,12 @@ const UserSchema = new Schema<IUser>(
                 default: []
             },
         ],
+        createdAt:{
+            type:Date
+        } , 
+        updatedAt:{
+            type:Date
+        }
     },
     { timestamps: true }
 )

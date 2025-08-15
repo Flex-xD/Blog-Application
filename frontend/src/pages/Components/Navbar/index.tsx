@@ -30,9 +30,12 @@ const Navbar = () => {
                 <span className="text-xl font-bold text-gray-800">BlogCraft</span>
             </div>
 
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center gap-6 space-x-3">
                 <Link to={"/feed"} className="text-gray-600 hover:bg-gray-100" onClick={() => setIsCreatingBlog(false)}>
                     Explore
+                </Link>
+                <Link to={"/feed"} className="text-gray-600 hover:bg-gray-100" onClick={() => setIsCreatingBlog(false)}>
+                    Social
                 </Link>
 
                 <DropdownMenu>
@@ -50,7 +53,7 @@ const Navbar = () => {
                 </DropdownMenu>
             </div>
 
-            <div className="flex-1 max-w-xl mx-4 hidden lg:block">
+            <div className="flex-[0.8] max-w-xl mx-4 hidden lg:block">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input

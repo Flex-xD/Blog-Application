@@ -1,13 +1,13 @@
 import mongoose, { Document, ObjectId, Schema, Types } from "mongoose";
 
 export interface IBlog extends Document {
-    _id:ObjectId
+    _id: ObjectId
     title: string;
     body: string;
     image: string;
     author: Types.ObjectId;
     likes: Types.ObjectId[];
-    comment: Types.ObjectId[];
+    comments: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -34,7 +34,7 @@ const blogSchema = new Schema<IBlog>(
                 type: Schema.Types.ObjectId,
             },
         ],
-        comment: [
+        comments: [
             {
                 ref: "User",
                 type: Schema.Types.ObjectId,
@@ -45,6 +45,12 @@ const blogSchema = new Schema<IBlog>(
             type: Schema.Types.ObjectId,
             required: true,
         },
+        createdAt: {
+            type: Date
+        },
+        updatedAt: {
+            type: Date
+        }
     },
     { timestamps: true }
 );

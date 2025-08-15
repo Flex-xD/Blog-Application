@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/Home';
 import Auth from './pages/AUTH';
-import { UserProfilePage } from './pages/PROFILE/UserProfile';
+import { UserProfilePage } from './pages/PROFILE';
 import Feed from './pages/FEED';
 import WithAuth from './pages/AUTH/components/WithAuthWrapper';
 import { useUserProfileData } from './customHooks/UserDataFetching';
@@ -24,8 +24,8 @@ const routes: IRoute[] = [
 ]
 
 const App = () => {
-  const {data , isLoading} = useUserProfileData();
-  if (isLoading) return <div className='h-screen w-screen flex items-center justify-center'><Loader/></div>
+  const { data, isLoading } = useUserProfileData();
+  if (isLoading) return <div className='h-screen w-screen flex items-center justify-center'><Loader /></div>
   console.log(data)
   return (
     <BrowserRouter>

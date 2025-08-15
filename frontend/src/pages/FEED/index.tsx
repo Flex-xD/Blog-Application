@@ -1,84 +1,78 @@
 import { motion } from "framer-motion";
 import { BlogCard } from "../Components/BlogCard";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link, Image as ImageIcon } from "lucide-react";
+import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link2, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useAppStore } from "@/store";
+import type { IBlog } from "@/types";
+import { Link } from "react-router-dom";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");
     const { isCreatingBlog } = useAppStore();
     const [showCreateModal, setShowCreateModal] = useState(isCreatingBlog === true ? true : false);
-    const blogs = [
+
+    const blogs: IBlog[] = [
         {
-            id: "1",
+            _id: "1",
             title: "The Evolution of Modern Web Development",
             body: "In the past decade, web development has undergone a radical transformation. From static HTML pages to dynamic single-page applications, the landscape has changed dramatically. Modern frameworks like React, Vue, and Angular have enabled developers to build complex applications with maintainable code...",
-            author: {
-                name: "Alex Johnson",
-                avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-            },
             image: "https://picsum.photos/id/1015/800/400",
-            likes: 128,
-            comments: 24,
-            publishedAt: "2023-06-20T14:30:00Z",
+            author: "Alex Johnson",
+            likes: ["user1", "user2", "user3"], // mock user IDs
+            comments: ["comment1", "comment2"], // mock comment IDs
+            createdAt: new Date("2023-06-20T14:30:00Z"),
+            updatedAt: new Date("2023-06-20T14:30:00Z"),
         },
         {
-            id: "2",
+            _id: "2",
             title: "Understanding TypeScript: A Comprehensive Guide",
             body: "TypeScript has become an essential tool for modern web development. This guide covers everything from basic types to advanced patterns. Learn how TypeScript can help catch errors early and improve your development experience...",
-            author: {
-                name: "Maria Chen",
-                avatar: "https://randomuser.me/api/portraits/women/32.jpg",
-            },
             image: "https://picsum.photos/id/1025/800/400",
-            likes: 95,
-            comments: 18,
-            publishedAt: "2023-05-15T09:15:00Z",
+            author: "Maria Chen",
+            likes: ["user4", "user5"],
+            comments: ["comment3", "comment4"],
+            createdAt: new Date("2023-05-15T09:15:00Z"),
+            updatedAt: new Date("2023-05-15T09:15:00Z"),
         },
         {
-            id: "3",
+            _id: "3",
             title: "Exploring the Power of Serverless Architecture",
             body: "Serverless computing eliminates the need for managing servers, allowing developers to focus on writing code. Learn how AWS Lambda, Vercel, and Cloudflare Workers are shaping the future of scalable apps...",
-            author: {
-                name: "Noah Kim",
-                avatar: "https://randomuser.me/api/portraits/men/21.jpg",
-            },
             image: "https://picsum.photos/id/1003/800/400",
-            likes: 67,
-            comments: 10,
-            publishedAt: "2024-01-08T12:45:00Z",
+            author: "Noah Kim",
+            likes: ["user6", "user7"],
+            comments: ["comment5"],
+            createdAt: new Date("2024-01-08T12:45:00Z"),
+            updatedAt: new Date("2024-01-08T12:45:00Z"),
         },
         {
-            id: "4",
+            _id: "4",
             title: "Why You Should Care About Web Performance in 2025",
             body: "Performance is a ranking factor, a UX must-have, and a conversion booster. Dive into lazy loading, image optimization, and hydration strategies every frontend dev should know...",
-            author: {
-                name: "Emily Park",
-                avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-            },
             image: "https://picsum.photos/id/1044/800/400",
-            likes: 143,
-            comments: 29,
-            publishedAt: "2024-12-03T16:00:00Z",
+            author: "Emily Park",
+            likes: ["user8", "user9", "user10"],
+            comments: ["comment6", "comment7", "comment8"],
+            createdAt: new Date("2024-12-03T16:00:00Z"),
+            updatedAt: new Date("2024-12-03T16:00:00Z"),
         },
         {
-            id: "5",
+            _id: "5",
             title: "Top 10 VS Code Extensions to Boost Productivity",
             body: "Visual Studio Code is one of the most popular code editors today. These extensions will help you debug faster, write cleaner code, and customize your workflow like a pro...",
-            author: {
-                name: "Leo Fernandez",
-                avatar: "https://randomuser.me/api/portraits/men/54.jpg",
-            },
             image: "https://picsum.photos/id/1050/800/400",
-            likes: 110,
-            comments: 21,
-            publishedAt: "2025-07-10T11:00:00Z",
+            author: "Leo Fernandez",
+            likes: ["user11", "user12"],
+            comments: ["comment9", "comment10"],
+            createdAt: new Date("2025-07-10T11:00:00Z"),
+            updatedAt: new Date("2025-07-10T11:00:00Z"),
         },
     ];
+
 
     const trendingTopics = [
         { name: "#ReactJS", posts: "12.5K" },
@@ -126,7 +120,9 @@ const Feed = () => {
                         {/* Right side - Navigation */}
                         <div className="flex items-center space-x-4">
                             <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Home className="h-5 w-5" />
+                                <Link to={"/"}>
+                                    <Home className="h-5 w-5" />
+                                </Link>
                             </Button>
                             <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Bookmark className="h-5 w-5" />
@@ -176,7 +172,7 @@ const Feed = () => {
                                     Photo
                                 </Button>
                                 <Button variant="ghost" className="text-gray-600 hover:bg-gray-100">
-                                    <Link className="h-4 w-4 mr-2" />
+                                    <Link2 className="h-4 w-4 mr-2" />
                                     Link
                                 </Button>
                             </div>
@@ -209,10 +205,9 @@ const Feed = () => {
                         >
                             {blogs.map((blog) => (
                                 <BlogCard
-                                    key={blog.id}
+                                    createdAt={blog.createdAt} key={blog._id}
                                     {...blog}
-                                    onLike={handleLike}
-                                />
+                                    onLike={handleLike} />
                             ))}
                         </motion.div>
                     </div>
@@ -327,7 +322,7 @@ const Feed = () => {
                                         Add Image
                                     </Button>
                                     <Button variant="ghost">
-                                        <Link className="h-4 w-4 mr-2" />
+                                        <Link2 className="h-4 w-4 mr-2" />
                                         Add Link
                                     </Button>
                                 </div>

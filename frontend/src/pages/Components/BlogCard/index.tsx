@@ -11,32 +11,31 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import type { IUser } from "@/types";
 
 interface BlogCardProps {
-    id: string;
+    _id: string
     title: string;
     body: string;
-    author: {
-        name: string;
-        avatar?: string;
-    };
-    image?: string;
-    likes: number;
-    comments: number;
-    publishedAt: string;
+    image: string;
+    author: IUser
+    likes: string[];
+    comments: string[];
+    createdAt: Date;
+    updatedAt: Date;
     onLike?: (id: string) => void;
     onSave?: (id: string) => void;
 }
 
 export const BlogCard: React.FC<BlogCardProps> = ({
-    id,
+    _id,
     title,
     body,
     author,
     image,
     likes,
     comments,
-    publishedAt,
+    createdAt,
     onLike,
     onSave,
 }) => {
@@ -46,20 +45,22 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     const [currentLikes, setCurrentLikes] = useState(likes);
 
     const handleLike = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const newLikeStatus = !isLiked;
-        setIsLiked(newLikeStatus);
-        setCurrentLikes(newLikeStatus ? currentLikes + 1 : currentLikes - 1);
-        if (onLike) onLike(id);
+        setIsLiked(true);
+        setCurrentLikes;
+        // e.stopPropagation();
+        // const newLikeStatus = !isLiked;
+        // setIsLiked(newLikeStatus);
+        // setCurrentLikes(newLikeStatus ? currentLikes + 1 : currentLikes - 1);
+        // if (onLike) onLike(_id);
     };
 
     const handleSave = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsSaved(!isSaved);
-        if (onSave) onSave(id);
+        if (onSave) onSave(_id);
     };
 
-    const formattedDate = new Date(publishedAt).toLocaleDateString("en-US", {
+    const formattedDate = new Date(createdAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -97,13 +98,14 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8 border-2 border-white shadow">
-                                        <AvatarImage src={author.avatar} />
+                                        <AvatarImage src={author.profilePicture} />
                                         <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">
-                                            {author.name.charAt(0).toUpperCase()}
+                                            {(author?.username?.[0] || "").toUpperCase()
+                                            }
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="text-sm font-medium">{author.name}</p>
+                                        <p className="text-sm font-medium">{author.username}</p>
                                         <div className="flex items-center gap-2">
                                             <p className="text-xs text-muted-foreground">
                                                 {formattedDate}
@@ -197,13 +199,14 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         <div className="flex items-center justify-between mb-6">
                                             <div className="flex items-center space-x-3">
                                                 <Avatar className="h-10 w-10 border-2 border-white shadow">
-                                                    <AvatarImage src={author.avatar} />
+                                                    <AvatarImage src={author.profilePicture} />
                                                     <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">
-                                                        {author.name.charAt(0).toUpperCase()}
+                                                        {(author?.username?.[0] || "").toUpperCase()
+                                                        }
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="font-medium">{author.name}</p>
+                                                    <p className="font-medium">{author.username}</p>
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-sm text-muted-foreground">
                                                             {formattedDate}

@@ -49,6 +49,7 @@ export const registerController = async (req: Request, res: Response) => {
         profilePicture: "",
         following: [],
         followers: [],
+        bio:"" , 
         saves: [],
         userBlogs: [],
     });
@@ -125,7 +126,8 @@ export const getUserInfo = async (req:IAuthRequest , res:Response) => {
                 msg:"User is not Authenticated !"
             })
         }
-        const response  = await User.findById(userId);
+        const response  = await User.findById(userId).populate("userBlogs") as IUser;
+        
         if (!response) return sendResponse(res , {
             statusCode:StatusCodes.BAD_REQUEST , 
             success:false , 

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 
 export const useUserProfileData = () => {
-    const { setIsAuthenticated } = useAppStore();
+    const { setIsAuthenticated} = useAppStore();
 
     return useQuery(
         {
@@ -20,8 +20,7 @@ export const useUserProfileData = () => {
                 }
                 return response.data.data as IUser;
             },
-            // enabled: isAuthenticated,
-            staleTime: 0,
+            staleTime: 5 * 60 * 1000,
             retry: 1,
             onSuccess: (data: IUser) => {
                 console.log("Fetched user:", data);

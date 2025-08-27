@@ -5,7 +5,7 @@ import { createBlogController, getFeedController, getUserBlogs, getUserSavedBlog
 const blogRouter = Router();
 
 // ? USER'S FEED
-blogRouter.get("/get-user-feed" , verifyToken , getFeedController);
+blogRouter.get("/feed" , verifyToken , getFeedController);
 
 // ? USER'S BLOGS
 blogRouter.get("/user-blogs" , verifyToken , getUserBlogs);

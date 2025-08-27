@@ -1,78 +1,230 @@
 import { motion } from "framer-motion";
 import { BlogCard } from "../Components/BlogCard";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link2, Image as ImageIcon } from "lucide-react";
+import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useAppStore } from "@/store";
 import type { IBlog } from "@/types";
-import { Link } from "react-router-dom";
+import usePostUserBlog from "@/customHooks/PostUserBlog";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");
     const { isCreatingBlog } = useAppStore();
     const [showCreateModal, setShowCreateModal] = useState(isCreatingBlog === true ? true : false);
+    const { mutateAsync, isPending } = usePostUserBlog();
 
+
+    const [title, setTitle] = useState<string>("");
+    const [body, setBody] = useState<string>("");
+    const [image, setImage] = useState<string>("");
+
+
+    const handleBlogPost = async () => {
+        setShowCreateModal(false);
+        await mutateAsync({ title, body, image })
+    }
+
+    if (isPending) return <Loader />
+
+    // * DUMMY DATA (I still have to add backend)
     const blogs: IBlog[] = [
         {
             _id: "1",
             title: "The Evolution of Modern Web Development",
-            body: "In the past decade, web development has undergone a radical transformation. From static HTML pages to dynamic single-page applications, the landscape has changed dramatically. Modern frameworks like React, Vue, and Angular have enabled developers to build complex applications with maintainable code...",
+            body: "In the past decade, web development has undergone a radical transformation. From static HTML pages to dynamic single-page applications...",
             image: "https://picsum.photos/id/1015/800/400",
-            author: "Alex Johnson",
-            likes: ["user1", "user2", "user3"], // mock user IDs
-            comments: ["comment1", "comment2"], // mock comment IDs
+            author: {
+                _id: "u1",
+                username: "alexjohnson",
+                email: "alex.johnson@example.com",
+                password: "hashedpassword",
+                bio: "Full-stack developer passionate about frontend performance.",
+                profilePicture: "https://randomuser.me/api/portraits/men/45.jpg",
+                followers: ["u2", "u3"],
+                following: ["u5"],
+                saves: [],
+                userBlogs: ["1"],
+                createdAt: new Date("2023-01-01"),
+                updatedAt: new Date("2023-06-01"),
+            },
+            likes: ["u2", "u3", "u4"],
+            comments: ["c1", "c2", "c3"],
             createdAt: new Date("2023-06-20T14:30:00Z"),
-            updatedAt: new Date("2023-06-20T14:30:00Z"),
+            updatedAt: new Date("2023-06-25T10:00:00Z"),
         },
         {
             _id: "2",
             title: "Understanding TypeScript: A Comprehensive Guide",
-            body: "TypeScript has become an essential tool for modern web development. This guide covers everything from basic types to advanced patterns. Learn how TypeScript can help catch errors early and improve your development experience...",
+            body: "TypeScript has become an essential tool for modern web development...",
             image: "https://picsum.photos/id/1025/800/400",
-            author: "Maria Chen",
-            likes: ["user4", "user5"],
-            comments: ["comment3", "comment4"],
+            author: {
+                _id: "u2",
+                username: "mariachen",
+                email: "maria.chen@example.com",
+                password: "hashedpassword",
+                bio: "Frontend engineer and TypeScript enthusiast.",
+                profilePicture: "https://randomuser.me/api/portraits/women/32.jpg",
+                followers: ["u1"],
+                following: ["u3"],
+                saves: [],
+                userBlogs: ["2"],
+                createdAt: new Date("2023-02-15"),
+                updatedAt: new Date("2023-05-01"),
+            },
+            likes: ["u1", "u3", "u5"],
+            comments: ["c4", "c5"],
             createdAt: new Date("2023-05-15T09:15:00Z"),
-            updatedAt: new Date("2023-05-15T09:15:00Z"),
+            updatedAt: new Date("2023-05-18T12:00:00Z"),
         },
         {
             _id: "3",
             title: "Exploring the Power of Serverless Architecture",
-            body: "Serverless computing eliminates the need for managing servers, allowing developers to focus on writing code. Learn how AWS Lambda, Vercel, and Cloudflare Workers are shaping the future of scalable apps...",
+            body: "Serverless computing eliminates the need for managing servers...",
             image: "https://picsum.photos/id/1003/800/400",
-            author: "Noah Kim",
-            likes: ["user6", "user7"],
-            comments: ["comment5"],
+            author: {
+                _id: "u3",
+                username: "noahkim",
+                email: "noah.kim@example.com",
+                password: "hashedpassword",
+                bio: "Cloud engineer exploring serverless and distributed systems.",
+                profilePicture: "https://randomuser.me/api/portraits/men/21.jpg",
+                followers: ["u1", "u2"],
+                following: ["u4"],
+                saves: [],
+                userBlogs: ["3"],
+                createdAt: new Date("2023-04-01"),
+                updatedAt: new Date("2023-07-01"),
+            },
+            likes: ["u1", "u2", "u4"],
+            comments: ["c6"],
             createdAt: new Date("2024-01-08T12:45:00Z"),
-            updatedAt: new Date("2024-01-08T12:45:00Z"),
+            updatedAt: new Date("2024-01-10T10:30:00Z"),
         },
         {
             _id: "4",
             title: "Why You Should Care About Web Performance in 2025",
-            body: "Performance is a ranking factor, a UX must-have, and a conversion booster. Dive into lazy loading, image optimization, and hydration strategies every frontend dev should know...",
+            body: "Performance is a ranking factor, a UX must-have, and a conversion booster...",
             image: "https://picsum.photos/id/1044/800/400",
-            author: "Emily Park",
-            likes: ["user8", "user9", "user10"],
-            comments: ["comment6", "comment7", "comment8"],
+            author: {
+                _id: "u4",
+                username: "emilypark",
+                email: "emily.park@example.com",
+                password: "hashedpassword",
+                bio: "Frontend performance advocate and UX researcher.",
+                profilePicture: "https://randomuser.me/api/portraits/women/68.jpg",
+                followers: ["u1", "u3"],
+                following: ["u5"],
+                saves: [],
+                userBlogs: ["4"],
+                createdAt: new Date("2023-06-01"),
+                updatedAt: new Date("2023-12-01"),
+            },
+            likes: ["u1", "u2", "u3", "u5"],
+            comments: ["c7", "c8"],
             createdAt: new Date("2024-12-03T16:00:00Z"),
-            updatedAt: new Date("2024-12-03T16:00:00Z"),
+            updatedAt: new Date("2024-12-05T11:00:00Z"),
         },
         {
             _id: "5",
             title: "Top 10 VS Code Extensions to Boost Productivity",
-            body: "Visual Studio Code is one of the most popular code editors today. These extensions will help you debug faster, write cleaner code, and customize your workflow like a pro...",
+            body: "Visual Studio Code is one of the most popular code editors today...",
             image: "https://picsum.photos/id/1050/800/400",
-            author: "Leo Fernandez",
-            likes: ["user11", "user12"],
-            comments: ["comment9", "comment10"],
+            author: {
+                _id: "u5",
+                username: "leofernandez",
+                email: "leo.fernandez@example.com",
+                password: "hashedpassword",
+                bio: "Productivity hacker & VS Code power user.",
+                profilePicture: "https://randomuser.me/api/portraits/men/54.jpg",
+                followers: ["u2"],
+                following: ["u1", "u3"],
+                saves: [],
+                userBlogs: ["5"],
+                createdAt: new Date("2023-08-01"),
+                updatedAt: new Date("2025-01-01"),
+            },
+            likes: ["u2", "u4", "u3"],
+            comments: ["c9", "c10", "c11"],
             createdAt: new Date("2025-07-10T11:00:00Z"),
-            updatedAt: new Date("2025-07-10T11:00:00Z"),
+            updatedAt: new Date("2025-07-12T09:30:00Z"),
+        },
+        // ✅ New blogs
+        {
+            _id: "6",
+            title: "Mastering React Hooks in 2025",
+            body: "Hooks like useState, useEffect, and useMemo remain essential for React developers...",
+            image: "https://picsum.photos/id/1070/800/400",
+            author: {
+                _id: "u6",
+                username: "sofiabrown",
+                email: "sofia.brown@example.com",
+                password: "hashedpassword",
+                bio: "React developer focusing on scalable frontend architecture.",
+                profilePicture: "https://randomuser.me/api/portraits/women/12.jpg",
+                followers: ["u1", "u5"],
+                following: ["u2"],
+                saves: [],
+                userBlogs: ["6"],
+                createdAt: new Date("2024-03-12"),
+                updatedAt: new Date("2025-02-01"),
+            },
+            likes: ["u1", "u3", "u4", "u5"],
+            comments: ["c12", "c13"],
+            createdAt: new Date("2025-02-10T15:20:00Z"),
+            updatedAt: new Date("2025-02-12T10:00:00Z"),
+        },
+        {
+            _id: "7",
+            title: "AI-Powered Development Tools: The Future of Coding",
+            body: "AI tools like GitHub Copilot and ChatGPT are transforming how developers code...",
+            image: "https://picsum.photos/id/1084/800/400",
+            author: {
+                _id: "u7",
+                username: "ryantaylor",
+                email: "ryan.taylor@example.com",
+                password: "hashedpassword",
+                bio: "Exploring the intersection of AI and software engineering.",
+                profilePicture: "https://randomuser.me/api/portraits/men/36.jpg",
+                followers: ["u2", "u6"],
+                following: ["u1"],
+                saves: [],
+                userBlogs: ["7"],
+                createdAt: new Date("2024-05-01"),
+                updatedAt: new Date("2025-04-01"),
+            },
+            likes: ["u1", "u2", "u3", "u5", "u6"],
+            comments: ["c14", "c15", "c16", "c17"],
+            createdAt: new Date("2025-04-15T18:00:00Z"),
+            updatedAt: new Date("2025-04-18T12:00:00Z"),
+        },
+        {
+            _id: "8",
+            title: "GraphQL vs REST: Which API Style Wins in 2025?",
+            body: "Developers continue debating REST vs GraphQL. This article explores pros and cons of each...",
+            image: "https://picsum.photos/id/1099/800/400",
+            author: {
+                _id: "u8",
+                username: "oliviawright",
+                email: "olivia.wright@example.com",
+                password: "hashedpassword",
+                bio: "Backend engineer specialized in GraphQL and API design.",
+                profilePicture: "https://randomuser.me/api/portraits/women/29.jpg",
+                followers: ["u3", "u6", "u7"],
+                following: ["u4"],
+                saves: [],
+                userBlogs: ["8"],
+                createdAt: new Date("2024-07-10"),
+                updatedAt: new Date("2025-05-20"),
+            },
+            likes: ["u1", "u2", "u3", "u4", "u5", "u7"],
+            comments: ["c18", "c19"],
+            createdAt: new Date("2025-05-21T09:45:00Z"),
+            updatedAt: new Date("2025-05-23T08:00:00Z"),
         },
     ];
-
 
     const trendingTopics = [
         { name: "#ReactJS", posts: "12.5K" },
@@ -93,6 +245,7 @@ const Feed = () => {
         // Add your like logic here
     };
 
+    
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Sticky Navbar */}
@@ -120,9 +273,7 @@ const Feed = () => {
                         {/* Right side - Navigation */}
                         <div className="flex items-center space-x-4">
                             <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Link to={"/"}>
-                                    <Home className="h-5 w-5" />
-                                </Link>
+                                <Home className="h-5 w-5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Bookmark className="h-5 w-5" />
@@ -172,7 +323,7 @@ const Feed = () => {
                                     Photo
                                 </Button>
                                 <Button variant="ghost" className="text-gray-600 hover:bg-gray-100">
-                                    <Link2 className="h-4 w-4 mr-2" />
+                                    <Link className="h-4 w-4 mr-2" />
                                     Link
                                 </Button>
                             </div>
@@ -205,7 +356,7 @@ const Feed = () => {
                         >
                             {blogs.map((blog) => (
                                 <BlogCard
-                                    createdAt={blog.createdAt} key={blog._id}
+                                    key={blog._id}
                                     {...blog}
                                     onLike={handleLike} />
                             ))}
@@ -297,7 +448,10 @@ const Feed = () => {
                         </div>
                         <div className="p-4 overflow-y-auto">
                             <div className="space-y-4">
-                                <Input placeholder="Blog Title" className="text-xl font-bold border-none focus-visible:ring-0" />
+                                <Input
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Blog Title"
+                                    className="text-xl font-bold border-none focus-visible:ring-0" />
                                 <div className="flex items-center space-x-3">
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
@@ -313,16 +467,19 @@ const Feed = () => {
                                     </div>
                                 </div>
                                 <textarea
+                                    value={body}
+                                    onChange={(e) => setBody(e.target.value)}
                                     placeholder="Write your blog content here..."
                                     className="w-full min-h-[200px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 />
                                 <div className="flex items-center gap-2">
                                     <Button variant="ghost">
-                                        <ImageIcon className="h-4 w-4 mr-2" />
+                                        <ImageIcon
+                                            className="h-4 w-4 mr-2" />
                                         Add Image
                                     </Button>
                                     <Button variant="ghost">
-                                        <Link2 className="h-4 w-4 mr-2" />
+                                        <Link className="h-4 w-4 mr-2" />
                                         Add Link
                                     </Button>
                                 </div>
@@ -332,7 +489,9 @@ const Feed = () => {
                             <Button variant="outline" onClick={() => setShowCreateModal(false)}>
                                 Cancel
                             </Button>
-                            <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                            <Button
+                                onClick={handleBlogPost}
+                                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
                                 Publish
                             </Button>
                         </div>

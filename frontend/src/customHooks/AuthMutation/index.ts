@@ -1,4 +1,5 @@
 import { AUTH_ENDPOINTS } from "@/constants/constants";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAppStore } from "@/store";
 import type { IUser } from "@/types";
 import apiClient from "@/utility/axiosClient";
@@ -20,7 +21,7 @@ const useAuthMutation = (isSignUp: boolean) => {
         onSuccess: (data: IUser) => {
             if (data === undefined || null) return;
             console.log(data);
-            queryClient.invalidateQueries({queryKey:["profile"]})
+            queryClient.invalidateQueries({queryKey:QUERY_KEYS.PROFILE.ME})
             setIsAuthenticated(true);
             toast.success(isSignUp ? "Registerd Successfully!" : "Logged In Successfully!");
             return setTimeout(() => {

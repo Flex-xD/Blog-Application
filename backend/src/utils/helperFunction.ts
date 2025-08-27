@@ -1,4 +1,5 @@
 import { Response } from "express"
+import { logger } from "../utils"
 
 interface ApiResponse<T> {
     statusCode: number,
@@ -34,12 +35,12 @@ export const sendError = (res: Response, {
     error?: unknown;
 }) => {
     const errorMessage = error instanceof Error ? error.message : message;
-    console.error("❌ Error:", errorMessage);
+    logger.error("❌ Error:", errorMessage);
 
     return res.status(statusCode).json({
         statusCode,
         success: false,
-        message: errorMessage,
+        msg: errorMessage,
         data: null,
     });
 };

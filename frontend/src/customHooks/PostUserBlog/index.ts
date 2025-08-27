@@ -1,0 +1,40 @@
+import { BLOG_ENDPOINTS } from "@/constants/constants";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import type { IBlog } from "@/types";
+import apiClient from "@/utility/axiosClient";
+import getErrorMessage from "@/utility/errorUtility";
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { AxiosError } from "axios";
+import { toast } from "sonner";
+
+interface IUserBlog {
+    title: string,
+    body: string,
+    image?: string
+}
+
+const usePostUserBlog = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (blog: IUserBlog) => {
+            const imageToBeUploaded = blog.image ? blog.image : undefined;
+            const response = await apiClient.post(BLOG_ENDPOINTS.CREATE_BLOG, {
+                ...blog,
+                imageToBeUploaded
+            });
+            return response.data
+        },
+        onSuccess: (data: IBlog) => {
+            if (!data) return;
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE.ME });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BLOGS.ALL });
+            console.log(`Blog successfully Created : ${data}`);
+            toast.success("Blog Posted Successfully !");
+        },
+        onError: (error: AxiosError | Error) => {
+            return toast.error(getErrorMessage(error));
+        }
+    })
+}
+
+export default usePostUserBlog;

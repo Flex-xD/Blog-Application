@@ -44,8 +44,8 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     const [isSaved, setIsSaved] = useState(false);
     const [currentLikes, setCurrentLikes] = useState(likes);
 
-    const handleLike = (e: React.MouseEvent) => {
-        setIsLiked(true);
+    const handleLike = () => {
+        setIsLiked(!isLiked);
         setCurrentLikes;
         // e.stopPropagation();
         // const newLikeStatus = !isLiked;
@@ -148,7 +148,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         <Heart
                                             className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
                                         />
-                                        <span>{currentLikes}</span>
+                                        <span>{currentLikes.length}</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -156,7 +156,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         className="h-8 px-3 gap-2 text-sm rounded-full"
                                     >
                                         <MessageCircle className="h-4 w-4" />
-                                        <span>{comments}</span>
+                                        <span>{comments.length}</span>
                                     </Button>
                                 </div>
                                 <Button
@@ -256,14 +256,14 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                             <Heart
                                                 className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
                                             />
-                                            <span>{currentLikes} likes</span>
+                                            <span>{currentLikes.length} likes</span>
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             className="flex items-center space-x-2"
                                         >
                                             <MessageCircle className="h-5 w-5" />
-                                            <span>{comments} comments</span>
+                                            <span>{comments.length} comments</span>
                                         </Button>
                                     </div>
                                 </div>

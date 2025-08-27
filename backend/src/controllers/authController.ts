@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import User, { IUser } from "../models/userModel";
 import { StatusCodes } from "http-status-codes";
 import { authControllerType } from "../types/index.js";
-import { sendError, sendResponse } from "../middleware/helperFunction";
+import { sendError, sendResponse } from "../utils/helperFunction";
 import { IAuthRequest } from "../middleware/authMiddleware";
 
 const maxage = 3 * 24 * 60 * 60 * 1000;
@@ -13,7 +13,8 @@ const createtoken = async (userId: string, email: string) => {
 }
 
 export const registerController = async (req: Request, res: Response) => {
-
+    try {
+        
     const { email, username, password } = req.body as authControllerType;
     if (!email || !username || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields !" });
@@ -67,6 +68,10 @@ export const registerController = async (req: Request, res: Response) => {
         msg: "User Registered !",
         data: user
     })
+    } catch (error) {
+        console.log(error);
+        return sendError(res , {error});
+    }
 }
 
 export const loginController = async (req: Request, res: Response) => {
@@ -80,6 +85,8 @@ export const loginController = async (req: Request, res: Response) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "User does not exist !" });
         }
         const match = await bcrypt.compare(password, user.password);
+        console.log(user.password)
+        console.log(match);
         if (!match) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid credentials !" });
         }
@@ -116,31 +123,3 @@ export const logoutController = async (res: Response) => {
     }
 }
 
-export const getUserInfo = async (req:IAuthRequest , res:Response) => {
-    try {
-        const {userId} = req;
-        if (!userId) {
-            sendResponse(res , {
-                statusCode:StatusCodes.UNAUTHORIZED , 
-                success:false , 
-                msg:"User is not Authenticated !"
-            })
-        }
-        const response  = await User.findById(userId).populate("userBlogs") as IUser;
-        
-        if (!response) return sendResponse(res , {
-            statusCode:StatusCodes.BAD_REQUEST , 
-            success:false , 
-            msg:"There was an issue fetching user data !"
-        })
-        sendResponse(res , {
-            statusCode:StatusCodes.OK , 
-            success:true , 
-            msg:"User data fetched successfully !" , 
-            data:response
-        })
-    } catch (error) {
-        console.log({ error });
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Internal Server Error !" });
-    }
-}

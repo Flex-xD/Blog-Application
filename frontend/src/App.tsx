@@ -7,6 +7,7 @@ import Feed from './pages/FEED';
 import WithAuth from './pages/AUTH/components/WithAuthWrapper';
 import { useUserProfileData } from './customHooks/UserDataFetching';
 import { Loader } from 'lucide-react';
+import Social from './pages/Social';
 
 interface IRoute {
   path: string,
@@ -21,6 +22,7 @@ const routes: IRoute[] = [
   { path: "/auth", isPrivate: false, redirectTo: "/", element: <Auth />, allowAuthenticated: false },
   { path: "/profile", isPrivate: true, redirectTo: "/auth", element: <UserProfilePage /> },
   { path: "/feed", isPrivate: true, redirectTo: "/auth", element: <Feed /> },
+  { path: "/social", isPrivate: true, redirectTo: "/auth", element: <Social /> },
 ]
 
 const App = () => {

@@ -1,5 +1,5 @@
 import { Request, response, Response } from "express"
-import { sendError, sendResponse } from "../middleware/helperFunction";
+import { sendError, sendResponse } from "../utils/helperFunction";
 import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../models/userModel";
 import Blog, { IBlog } from "../models/blogModel";
@@ -127,7 +127,7 @@ export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
                 msg: "User not found",
             });
         }
-        
+
     } catch (error) {
         sendError(res, { error });
     }

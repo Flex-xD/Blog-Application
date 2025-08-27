@@ -2,6 +2,7 @@ export interface IUser {
     username: string;
     email: string;
     password: string;
+    _id: string,
     bio: string,
     profilePicture?: string;
     followers: string[];
@@ -17,9 +18,9 @@ export interface IBlog {
     title: string;
     body: string;
     image: string;
-    author: string
+    author: IUser;
     likes: string[];
     comments: string[];
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }

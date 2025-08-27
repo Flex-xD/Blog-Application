@@ -6,6 +6,8 @@ import connectDB from "./config/config";
 import cors from "cors";
 import blogRouter from "./routes/blogRoutes";
 import LLMRouter from "./routes/LLMProcessing";
+import userActivityRouter from "./routes/userActivityRoutes";
+
 
 dotenv.config();
 
@@ -23,6 +25,7 @@ app.use(cors(corsOptions));
 app.use("/api/auth" , authRouter);
 app.use("/api/llm" , LLMRouter);
 app.use("/api/blog" , blogRouter);
+app.use("/api/user" , userActivityRouter);
 
 
 app.listen(port , () => {

@@ -34,7 +34,7 @@ const Navbar = () => {
                 <Link to={"/feed"} className="text-gray-600 hover:bg-gray-100" onClick={() => setIsCreatingBlog(false)}>
                     Explore
                 </Link>
-                <Link to={"/feed"} className="text-gray-600 hover:bg-gray-100" onClick={() => setIsCreatingBlog(false)}>
+                <Link to={"/social"} className="text-gray-600 hover:bg-gray-100" onClick={() => setIsCreatingBlog(false)}>
                     Social
                 </Link>
 

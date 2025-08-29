@@ -9,9 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { BlogCard } from "@/pages/Components/BlogCard";
 import type { IBlog } from "@/types";
+import Navbar from "@/pages/Components/Navbar";
 
 interface UserProfileProps {
     user: {
+        _id:string
         username: string;
         email: string;
         password: string;
@@ -43,7 +45,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
     // const { isAuthenticated } = useAppStore();
 
-
     if (isLoading) {
         return <ProfileSkeleton />;
     }
@@ -51,6 +52,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Profile Header */}
+            <Navbar/>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

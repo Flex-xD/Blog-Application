@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import Navbar from '../Components/Navbar';
 
 // Mock data types
 type User = {
@@ -180,44 +181,18 @@ const SocialComponent = () => {
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mb-8"
-            >
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    Social Hub
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                    Connect with creators and discover content
-                </p>
-            </motion.div>
-
-            {/* Search Bar */}
-            <motion.div
-                whileHover={{ scale: 1.01 }}
-                className="relative mb-8 max-w-2xl"
-            >
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <Input
-                    type="text"
-                    className="pl-10"
-                    placeholder="Search for people or topics..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </motion.div>
+            <Navbar />
 
             {/* Main Content */}
             <Tabs defaultValue="discover" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-md mb-6">
-                    <TabsTrigger value="discover">Discover</TabsTrigger>
-                    <TabsTrigger value="following">Following</TabsTrigger>
-                    <TabsTrigger value="trending">Trending</TabsTrigger>
-                </TabsList>
+
+                <div className='flex items-center justify-center p-2'>
+                    <TabsList className="grid w-full grid-cols-3 max-w-md mb-6">
+                        <TabsTrigger value="discover">Discover</TabsTrigger>
+                        <TabsTrigger value="following">Following</TabsTrigger>
+                        <TabsTrigger value="trending">Trending</TabsTrigger>
+                    </TabsList>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - User Suggestions & Trending Topics */}

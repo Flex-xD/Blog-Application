@@ -7,7 +7,8 @@ import { Toaster } from 'sonner'
 const queryCleint = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 min
+      staleTime: 5 * 60 * 1000, // 5 min , 
+
       retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -17,8 +18,6 @@ const queryCleint = new QueryClient({
     }
   }
 })
-
-// const {data , isLoading} = useUserProfileData();
 
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryCleint}>

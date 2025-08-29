@@ -1,333 +1,56 @@
 import { motion } from "framer-motion";
 import { BlogCard } from "../Components/BlogCard";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Search, Bell, Bookmark, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader } from "lucide-react";
+import { PenSquare, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useAppStore } from "@/store";
-import type { IBlog } from "@/types";
 import usePostUserBlog from "@/customHooks/PostUserBlog";
+import useUserFeedData from "@/customHooks/UserFeedFetching";
+import { suggestedUsers, trendingTopics } from "@/constants/dummyData";
+import { CreateBlogCard } from "./components/createBlogCard";
+import { useUserProfileData } from "@/customHooks/UserDataFetching";
+import { FeedNavbar } from "../Components/FeedNavbar";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");
     const { isCreatingBlog } = useAppStore();
     const [showCreateModal, setShowCreateModal] = useState(isCreatingBlog === true ? true : false);
-    const { mutateAsync, isPending } = usePostUserBlog();
-
 
     const [title, setTitle] = useState<string>("");
     const [body, setBody] = useState<string>("");
     const [image, setImage] = useState<string>("");
 
+    const { data: userData, isPending: userDataPending } = useUserProfileData();
+    const { data: userFeedData, isPending: userFeedDataPending, error: userFeedDataError } = useUserFeedData(userData?._id || "");
+    const { mutateAsync: postBlog, isPending: postingBlogPending, error: postBlogError } = usePostUserBlog();
+    console.log("User feed data : ", userFeedData, "user feed error : ", userFeedDataError, "userPostBlogError : ", postBlogError);
 
     const handleBlogPost = async () => {
         setShowCreateModal(false);
-        await mutateAsync({ title, body, image })
+        await postBlog({ title, body, image })
+        setTitle("");
+        setBody("");
+        setImage("");
     }
-
-    if (isPending) return <Loader />
-
-    // * DUMMY DATA (I still have to add backend)
-    const blogs: IBlog[] = [
-        {
-            _id: "1",
-            title: "The Evolution of Modern Web Development",
-            body: "In the past decade, web development has undergone a radical transformation. From static HTML pages to dynamic single-page applications...",
-            image: "https://picsum.photos/id/1015/800/400",
-            author: {
-                _id: "u1",
-                username: "alexjohnson",
-                email: "alex.johnson@example.com",
-                password: "hashedpassword",
-                bio: "Full-stack developer passionate about frontend performance.",
-                profilePicture: "https://randomuser.me/api/portraits/men/45.jpg",
-                followers: ["u2", "u3"],
-                following: ["u5"],
-                saves: [],
-                userBlogs: ["1"],
-                createdAt: new Date("2023-01-01"),
-                updatedAt: new Date("2023-06-01"),
-            },
-            likes: ["u2", "u3", "u4"],
-            comments: ["c1", "c2", "c3"],
-            createdAt: new Date("2023-06-20T14:30:00Z"),
-            updatedAt: new Date("2023-06-25T10:00:00Z"),
-        },
-        {
-            _id: "2",
-            title: "Understanding TypeScript: A Comprehensive Guide",
-            body: "TypeScript has become an essential tool for modern web development...",
-            image: "https://picsum.photos/id/1025/800/400",
-            author: {
-                _id: "u2",
-                username: "mariachen",
-                email: "maria.chen@example.com",
-                password: "hashedpassword",
-                bio: "Frontend engineer and TypeScript enthusiast.",
-                profilePicture: "https://randomuser.me/api/portraits/women/32.jpg",
-                followers: ["u1"],
-                following: ["u3"],
-                saves: [],
-                userBlogs: ["2"],
-                createdAt: new Date("2023-02-15"),
-                updatedAt: new Date("2023-05-01"),
-            },
-            likes: ["u1", "u3", "u5"],
-            comments: ["c4", "c5"],
-            createdAt: new Date("2023-05-15T09:15:00Z"),
-            updatedAt: new Date("2023-05-18T12:00:00Z"),
-        },
-        {
-            _id: "3",
-            title: "Exploring the Power of Serverless Architecture",
-            body: "Serverless computing eliminates the need for managing servers...",
-            image: "https://picsum.photos/id/1003/800/400",
-            author: {
-                _id: "u3",
-                username: "noahkim",
-                email: "noah.kim@example.com",
-                password: "hashedpassword",
-                bio: "Cloud engineer exploring serverless and distributed systems.",
-                profilePicture: "https://randomuser.me/api/portraits/men/21.jpg",
-                followers: ["u1", "u2"],
-                following: ["u4"],
-                saves: [],
-                userBlogs: ["3"],
-                createdAt: new Date("2023-04-01"),
-                updatedAt: new Date("2023-07-01"),
-            },
-            likes: ["u1", "u2", "u4"],
-            comments: ["c6"],
-            createdAt: new Date("2024-01-08T12:45:00Z"),
-            updatedAt: new Date("2024-01-10T10:30:00Z"),
-        },
-        {
-            _id: "4",
-            title: "Why You Should Care About Web Performance in 2025",
-            body: "Performance is a ranking factor, a UX must-have, and a conversion booster...",
-            image: "https://picsum.photos/id/1044/800/400",
-            author: {
-                _id: "u4",
-                username: "emilypark",
-                email: "emily.park@example.com",
-                password: "hashedpassword",
-                bio: "Frontend performance advocate and UX researcher.",
-                profilePicture: "https://randomuser.me/api/portraits/women/68.jpg",
-                followers: ["u1", "u3"],
-                following: ["u5"],
-                saves: [],
-                userBlogs: ["4"],
-                createdAt: new Date("2023-06-01"),
-                updatedAt: new Date("2023-12-01"),
-            },
-            likes: ["u1", "u2", "u3", "u5"],
-            comments: ["c7", "c8"],
-            createdAt: new Date("2024-12-03T16:00:00Z"),
-            updatedAt: new Date("2024-12-05T11:00:00Z"),
-        },
-        {
-            _id: "5",
-            title: "Top 10 VS Code Extensions to Boost Productivity",
-            body: "Visual Studio Code is one of the most popular code editors today...",
-            image: "https://picsum.photos/id/1050/800/400",
-            author: {
-                _id: "u5",
-                username: "leofernandez",
-                email: "leo.fernandez@example.com",
-                password: "hashedpassword",
-                bio: "Productivity hacker & VS Code power user.",
-                profilePicture: "https://randomuser.me/api/portraits/men/54.jpg",
-                followers: ["u2"],
-                following: ["u1", "u3"],
-                saves: [],
-                userBlogs: ["5"],
-                createdAt: new Date("2023-08-01"),
-                updatedAt: new Date("2025-01-01"),
-            },
-            likes: ["u2", "u4", "u3"],
-            comments: ["c9", "c10", "c11"],
-            createdAt: new Date("2025-07-10T11:00:00Z"),
-            updatedAt: new Date("2025-07-12T09:30:00Z"),
-        },
-        // ✅ New blogs
-        {
-            _id: "6",
-            title: "Mastering React Hooks in 2025",
-            body: "Hooks like useState, useEffect, and useMemo remain essential for React developers...",
-            image: "https://picsum.photos/id/1070/800/400",
-            author: {
-                _id: "u6",
-                username: "sofiabrown",
-                email: "sofia.brown@example.com",
-                password: "hashedpassword",
-                bio: "React developer focusing on scalable frontend architecture.",
-                profilePicture: "https://randomuser.me/api/portraits/women/12.jpg",
-                followers: ["u1", "u5"],
-                following: ["u2"],
-                saves: [],
-                userBlogs: ["6"],
-                createdAt: new Date("2024-03-12"),
-                updatedAt: new Date("2025-02-01"),
-            },
-            likes: ["u1", "u3", "u4", "u5"],
-            comments: ["c12", "c13"],
-            createdAt: new Date("2025-02-10T15:20:00Z"),
-            updatedAt: new Date("2025-02-12T10:00:00Z"),
-        },
-        {
-            _id: "7",
-            title: "AI-Powered Development Tools: The Future of Coding",
-            body: "AI tools like GitHub Copilot and ChatGPT are transforming how developers code...",
-            image: "https://picsum.photos/id/1084/800/400",
-            author: {
-                _id: "u7",
-                username: "ryantaylor",
-                email: "ryan.taylor@example.com",
-                password: "hashedpassword",
-                bio: "Exploring the intersection of AI and software engineering.",
-                profilePicture: "https://randomuser.me/api/portraits/men/36.jpg",
-                followers: ["u2", "u6"],
-                following: ["u1"],
-                saves: [],
-                userBlogs: ["7"],
-                createdAt: new Date("2024-05-01"),
-                updatedAt: new Date("2025-04-01"),
-            },
-            likes: ["u1", "u2", "u3", "u5", "u6"],
-            comments: ["c14", "c15", "c16", "c17"],
-            createdAt: new Date("2025-04-15T18:00:00Z"),
-            updatedAt: new Date("2025-04-18T12:00:00Z"),
-        },
-        {
-            _id: "8",
-            title: "GraphQL vs REST: Which API Style Wins in 2025?",
-            body: "Developers continue debating REST vs GraphQL. This article explores pros and cons of each...",
-            image: "https://picsum.photos/id/1099/800/400",
-            author: {
-                _id: "u8",
-                username: "oliviawright",
-                email: "olivia.wright@example.com",
-                password: "hashedpassword",
-                bio: "Backend engineer specialized in GraphQL and API design.",
-                profilePicture: "https://randomuser.me/api/portraits/women/29.jpg",
-                followers: ["u3", "u6", "u7"],
-                following: ["u4"],
-                saves: [],
-                userBlogs: ["8"],
-                createdAt: new Date("2024-07-10"),
-                updatedAt: new Date("2025-05-20"),
-            },
-            likes: ["u1", "u2", "u3", "u4", "u5", "u7"],
-            comments: ["c18", "c19"],
-            createdAt: new Date("2025-05-21T09:45:00Z"),
-            updatedAt: new Date("2025-05-23T08:00:00Z"),
-        },
-    ];
-
-    const trendingTopics = [
-        { name: "#ReactJS", posts: "12.5K" },
-        { name: "#TypeScript", posts: "8.2K" },
-        { name: "#NextJS", posts: "6.7K" },
-        { name: "#WebDev", posts: "5.9K" },
-        { name: "#AI", posts: "15.3K" },
-    ];
-
-    const suggestedUsers = [
-        { name: "Sarah Williams", avatar: "https://randomuser.me/api/portraits/women/44.jpg", role: "Frontend Lead" },
-        { name: "Michael Chen", avatar: "https://randomuser.me/api/portraits/men/33.jpg", role: "UX Engineer" },
-        { name: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/65.jpg", role: "React Specialist" },
-    ];
-
     const handleLike = (id: string) => {
         console.log(`Liked blog ${id}`);
         // Add your like logic here
     };
 
-    
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Sticky Navbar */}
-            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        {/* Left side - Logo */}
-                        <div className="flex items-center">
-                            <PenSquare className="h-6 w-6 text-indigo-600" />
-                            <span className="ml-2 text-xl font-bold text-gray-900">BlogCraft</span>
-                        </div>
-
-                        {/* Center - Search */}
-                        <div className="flex-1 max-w-xl mx-4 hidden md:block">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <Input
-                                    type="search"
-                                    placeholder="Search blogs, topics, or people..."
-                                    className="pl-10 rounded-full bg-gray-100 border-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Right side - Navigation */}
-                        <div className="flex items-center space-x-4">
-                            <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Home className="h-5 w-5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Bookmark className="h-5 w-5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Bell className="h-5 w-5" />
-                            </Button>
-                            <Avatar className="h-8 w-8 border-2 border-indigo-100">
-                                <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
-                                <AvatarFallback>ME</AvatarFallback>
-                            </Avatar>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <FeedNavbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main Content */}
                     <div className="flex-1">
                         {/* Create Blog Card */}
-                        <motion.div
-                            whileHover={{ y: -2 }}
-                            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6"
-                        >
-                            <div className="flex items-start space-x-3">
-                                <Avatar className="h-10 w-10">
-                                    <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
-                                    <AvatarFallback>ME</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                    <button
-                                        onClick={() => setShowCreateModal(true)}
-                                        className="w-full text-left bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2 text-gray-600 transition-colors"
-                                    >
-                                        What's on your mind today?
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
-                                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100">
-                                    <PenSquare className="h-4 w-4 mr-2" />
-                                    Write
-                                </Button>
-                                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100">
-                                    <ImageIcon className="h-4 w-4 mr-2" />
-                                    Photo
-                                </Button>
-                                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100">
-                                    <Link className="h-4 w-4 mr-2" />
-                                    Link
-                                </Button>
-                            </div>
-                        </motion.div>
+                        <CreateBlogCard setShowCreateModel={setShowCreateModal} />
 
                         {/* Feed Tabs */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
@@ -348,18 +71,26 @@ const Feed = () => {
                         </Tabs>
 
                         {/* Blog List */}
+                        {/* Blog List */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5 }}
                             className="space-y-6"
                         >
-                            {blogs.map((blog) => (
-                                <BlogCard
-                                    key={blog._id}
-                                    {...blog}
-                                    onLike={handleLike} />
-                            ))}
+                            {userFeedDataError ? (
+                                <p>Error loading feed: {userFeedDataError.message}</p>
+                            ) : userDataPending || userFeedDataPending ? (
+                                <div className="h-screen w-screen flex items-center justify-center">
+                                    <Loader2 />
+                                </div>
+                            ) : userFeedData?.length > 0 ? (  // Simplified check since it's always an array
+                                userFeedData.map((blog) => (
+                                    <BlogCard key={blog._id} {...blog} onLike={handleLike} />
+                                ))
+                            ) : (
+                                <p>No blogs available</p>
+                            )}
                         </motion.div>
                     </div>
 
@@ -430,7 +161,7 @@ const Feed = () => {
             </div>
 
             {/* Create Blog Modal */}
-            {showCreateModal && (
+            {postingBlogPending ? <div className="h-screen w-screen flex items-center justify-center"><Loader2 /></div> : showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}

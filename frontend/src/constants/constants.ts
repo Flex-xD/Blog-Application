@@ -11,5 +11,6 @@ export const AUTH_ENDPOINTS = {
 }
 
 export const BLOG_ENDPOINTS = {
-    CREATE_BLOG:`${BASE_URL}/blog/create`
+    CREATE_BLOG:`${BASE_URL}/blog/create` , 
+    USER_FEED:`${BASE_URL}/blog/feed` ,
 }

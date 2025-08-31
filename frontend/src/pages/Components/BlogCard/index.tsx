@@ -11,14 +11,17 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import type { IUser } from "@/types";
 
 interface BlogCardProps {
     _id: string
     title: string;
     body: string;
     image: string;
-    author: IUser
+    authorDetails: {
+        username:string , 
+        _id:string , 
+        profilePicture:string
+    }
     likes: string[];
     comments: string[];
     createdAt: Date;
@@ -31,7 +34,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     _id,
     title,
     body,
-    author,
+    authorDetails,
     image,
     likes,
     comments,
@@ -98,14 +101,14 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8 border-2 border-white shadow">
-                                        <AvatarImage src={author.profilePicture} />
+                                        <AvatarImage src={authorDetails.profilePicture} />
                                         <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">
-                                            {(author?.username?.[0] || "").toUpperCase()
+                                            {(authorDetails?.username?.[0] || "").toUpperCase()
                                             }
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="text-sm font-medium">{author.username}</p>
+                                        <p className="text-sm font-medium">{authorDetails.username}</p>
                                         <div className="flex items-center gap-2">
                                             <p className="text-xs text-muted-foreground">
                                                 {formattedDate}
@@ -199,14 +202,14 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         <div className="flex items-center justify-between mb-6">
                                             <div className="flex items-center space-x-3">
                                                 <Avatar className="h-10 w-10 border-2 border-white shadow">
-                                                    <AvatarImage src={author.profilePicture} />
+                                                    <AvatarImage src={authorDetails.profilePicture} />
                                                     <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">
-                                                        {(author?.username?.[0] || "").toUpperCase()
+                                                        {(authorDetails?.username?.[0] || "").toUpperCase()
                                                         }
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="font-medium">{author.username}</p>
+                                                    <p className="font-medium">{authorDetails.username}</p>
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-sm text-muted-foreground">
                                                             {formattedDate}

@@ -18,7 +18,11 @@ export interface IBlog {
     title: string;
     body: string;
     image: string;
-    author: IUser;
+    authorDetails: {
+        username:string , 
+        _id:string , 
+        profilePicture:string
+    };
     likes: string[];
     comments: string[];
     createdAt: Date;

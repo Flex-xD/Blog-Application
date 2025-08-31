@@ -35,6 +35,7 @@ export const sendError = (res: Response, {
     error?: unknown;
 }) => {
     const errorMessage = error instanceof Error ? error.message : message;
+    console.log(error);
     logger.error("❌ Error:", errorMessage);
 
     return res.status(statusCode).json({

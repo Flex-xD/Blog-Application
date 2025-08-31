@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-    Search,
     Users,
     TrendingUp,
     MessageCircle,
@@ -14,7 +13,6 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -187,7 +185,7 @@ const SocialComponent = () => {
             <Tabs defaultValue="discover" className="w-full">
 
                 <div className='flex items-center justify-center p-2'>
-                    <TabsList className="grid w-full grid-cols-3 max-w-md mb-6">
+                    <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto bg-gray-100 p-1 h-auto rounded-xl">
                         <TabsTrigger value="discover">Discover</TabsTrigger>
                         <TabsTrigger value="following">Following</TabsTrigger>
                         <TabsTrigger value="trending">Trending</TabsTrigger>

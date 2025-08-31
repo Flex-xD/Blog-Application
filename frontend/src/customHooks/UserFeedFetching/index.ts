@@ -21,11 +21,12 @@ interface FeedResponse {
 }
 
 const useUserFeedData = (userId: string) => {
-    return useQuery<IBlog[], AxiosError>({
+    return useQuery<FeedResponse , AxiosError>({
         queryKey: QUERY_KEYS.BLOGS.FEED(userId),
         queryFn: async () => {
-            const response = await apiClient.get<FeedResponse>(`${BLOG_ENDPOINTS.USER_FEED}/${userId}`);
-            return response.data?.data?.blogs || [];
+            const response = await apiClient.get<FeedResponse>(`${BLOG_ENDPOINTS.USER_FEED}`);
+            console.log("This is the response of the feedData : " , response.data.data);
+            return response.data || [];
         },
         enabled: !!userId,
         staleTime: 5 * 60 * 1000,

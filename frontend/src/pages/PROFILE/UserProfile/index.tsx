@@ -13,7 +13,7 @@ import Navbar from "@/pages/Components/Navbar";
 
 interface UserProfileProps {
     user: {
-        _id:string
+        _id: string
         username: string;
         email: string;
         password: string;
@@ -52,7 +52,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Profile Header */}
-            <Navbar/>
+            <Navbar />
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

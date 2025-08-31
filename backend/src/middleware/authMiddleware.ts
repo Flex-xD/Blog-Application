@@ -11,18 +11,18 @@ export interface IAuthRequest extends Request {
 
 const verifyToken = (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
-        const {token} = req.cookies;
+        const { token } = req.cookies;
         if (!token) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
                 msg: "Unauthorized access , please try again !"
             })
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {userId:string};
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string };
         if (!decoded.userId || !isValidObjectId(decoded.userId)) {
-            sendResponse(res , {
-                statusCode:StatusCodes.UNAUTHORIZED , 
-                success:false , 
-                msg:"UserId not found !"
+            sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "UserId not found !"
             })
         }
         req.userId = decoded.userId;
@@ -30,7 +30,7 @@ const verifyToken = (req: IAuthRequest, res: Response, next: NextFunction) => {
 
     } catch (error) {
         console.log("Token verification failed :", error);
-        return sendError(res , {error});
+        return sendError(res, { error });
     }
 }
 

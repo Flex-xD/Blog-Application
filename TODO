@@ -1,14 +1,8 @@
-TODO : 
-
-1. start working on the frontend like create a basic looking UI 
-   . AUTH PAGE
-   . Home Page 
-       > Blog component
-2. after this try fetching some JSON file and display the data via Blog component 
-
-3. start working on the blog related backend (on hold)
-
-
-
-<!-- THINGS I HAVE TO FIX : -->
-1. IN the authentication I am not getting the clear msg of password field which requires a number , I am getting "Invalid request data !";
+TODO (31 | 8 | 25 ) : 
+1. Add the functionality of uploading a image in the blog using multer. (and make everything compatible)
+2. Create Like and unlike controller and test them , then connect with the frontend 
+3. test follow and unfollow controllers and connect them with the frontend 
+4. Make a controller for saving Blog  and connect with the frontend 
+5. work on the social page of the blog application 
+6. Integrate AI blog enhancing feature to the blog modal while creating blog (get a new API key ) 
+7. Integrate the the webSpeechAPI to write blogs via speaking 

@@ -5,7 +5,11 @@ export interface IBlog extends Document {
     title: string;
     body: string;
     image: string;
-    author: Types.ObjectId;
+    authorDetails:{
+        username:string , 
+        profilePicture:string , 
+        _id:mongoose.ObjectId
+    }
     likes: Types.ObjectId[];
     comments: Types.ObjectId[];
     createdAt: Date;
@@ -40,10 +44,16 @@ const blogSchema = new Schema<IBlog>(
                 type: Schema.Types.ObjectId,
             },
         ],
-        author: {
-            ref: "User",
-            type: Schema.Types.ObjectId,
-            required: true,
+        authorDetails: {
+            username:{
+                type:String ,
+            } , 
+            profilePicture:{
+                type:String , 
+            } , 
+            _id:{
+                type:String
+            }
         },
         createdAt: {
             type: Date

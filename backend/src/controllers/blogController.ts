@@ -1,4 +1,4 @@
-import { Request, response, Response } from "express"
+import { Request, Response } from "express"
 import { sendError, sendResponse } from "../utils/helperFunction";
 import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../models/userModel";
@@ -30,7 +30,7 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
             if (!userId) {
                 return sendResponse(res, { statusCode: StatusCodes.UNAUTHORIZED, success: false, msg: "You are unauthorized !" })
             }
-            const user: IUser | null = await User.findById(userId);
+            const user: IUser | null = await User.findById(userId).select("-password");
             if (!user) {
                 return sendResponse(res, {
                     statusCode: StatusCodes.NOT_FOUND,
@@ -42,7 +42,11 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
                 title,
                 image,
                 body,
-                author: userId
+                authorDetails: {
+                    username:user.username , 
+                    _id:user._id  ,
+                    profilePicture:user.profilePicture
+                }
             })
 
             await userBlog.save({ session });
@@ -133,7 +137,6 @@ export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
     }
 }
 
-// ? I still have to test the getFeedController
 export const getFeedController = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
@@ -197,9 +200,11 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
                     image: 1,
                     body: 1,
                     createdAt: 1,
+                    likes: 1,
+                    comments: 1,
                     "authorDetails._id": 1,
                     "authorDetails.username": 1,
-                    "authorDetails.profileImage": 1,
+                    "authorDetails.profilePicture": 1,
                 },
             },
         ];
@@ -207,6 +212,7 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
         const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
             followPipeline,
         );
+        console.log(followBlogs);
 
         const randomPipeline: PipelineStage[] = [
             {
@@ -231,9 +237,11 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
                     image: 1,
                     body: 1,
                     createdAt: 1,
+                    likes: 1,
+                    comments: 1,
                     "authorDetails._id": 1,
                     "authorDetails.username": 1,
-                    "authorDetails.profileImage": 1,
+                    "authorDetails.profilePicture": 1,
                 },
             },
         ];
@@ -241,6 +249,8 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
         const randomBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
             randomPipeline,
         );
+
+        console.log("Random Blogs : ", randomBlogs)
 
         const blogs = [...followBlogs, ...randomBlogs].sort(
             () => Math.random() - 0.5,

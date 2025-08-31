@@ -26,7 +26,6 @@ const Feed = () => {
     const { data: userData, isPending: userDataPending } = useUserProfileData();
     const { data: userFeedData, isPending: userFeedDataPending, error: userFeedDataError } = useUserFeedData(userData?._id || "");
     const { mutateAsync: postBlog, isPending: postingBlogPending, error: postBlogError } = usePostUserBlog();
-    console.log("User feed data : ", userFeedData, "user feed error : ", userFeedDataError, "userPostBlogError : ", postBlogError);
 
     const handleBlogPost = async () => {
         setShowCreateModal(false);
@@ -35,6 +34,7 @@ const Feed = () => {
         setBody("");
         setImage("");
     }
+
     const handleLike = (id: string) => {
         console.log(`Liked blog ${id}`);
         // Add your like logic here
@@ -84,9 +84,9 @@ const Feed = () => {
                                 <div className="h-screen w-screen flex items-center justify-center">
                                     <Loader2 />
                                 </div>
-                            ) : userFeedData?.length > 0 ? (  // Simplified check since it's always an array
-                                userFeedData.map((blog) => (
-                                    <BlogCard key={blog._id} {...blog} onLike={handleLike} />
+                            ) : userFeedData.data.blogs?.length > 0 ? (  // Simplified check since it's always an array
+                                userFeedData.data.blogs.map((blog) => (
+                                    <BlogCard key={blog._id} {...blog} authorDetails={{ ...blog.authorDetails }} onLike={handleLike} />
                                 ))
                             ) : (
                                 <p>No blogs available</p>
@@ -182,7 +182,7 @@ const Feed = () => {
                                 <Input
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="Blog Title"
-                                    className="text-xl font-bold border-none focus-visible:ring-0" />
+                                    className="text-xl font-bold border-none focus-'visible:ring-0" />
                                 <div className="flex items-center space-x-3">
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />

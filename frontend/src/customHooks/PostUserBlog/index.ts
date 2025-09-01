@@ -7,10 +7,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
 
-interface IUserBlog {
+export interface IUserBlog {
     title: string,
     body: string,
-    image?: string
+    image?: File | null
 }
 
 const usePostUserBlog = () => {

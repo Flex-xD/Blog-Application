@@ -286,10 +286,7 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
 };
 
 
-
-
 // * LIKE AND COMMENT AND REPLIES
-
 export const likeOnBlog = async () => {
 
 }

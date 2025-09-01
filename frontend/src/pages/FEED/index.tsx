@@ -5,9 +5,9 @@ import { PenSquare, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader2 }
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, type SetStateAction } from "react";
 import { useAppStore } from "@/store";
-import usePostUserBlog from "@/customHooks/PostUserBlog";
+import usePostUserBlog, { type IUserBlog } from "@/customHooks/PostUserBlog";
 import useUserFeedData from "@/customHooks/UserFeedFetching";
 import { suggestedUsers, trendingTopics } from "@/constants/dummyData";
 import { CreateBlogCard } from "./components/createBlogCard";
@@ -22,18 +22,38 @@ const Feed = () => {
     const [title, setTitle] = useState<string>("");
     const [body, setBody] = useState<string>("");
     const [image, setImage] = useState<string>("");
+    const [selectedImage, setSelectedImage] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const { data: userData, isPending: userDataPending } = useUserProfileData();
     const { data: userFeedData, isPending: userFeedDataPending, error: userFeedDataError } = useUserFeedData(userData?._id || "");
     const { mutateAsync: postBlog, isPending: postingBlogPending, error: postBlogError } = usePostUserBlog();
 
     const handleBlogPost = async () => {
-        setShowCreateModal(false);
-        await postBlog({ title, body, image })
+        const blogData: IUserBlog = {
+            title,
+            body,
+            image: selectedImage
+        }
+        await postBlog(blogData);
         setTitle("");
         setBody("");
         setImage("");
+        setShowCreateModal(false);
+
     }
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setImagePreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleLike = (id: string) => {
         console.log(`Liked blog ${id}`);
@@ -50,7 +70,7 @@ const Feed = () => {
                     {/* Main Content */}
                     <div className="flex-1">
                         {/* Create Blog Card */}
-                        <CreateBlogCard setShowCreateModel={setShowCreateModal} />
+                        <CreateBlogCard setShowCreateModal={setShowCreateModal} setSelectedImage={setSelectedImage} />
 
                         {/* Feed Tabs */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
@@ -172,7 +192,11 @@ const Feed = () => {
                         <div className="p-4 border-b border-gray-200">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-semibold">Create New Blog</h3>
-                                <button onClick={() => setShowCreateModal(false)} className="text-gray-500 hover:text-gray-700">
+                                <button onClick={() => {
+                                    setShowCreateModal(false);
+                                    setSelectedImage(null);
+                                    setImagePreview(null);
+                                }} className="text-gray-500 hover:text-gray-700">
                                     ✕
                                 </button>
                             </div>
@@ -182,7 +206,8 @@ const Feed = () => {
                                 <Input
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="Blog Title"
-                                    className="text-xl font-bold border-none focus-'visible:ring-0" />
+                                    className="text-xl font-bold border-none focus-visible:ring-0"
+                                />
                                 <div className="flex items-center space-x-3">
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
@@ -197,6 +222,26 @@ const Feed = () => {
                                         </select>
                                     </div>
                                 </div>
+
+                                {imagePreview && (
+                                    <div className="relative">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="w-full h-64 object-cover rounded-lg"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                setSelectedImage(null);
+                                                setImagePreview(null);
+                                            }}
+                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
+
                                 <textarea
                                     value={body}
                                     onChange={(e) => setBody(e.target.value)}
@@ -204,9 +249,14 @@ const Feed = () => {
                                     className="w-full min-h-[200px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 />
                                 <div className="flex items-center gap-2">
-                                    <Button variant="ghost">
-                                        <ImageIcon
-                                            className="h-4 w-4 mr-2" />
+                                    <Button variant="ghost" className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        />
+                                        <ImageIcon className="h-4 w-4 mr-2" />
                                         Add Image
                                     </Button>
                                     <Button variant="ghost">
@@ -217,12 +267,17 @@ const Feed = () => {
                             </div>
                         </div>
                         <div className="p-4 border-t border-gray-200 flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+                            <Button variant="outline" onClick={() => {
+                                setShowCreateModal(false);
+                                setSelectedImage(null);
+                                setImagePreview(null);
+                            }}>
                                 Cancel
                             </Button>
                             <Button
                                 onClick={handleBlogPost}
-                                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                            >
                                 Publish
                             </Button>
                         </div>

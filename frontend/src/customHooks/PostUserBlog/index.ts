@@ -17,12 +17,16 @@ const usePostUserBlog = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (blog: IUserBlog) => {
-            const imageToBeUploaded = blog.image ? blog.image : undefined;
-            const response = await apiClient.post(BLOG_ENDPOINTS.CREATE_BLOG, {
-                ...blog,
-                imageToBeUploaded
+            const fd = new FormData();
+            fd.append("title", blog.title);
+            fd.append("body", blog.body);
+            if (blog.image) fd.append("image", blog.image);
+
+            const response = await apiClient.post(BLOG_ENDPOINTS.CREATE_BLOG, fd, {
+                headers: { "Content-Type": "multipart/form-data" },
             });
-            return response.data
+
+            return response.data;
         },
         onSuccess: (data: IBlog) => {
             if (!data) return;

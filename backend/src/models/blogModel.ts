@@ -1,14 +1,24 @@
 import mongoose, { Document, ObjectId, Schema, Types } from "mongoose";
+import { number, string } from "zod";
+import { required } from "zod/v4/core/util.cjs";
+
+export interface IImageInfo {
+    url: string;
+    publicId: string;
+    width?: number;
+    height?: number;
+    format?: string;
+}
 
 export interface IBlog extends Document {
     _id: ObjectId
     title: string;
     body: string;
-    image: string;
-    authorDetails:{
-        username:string , 
-        profilePicture:string , 
-        _id:mongoose.ObjectId
+    image: IImageInfo;
+    authorDetails: {
+        username: string,
+        profilePicture: string,
+        _id: mongoose.ObjectId
     }
     likes: Types.ObjectId[];
     comments: Types.ObjectId[];
@@ -28,9 +38,13 @@ const blogSchema = new Schema<IBlog>(
             required: false,
         },
         image: {
-            type: String,
-            required: false,
-            default: "",
+            url: { type: String, required: true },
+            publicId: {
+                type: String, required: true
+            },
+            width: { type: Number },
+            height: { type: Number },
+            format: { type: String },
         },
         likes: [
             {
@@ -45,14 +59,14 @@ const blogSchema = new Schema<IBlog>(
             },
         ],
         authorDetails: {
-            username:{
-                type:String ,
-            } , 
-            profilePicture:{
-                type:String , 
-            } , 
-            _id:{
-                type:String
+            username: {
+                type: String,
+            },
+            profilePicture: {
+                type: String,
+            },
+            _id: {
+                type: String
             }
         },
         createdAt: {

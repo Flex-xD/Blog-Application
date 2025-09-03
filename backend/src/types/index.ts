@@ -13,11 +13,3 @@ export interface IFeedQuery {
     page?: string;
     limit?: string;
 }
-
-export interface IBlogWithAuthor extends IBlog {
-    authorDetails: {
-        _id: Types.ObjectId;
-        username: string;
-        profileImage?: string;
-    };
-}

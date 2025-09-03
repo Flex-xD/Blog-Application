@@ -4,7 +4,60 @@ import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../models/userModel";
 import Blog, { IBlog } from "../models/blogModel";
 import mongoose, { PipelineStage, Types } from "mongoose";
-import { IBlogWithAuthor, IFeedQuery } from "../types";
+import { IFeedQuery } from "../types";
+import cloudinary from "../config/cloudinary";
+import streamifier from "streamifier";
+
+function uploadBufferToCloudinary(
+    fileBuffer: Buffer,
+    filename?: string,
+    folder = process.env.CLOUDINARY_FOLDER || "blogs"
+): Promise<{
+    secure_url: string;
+    public_id: string;
+    width?: number;
+    height?: number;
+    format?: string;
+}> {
+    return new Promise((resolve, reject) => {
+        const upload = cloudinary.uploader.upload_stream(
+            {
+                folder,
+                resource_type: "image",
+                filename_override: filename,
+                unique_filename: true,
+                overwrite: false,
+            },
+            (err, result) => {
+                if (err || !result) return reject(err || new Error("No result from Cloudinary"));
+                resolve({
+                    secure_url: result.secure_url,
+                    public_id: result.public_id,
+                    width: result.width,
+                    height: result.height,
+                    format: result.format,
+                });
+            }
+        );
+
+        streamifier.createReadStream(fileBuffer).pipe(upload);
+    });
+}
+
+interface IBlogWithAuthor {
+    _id: mongoose.Types.ObjectId;
+    title: string;
+    image: string;
+    body: string;
+    createdAt: Date;
+    likes: any[];
+    comments: any[];
+    authorDetails: {
+        _id: mongoose.Types.ObjectId;
+        username: string;
+        profilePicture?: string;
+    };
+}
 
 interface IAuthRequest extends Request {
     userId?: string
@@ -25,6 +78,7 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
 
         const session = await mongoose.startSession();
         session.startTransaction();
+        let uploadedPublicId: null | string = null;
         try {
             const { userId } = req;
             if (!userId) {
@@ -38,14 +92,37 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
                     msg: "User not found",
                 });
             }
+
+            let imageInfo: {
+                url: string;
+                publicId: string;
+                width?: number;
+                height?: number;
+                format?: string;
+            } | undefined;
+
+            if (req.file && req.file.buffer) {
+                const { secure_url, public_id, width, height, format } = await uploadBufferToCloudinary(
+                    req.file.buffer,
+                    req.file.originalname
+                );
+                uploadedPublicId = public_id;
+                imageInfo = {
+                    url: secure_url,
+                    publicId: public_id,
+                    width,
+                    height,
+                    format,
+                };
+            }
             const userBlog = new Blog({
                 title,
-                image,
+                image: imageInfo,
                 body,
                 authorDetails: {
-                    username:user.username , 
-                    _id:user._id  ,
-                    profilePicture:user.profilePicture
+                    username: user.username,
+                    _id: user._id,
+                    profilePicture: user.profilePicture
                 }
             })
 
@@ -56,6 +133,13 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
             return sendResponse(res, { statusCode: StatusCodes.CREATED, success: true, msg: "Blog successfully created !", data: userBlog })
         } catch (error) {
             session.abortTransaction();
+            if (uploadedPublicId) {
+                try {
+                    await cloudinary.uploader.destroy(uploadedPublicId);
+                } catch (e) {
+                    console.error("Failed to clean up Cloudinary asset:", e);
+                }
+            }
             return sendError(res, { statusCode: StatusCodes.INTERNAL_SERVER_ERROR, error })
         } finally {
             session.endSession();

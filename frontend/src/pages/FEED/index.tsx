@@ -55,6 +55,7 @@ const Feed = () => {
         }
     };
 
+
     const handleLike = (id: string) => {
         console.log(`Liked blog ${id}`);
         // Add your like logic here

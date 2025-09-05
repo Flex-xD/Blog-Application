@@ -3,10 +3,11 @@ import { sendError, sendResponse } from "../utils/helperFunction";
 import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../models/userModel";
 import Blog, { IBlog } from "../models/blogModel";
-import mongoose, { PipelineStage, Types } from "mongoose";
+import mongoose, { isValidObjectId, ObjectId, PipelineStage, Types } from "mongoose";
 import { IFeedQuery } from "../types";
 import cloudinary from "../config/cloudinary";
 import streamifier from "streamifier";
+import { STATUS_CODES } from "http";
 
 function uploadBufferToCloudinary(
     fileBuffer: Buffer,
@@ -71,7 +72,7 @@ interface IBlogRequestBody {
 
 export const createBlogController = async (req: IAuthRequest, res: Response) => {
     try {
-        const { title, image, body } = req.body as IBlogRequestBody;
+        const { title, body } = req.body as IBlogRequestBody;
         if (!title || !body) {
             return sendResponse(res, { statusCode: StatusCodes.BAD_REQUEST, success: false, msg: "Title and Body are required !" })
         }
@@ -130,6 +131,7 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
             user.userBlogs.push(userBlog._id as unknown as mongoose.Types.ObjectId);
             await user.save({ session });
             await session.commitTransaction();
+            console.log("Blog created successfully ! : ", userBlog);
             return sendResponse(res, { statusCode: StatusCodes.CREATED, success: true, msg: "Blog successfully created !", data: userBlog })
         } catch (error) {
             session.abortTransaction();
@@ -371,10 +373,63 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
 
 
 // * LIKE AND COMMENT AND REPLIES
-export const likeOnBlog = async () => {
 
+export const likeOnBlog = async (req: IAuthRequest, res: Response) => {
+    const { userId } = req;
+    const { blogToBeLikedId } = req.params;
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        if (!isValidObjectId(blogToBeLikedId))
+            if (!blogToBeLikedId) {
+                sendResponse(res, {
+                    statusCode: StatusCodes.BAD_REQUEST,
+                    success: false,
+                    msg: "Blog to be liked ID not given !"
+                })
+            }
+        const blog = await Promise.all([
+            Blog.findById({
+                _id: blogToBeLikedId,
+                likes: { $nin: userId }
+            })
+        ])
+
+        if (!blog) {
+            const blogExists = await Blog.exists({ _id: blogToBeLikedId });
+            if (!blogExists) {
+                sendResponse(res, {
+                    statusCode: StatusCodes.NOT_FOUND,
+                    success: false,
+                    msg: "Blog not found !"
+                })
+            }
+            sendResponse(res, {
+                statusCode: StatusCodes.CONFLICT,
+                success: false,
+                msg: "Blog already Liked !"
+            })
+        }
+
+        const updatedBlog = await Blog.findByIdAndUpdate(blogToBeLikedId, {
+            $addToSet: { likes: new mongoose.Types.ObjectId(blogToBeLikedId) },
+        },
+            { new: true, runValidators: true }
+        )
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: 'Blog liked successfully',
+            data: { likesCount: updatedBlog?.likes.length },
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        sendError(res, { error });
+    } finally {
+        await session.endSession();
+    }
 }
 
 export const commentOnBlog = async () => {
-
 }

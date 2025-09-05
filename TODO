@@ -6,3 +6,6 @@ TODO (31 | 8 | 25 ) :
 5. work on the social page of the blog application 
 6. Integrate AI blog enhancing feature to the blog modal while creating blog (get a new API key ) 
 7. Integrate the the webSpeechAPI to write blogs via speaking 
+
+<!-- CURRENTLY >>>>> -->
+I have to seperate the structure of the FEED page , it is getting bigger and bigger 

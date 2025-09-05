@@ -16,7 +16,13 @@ interface BlogCardProps {
     _id: string
     title: string;
     body: string;
-    image: string;
+    image: {
+        url:string , 
+        publicId:string , 
+        width:number  , 
+        height :number ,
+        format:string
+    };
     authorDetails: {
         username:string , 
         _id:string , 
@@ -87,7 +93,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                         {image && (
                             <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden">
                                 <motion.img
-                                    src={image}
+                                    src={image.url}
                                     alt={title}
                                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                                     initial={{ opacity: 0 }}
@@ -190,7 +196,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                 {image && (
                                     <div className="relative h-64 w-full overflow-hidden">
                                         <img
-                                            src={image}
+                                            src={image.url}
                                             alt={title}
                                             className="object-cover w-full h-full"
                                         />

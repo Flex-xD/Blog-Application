@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { BlogCard } from "../Components/BlogCard";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader2 } from "lucide-react";
+import { PenSquare, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader2, Loader } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, type SetStateAction } from "react";
+import { useState } from "react";
 import { useAppStore } from "@/store";
 import usePostUserBlog, { type IUserBlog } from "@/customHooks/PostUserBlog";
 import useUserFeedData from "@/customHooks/UserFeedFetching";
@@ -26,7 +26,7 @@ const Feed = () => {
 
     const { data: userData, isPending: userDataPending } = useUserProfileData();
     const { data: userFeedData, isPending: userFeedDataPending, error: userFeedDataError } = useUserFeedData(userData?._id || "");
-    const { mutateAsync: postBlog, isPending: postingBlogPending, error: postBlogError } = usePostUserBlog();
+    const { mutateAsync: postBlog, isPending: postingBlogPending } = usePostUserBlog();
 
     const handleBlogPost = async () => {
         const blogData: IUserBlog = {
@@ -41,7 +41,6 @@ const Feed = () => {
         setImagePreview(null);
         setShowCreateModal(false);
     };
-
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -107,7 +106,17 @@ const Feed = () => {
                                 </div>
                             ) : userFeedData.data.blogs?.length > 0 ? (  // Simplified check since it's always an array
                                 userFeedData.data.blogs.map((blog) => (
-                                    <BlogCard key={blog._id} {...blog} authorDetails={{ ...blog.authorDetails }} onLike={handleLike} />
+                                    <BlogCard
+                                        key={blog._id}
+                                        {...blog}
+                                        image={
+                                            typeof blog.image === "string"
+                                                ? { url: blog.image, publicId: "", width: 0, height: 0, format: "" }
+                                                : blog.image
+                                        }
+                                        authorDetails={{ ...blog.authorDetails }}
+                                        onLike={handleLike}
+                                    />
                                 ))
                             ) : (
                                 <p>No blogs available</p>
@@ -182,11 +191,7 @@ const Feed = () => {
             </div>
 
             {/* Create Blog Modal */}
-            {postingBlogPending ? (
-                <div className="h-screen w-screen flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-            ) : (
+            {(
                 showCreateModal && (
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <motion.div
@@ -195,6 +200,7 @@ const Feed = () => {
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
                         >
+                            {postingBlogPending && <Loader2 />}
                             <div className="p-4 border-b border-gray-200">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-lg font-semibold">Create New Blog</h3>
@@ -303,6 +309,7 @@ const Feed = () => {
                                     Publish
                                 </Button>
                             </div>
+
                         </motion.div>
                     </div>
                 )

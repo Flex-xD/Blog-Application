@@ -371,7 +371,6 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
     }
 };
 
-
 // * LIKE AND COMMENT AND REPLIES
 
 export const likeOnBlog = async (req: IAuthRequest, res: Response) => {
@@ -428,6 +427,58 @@ export const likeOnBlog = async (req: IAuthRequest, res: Response) => {
         sendError(res, { error });
     } finally {
         await session.endSession();
+    }
+}
+
+export const unlikeBlog = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        const { blogToUnlikeId } = req.params;
+        const session = await mongoose.startSession()
+        session.startTransaction();
+        try {
+            const blog = await Promise.all([
+                Blog.findById({
+                    _id: blogToUnlikeId,
+                    likes: { $in: userId }
+                }).session(session)
+            ])
+
+            if (!blog) {
+                const blogExists = await Blog.exists({
+                    _id: blogToUnlikeId
+                })
+                if (!blogExists) {
+                    return sendResponse(res, {
+                        statusCode: StatusCodes.NOT_FOUND,
+                        success: false,
+                        msg: "Blog does not exists !"
+                    })
+                }
+                return sendResponse(res, {
+                    statusCode: StatusCodes.CONFLICT,
+                    success: false,
+                    msg: "Blog already Liked"
+                })
+            }
+            const updatedBlog = await Blog.findByIdAndUpdate(blogToUnlikeId, {
+                likes: { $pull: userId }
+            }, { new: true, runValidators: true }
+            )
+            sendResponse(res, {
+                statusCode: StatusCodes.OK,
+                success: false,
+                msg: "Blog unliked successfully !",
+                data: { likesCount: updatedBlog?.likes.length },
+
+            })
+        } catch (error) {
+            return sendError(res, { error });
+        } finally {
+            await session.endSession();
+        }
+    } catch (error) {
+        sendError(res, { error });
     }
 }
 

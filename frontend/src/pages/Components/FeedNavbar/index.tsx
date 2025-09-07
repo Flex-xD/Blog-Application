@@ -14,6 +14,9 @@ export const FeedNavbar = () => {
         navigate("/feed")
     }
 
+    const handleNavbarNavigation = (endpoint:string) => {
+        navigate(endpoint);
+    }
     return (
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,13 +48,13 @@ export const FeedNavbar = () => {
 
                         {/* Desktop Navigation */}
                         <div className="hidden sm:flex items-center space-x-1">
-                            <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
+                            <Button onClick={() => handleNavbarNavigation("/")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Home className="h-5 w-5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
+                            <Button  onClick={() => handleNavbarNavigation("/profile")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Bookmark className="h-5 w-5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
+                            <Button onClick={() => handleNavbarNavigation("/notifications")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Bell className="h-5 w-5" />
                             </Button>
                             <Button
@@ -66,7 +69,7 @@ export const FeedNavbar = () => {
 
                         {/* Profile */}
                         {isAuthenticated && (
-                            <Avatar className="h-8 w-8 border-2 border-indigo-100 cursor-pointer">
+                            <Avatar onClick={() => handleNavbarNavigation("/profile")} className="h-8 w-8 border-2 border-indigo-100 cursor-pointer">
                                 <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
                                 <AvatarFallback>ME</AvatarFallback>
                             </Avatar>

@@ -4,7 +4,13 @@ export interface IUser {
     password: string;
     _id: string,
     bio: string,
-    profilePicture?: string;
+    profilePicture?: {
+        format: string,
+        height: number,
+        width: number,
+        url: string,
+        publicId: string
+    };
     followers: string[];
     following: string[];
     saves: string[];
@@ -17,11 +23,17 @@ export interface IBlog {
     _id: string
     title: string;
     body: string;
-    image: string;
+    image: {
+        format: string,
+        height: number,
+        width: number,
+        url: string,
+        publicId: string
+    };
     authorDetails: {
-        username:string , 
-        _id:string , 
-        profilePicture:string
+        username: string,
+        _id: string,
+        profilePicture: string
     };
     likes: string[];
     comments: string[];

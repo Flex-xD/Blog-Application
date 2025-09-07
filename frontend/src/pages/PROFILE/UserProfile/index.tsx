@@ -3,13 +3,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare } from "lucide-react";
+import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare, LucideLogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { BlogCard } from "@/pages/Components/BlogCard";
 import type { IBlog } from "@/types";
 import Navbar from "@/pages/Components/Navbar";
+import apiClient from "@/utility/axiosClient";
+import { AUTH_ENDPOINTS } from "@/constants/constants";
+import { toast } from "sonner";
 
 interface UserProfileProps {
     user: {
@@ -47,6 +50,21 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
     if (isLoading) {
         return <ProfileSkeleton />;
+    }
+
+    const handleLogout = async () => {
+        try {
+            // handle this properly afterwards , abhi ke liye busss kaam chalao hai 
+            await apiClient.post(AUTH_ENDPOINTS.LOGOUT);
+            setTimeout(() => {
+                toast.success("Logged out Successfully !");
+            }, 1000);
+            window.location.reload();
+
+        } catch (error) {
+            console.log(error)
+            toast.error("Error occured while logging out !");
+        }
     }
 
     return (
@@ -91,14 +109,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
                             <div className="flex gap-3">
                                 {isCurrentUser ? (
-                                    <Button
-                                        variant="outline"
-                                        onClick={onEditProfile}
-                                        className="gap-2 shadow-sm"
-                                    >
-                                        <Pencil className="h-4 w-4" />
-                                        Edit Profile
-                                    </Button>
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleLogout}
+                                            className="gap-2 shadow-sm"
+                                        >
+                                            <LucideLogOut className="h-4 w-4" />
+                                            Logout
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={onEditProfile}
+                                            className="gap-2 shadow-sm"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                            Edit Profile
+                                        </Button>
+                                    </>
                                 ) : (
                                     <Button
                                         onClick={onFollow}
@@ -197,9 +225,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                         >
                                             <BlogCard
                                                 {...blog}
-                                                author={{
-                                                    ...user
-                                                }}
+                                                image={
+                                                    typeof blog.image === "string"
+                                                        ? {
+                                                            url: blog.image,
+                                                            publicId: "",
+                                                            width: 0,
+                                                            height: 0,
+                                                            format: "",
+                                                        }
+                                                        : blog.image
+                                                }
                                                 onLike={() => { }}
                                             />
                                         </motion.div>

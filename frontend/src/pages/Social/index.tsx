@@ -1,131 +1,19 @@
-'use client';
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-    Users,
-    TrendingUp,
-    MessageCircle,
-    Heart,
-    Share2,
-    UserPlus,
-    Check
-} from 'lucide-react';
-
+import { Users, TrendingUp, UserPlus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import Navbar from '../Components/Navbar';
+import { PopularPosts, suggestedUsersForSocial } from './components/PopularPosts';
 
-// Mock data types
-type User = {
-    id: string;
-    name: string;
-    username: string;
-    avatar: string;
-    followers: number;
-    isFollowing: boolean;
-};
-
-type Post = {
-    id: string;
-    user: User;
-    title: string;
-    content: string;
-    likes: number;
-    comments: number;
-    shares: number;
-    createdAt: string;
-    tags: string[];
-};
 
 type TrendingTopic = {
     id: string;
     name: string;
     postCount: number;
 };
-
-// Mock data
-const suggestedUsers: User[] = [
-    {
-        id: '1',
-        name: 'Alex Johnson',
-        username: 'alexj',
-        avatar: '/avatars/1.jpg',
-        followers: 1243,
-        isFollowing: false,
-    },
-    {
-        id: '2',
-        name: 'Maria Garcia',
-        username: 'mariag',
-        avatar: '/avatars/2.jpg',
-        followers: 892,
-        isFollowing: false,
-    },
-    {
-        id: '3',
-        name: 'Sam Wilson',
-        username: 'samw',
-        avatar: '/avatars/3.jpg',
-        followers: 2456,
-        isFollowing: true,
-    },
-    {
-        id: '4',
-        name: 'Taylor Swift',
-        username: 'taylors',
-        avatar: '/avatars/4.jpg',
-        followers: 5321,
-        isFollowing: false,
-    },
-    {
-        id: '5',
-        name: 'Jordan Lee',
-        username: 'jordanl',
-        avatar: '/avatars/5.jpg',
-        followers: 1876,
-        isFollowing: false,
-    },
-];
-
-const popularPosts: Post[] = [
-    {
-        id: '1',
-        user: suggestedUsers[0],
-        title: 'How I Built My First SaaS in 30 Days',
-        content: 'Sharing my journey of building a SaaS product from scratch in just one month...',
-        likes: 243,
-        comments: 42,
-        shares: 31,
-        createdAt: '2 hours ago',
-        tags: ['#SaaS', '#Startup'],
-    },
-    {
-        id: '2',
-        user: suggestedUsers[1],
-        title: 'The Complete Guide to React Hooks',
-        content: 'Deep dive into React Hooks with practical examples and best practices...',
-        likes: 187,
-        comments: 31,
-        shares: 28,
-        createdAt: '5 hours ago',
-        tags: ['#React', '#WebDev'],
-    },
-    {
-        id: '3',
-        user: suggestedUsers[2],
-        title: 'Design Systems for Developers',
-        content: 'How to implement and maintain design systems in large scale applications...',
-        likes: 156,
-        comments: 28,
-        shares: 19,
-        createdAt: '1 day ago',
-        tags: ['#Design', '#Frontend'],
-    },
-];
 
 const trendingTopics: TrendingTopic[] = [
     { id: '1', name: '#ReactJS', postCount: 1250 },
@@ -165,7 +53,7 @@ const trendingPosts = [
 const SocialComponent = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [followedUsers, setFollowedUsers] = useState<string[]>(
-        suggestedUsers.filter(user => user.isFollowing).map(user => user.id)
+        suggestedUsersForSocial.filter(user => user._id).map(user => user._id)
     );
 
     const toggleFollow = (userId: string) => {
@@ -204,31 +92,31 @@ const SocialComponent = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {suggestedUsers.map((user) => (
+                                {suggestedUsersForSocial.map((user) => (
                                     <motion.div
-                                        key={user.id}
+                                        key={user._id}
                                         whileHover={{ y: -2 }}
                                         className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
                                     >
                                         <div className="flex items-center gap-3">
                                             <Avatar>
-                                                <AvatarImage src={user.avatar} />
-                                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                <AvatarImage src={user.profilePicture?.url} />
+                                                <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <p className="font-medium">{user.name}</p>
+                                                <p className="font-medium">{user.username}</p>
                                                 <p className="text-sm text-muted-foreground">
                                                     @{user.username} · {user.followers.toLocaleString()} followers
                                                 </p>
                                             </div>
                                         </div>
                                         <Button
-                                            variant={followedUsers.includes(user.id) ? 'outline' : 'default'}
+                                            variant={followedUsers.includes(user._id) ? 'outline' : 'default'}
                                             size="sm"
-                                            onClick={() => toggleFollow(user.id)}
+                                            onClick={() => toggleFollow(user._id)}
                                             className="gap-1"
                                         >
-                                            {followedUsers.includes(user.id) ? (
+                                            {followedUsers.includes(user._id) ? (
                                                 <>
                                                     <Check className="h-4 w-4" /> Following
                                                 </>
@@ -278,46 +166,7 @@ const SocialComponent = () => {
                                     <CardTitle>Popular Posts</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    {popularPosts.map((post) => (
-                                        <motion.div
-                                            key={post.id}
-                                            whileHover={{ scale: 1.01 }}
-                                            className="border rounded-xl p-5 hover:shadow-sm transition-all"
-                                        >
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <Avatar>
-                                                    <AvatarImage src={post.user.avatar} />
-                                                    <AvatarFallback>{post.user.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-medium">{post.user.name}</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        @{post.user.username} · {post.createdAt}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
-                                            <p className="text-muted-foreground mb-4">{post.content}</p>
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {post.tags.map((tag) => (
-                                                    <Badge key={tag} variant="secondary">
-                                                        {tag}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                            <div className="flex items-center gap-4 text-muted-foreground">
-                                                <Button variant="ghost" size="sm" className="gap-1">
-                                                    <Heart className="h-4 w-4" /> {post.likes}
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="gap-1">
-                                                    <MessageCircle className="h-4 w-4" /> {post.comments}
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="gap-1">
-                                                    <Share2 className="h-4 w-4" /> {post.shares}
-                                                </Button>
-                                            </div>
-                                        </motion.div>
-                                    ))}
+                                    <PopularPosts />
                                 </CardContent>
                             </Card>
                         </TabsContent>

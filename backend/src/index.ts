@@ -7,6 +7,7 @@ import cors from "cors";
 import blogRouter from "./routes/blogRoutes";
 import LLMRouter from "./routes/LLMProcessing";
 import userActivityRouter from "./routes/userActivityRoutes";
+import socialRoutes from "./routes/socialRoutes";
 
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/llm", LLMRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/user", userActivityRouter);
+app.use("/api/social" , socialRoutes);
 
 
 app.listen(port, () => {

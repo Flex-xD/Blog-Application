@@ -5,7 +5,6 @@ import User, { IUser } from "../models/userModel";
 import { StatusCodes } from "http-status-codes";
 import { authControllerType } from "../types/index.js";
 import { sendError, sendResponse } from "../utils/helperFunction";
-import { IAuthRequest } from "../middleware/authMiddleware";
 
 const maxage = 3 * 24 * 60 * 60 * 1000;
 const createtoken = async (userId: string, email: string) => {
@@ -113,7 +112,7 @@ export const loginController = async (req: Request, res: Response) => {
     }
 }
 
-export const logoutController = async (res: Response) => {
+export const logoutController = async (req:Request , res:Response) => {
     try {
         res.clearCookie("token", { httpOnly: true, secure: false, sameSite: "strict" });
         return res.status(StatusCodes.OK).json({ msg: "User Logged Out !" });

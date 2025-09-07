@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { BlogCard } from "../Components/BlogCard";
 import { Button } from "@/components/ui/button";
-import { PenSquare, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader2, Loader } from "lucide-react";
+import { PenSquare, Users, Home, TrendingUp, Link, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

@@ -12,21 +12,21 @@ import {
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 
-interface BlogCardProps {
+export interface BlogCardProps {
     _id: string
     title: string;
     body: string;
     image: {
-        url:string , 
-        publicId:string , 
-        width:number  , 
-        height :number ,
-        format:string
+        url: string,
+        publicId: string,
+        width: number,
+        height: number,
+        format: string
     };
     authorDetails: {
-        username:string , 
-        _id:string , 
-        profilePicture:string
+        username: string,
+        _id: string,
+        profilePicture: string
     }
     likes: string[];
     comments: string[];

@@ -186,7 +186,7 @@ export const popularBlogs: IBlog[] = [
             format: "jpg",
             height: 600,
             width: 800,
-            url: "https://example.com/blogs/ai_future.jpg",
+            url: "https://imgs.search.brave.com/LRHlyrz-FEDtdPUvWj455KdmJrGTALl6aMX_NehEoW0/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzJkL2Mw/L2M2LzJkYzBjNjkw/MzY3ZGM5NDcyMWM0/YmUzMzU4M2FlNjNj/LmpwZw",
             publicId: "blog_ai_future"
         },
         authorDetails: {
@@ -207,7 +207,7 @@ export const popularBlogs: IBlog[] = [
             format: "png",
             height: 600,
             width: 800,
-            url: "https://example.com/blogs/travel_destinations.png",
+            url: "https://imgs.search.brave.com/lZgSTVLoLGk8_95IdXV_4JYyG_V9o7pk3G-QOSJYzrw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTA4/MTg2OTM1Ni9waG90/by90YWtpbmctb24t/dGhlLWxhdGUtc2hp/ZnQtd2l0aC10cnVl/LWRlZGljYXRpb24u/anBnP3M9NjEyeDYx/MiZ3PTAmaz0yMCZj/PTZjZDBYQ2M3U1hi/d2gzZ0RURGdnN3lq/bGpCUGJXOGdBbVVV/bURDUXFzOUU9",
             publicId: "blog_travel_destinations"
         },
         authorDetails: {
@@ -228,7 +228,7 @@ export const popularBlogs: IBlog[] = [
             format: "jpg",
             height: 600,
             width: 800,
-            url: "https://example.com/blogs/healthy_recipes.jpg",
+            url: "https://imgs.search.brave.com/4-C5b0_ZU7sx7vJaTZxdc7ZvInOr-0E8BaWpXMLVDuw/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMjE1/NTc2OTU1NS9waG90/by9hcnRpZmljaWFs/LWludGVsbGlnZW5j/ZS1jb25jZXB0LWNw/dS1xdWFudHVtLWNv/bXB1dGluZy5qcGc_/cz02MTJ4NjEyJnc9/MCZrPTIwJmM9WXR4/RnVkc01YOVpDVmpk/Yml4ZERFTTRjSjV4/b3RNbjVnNWdnR0Jl/amdmcz0",
             publicId: "blog_healthy_recipes"
         },
         authorDetails: {
@@ -249,7 +249,7 @@ export const popularBlogs: IBlog[] = [
             format: "png",
             height: 600,
             width: 800,
-            url: "https://example.com/blogs/fitness_tips.png",
+            url: "https://imgs.search.brave.com/INjvDnGLeKWlv3jg-t8-lU3I896__gQ9Xmeu0tpaKGY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTUw/ODc4MDY3MS9waG90/by90b3VjaGluZy1t/ZXRhdmVyc2UuanBn/P3M9NjEyeDYxMiZ3/PTAmaz0yMCZjPTgw/YnA0NE1jM1VBNFFw/NVlrYmxBZUpmalhC/cWJ6clRUa2hQbjYt/b3JPLWM9",
             publicId: "blog_fitness_tips"
         },
         authorDetails: {
@@ -270,7 +270,7 @@ export const popularBlogs: IBlog[] = [
             format: "jpg",
             height: 600,
             width: 800,
-            url: "https://example.com/blogs/gaming_trends.jpg",
+            url: "https://imgs.search.brave.com/KxK8qHvgPXvlKdCh8l5h_3GZwrV5LfGfI6SfQZR-BmM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzczLzQ5/Lzk5LzczNDk5OTdh/NGQwN2ZiYjk3MTgw/YzlhNTI2ZmI4OGZm/LmpwZw",
             publicId: "blog_gaming_trends"
         },
         authorDetails: {

@@ -7,12 +7,8 @@ import { useAppStore } from "@/store"
 
 export const FeedNavbar = () => {
     const navigate = useNavigate();
-    const { setIsCreatingBlog, isAuthenticated } = useAppStore();
+    const { isAuthenticated } = useAppStore();
 
-    const navigateToFeedAndOpenModal = (value: boolean) => {
-        setIsCreatingBlog(value);
-        navigate("/feed")
-    }
 
     const handleNavbarNavigation = (endpoint:string) => {
         navigate(endpoint);
@@ -56,14 +52,6 @@ export const FeedNavbar = () => {
                             </Button>
                             <Button onClick={() => handleNavbarNavigation("/notifications")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Bell className="h-5 w-5" />
-                            </Button>
-                            <Button
-                                variant="default"
-                                size="sm"
-                                className="hidden sm:inline-flex bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 ml-2"
-                                onClick={() => navigateToFeedAndOpenModal(true)}
-                            >
-                                Create
                             </Button>
                         </div>
 

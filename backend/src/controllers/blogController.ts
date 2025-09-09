@@ -115,10 +115,10 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
                     height,
                     format,
                 };
-            }
+            } 
             const userBlog = new Blog({
                 title,
-                image: imageInfo,
+                image: imageInfo ? imageInfo : undefined,
                 body,
                 authorDetails: {
                     username: user.username,

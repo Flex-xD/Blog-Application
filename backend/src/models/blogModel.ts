@@ -14,7 +14,7 @@ export interface IBlog extends Document {
     _id: ObjectId
     title: string;
     body: string;
-    image: IImageInfo;
+    image?: IImageInfo;
     authorDetails: {
         username: string,
         profilePicture: string,
@@ -38,9 +38,9 @@ const blogSchema = new Schema<IBlog>(
             required: false,
         },
         image: {
-            url: { type: String, required: true },
+            url: { type: String },
             publicId: {
-                type: String, required: true
+                type: String,
             },
             width: { type: Number },
             height: { type: Number },

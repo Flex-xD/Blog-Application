@@ -20,7 +20,7 @@ const usePostUserBlog = () => {
             const fd = new FormData();
             fd.append("title", blog.title);
             fd.append("body", blog.body);
-            if (blog.image) fd.append("image", blog.image);
+            if (blog.image) {fd.append("image", blog.image)};
 
             const response = await apiClient.post(BLOG_ENDPOINTS.CREATE_BLOG, fd, {
                 headers: { "Content-Type": "multipart/form-data" },

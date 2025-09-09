@@ -6,7 +6,7 @@ import User, { IUser } from "../models/userModel";
 
 
 // TEST THE CONTROLLER 
-export const suggestionForUser = async (req: IAuthRequest, res: Response) => {
+export const followSuggestionForUser = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
         const user: IUser | null = await User.findById(userId);
@@ -17,36 +17,50 @@ export const suggestionForUser = async (req: IAuthRequest, res: Response) => {
                 msg: "User not found !"
             })
         }
-        const aggregationPipeline = [
+        const mutualSuggestionAggregationPipeline = [
             {
                 $match: { _id: userId }
             },
             {
                 $lookup: {
                     from: "users",
-                    localfield: "following",
-                    foreignfield: "_id",
+                    localField: "following",
+                    foreignField: "_id",
                     as: "followingUsers"
                 }
             },
-            { $unwind: "followingUsers" },
+            { $unwind: "$followingUsers" },
             {
                 $lookup: {
                     from: "users",
-                    loaclfield: "followingUsers.following",
-                    foreginfield: "_id",
+                    localField: "followingUsers.following",
+                    foreignField: "_id",
                     as: "secondDegreeConnections"
                 }
             },
-            { $unwind: "secondDegreeConnections" },
+            { $unwind: "$secondDegreeConnections" },
             {
                 $match: {
-                    "secondDegreeConnections._id": { $nin: [user ? user.following : undefined, userId] }
+                    "secondDegreeConnections._id": {
+                        $nin: [...(user?.following || []), userId] // safe fallback
+                    }
                 }
             },
             { $limit: 5 }
+        ];
+
+        const randomAggregationPipeline = [
+            { $match: { _id: { $ne: userId } } },
+            {$sample:{size:10}}
         ]
-        const suggestedUsers = await User.aggregate(aggregationPipeline);
+
+        const [mutualFollowSuggestions , randomFollowSuggestions] = await Promise.all([
+            User.aggregate(mutualSuggestionAggregationPipeline) , 
+            User.aggregate(randomAggregationPipeline)
+        ])
+
+        const suggestedUsers = [...mutualFollowSuggestions , ...randomFollowSuggestions];
+        
         sendResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,

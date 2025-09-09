@@ -32,7 +32,7 @@ const Feed = () => {
         const blogData: IUserBlog = {
             title,
             body,
-            image: selectedImage, // correct
+            image: selectedImage , // correct
         };
         await postBlog(blogData);
         setTitle("");
@@ -200,7 +200,6 @@ const Feed = () => {
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
                         >
-                            {postingBlogPending && <Loader2 />}
                             <div className="p-4 border-b border-gray-200">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-lg font-semibold">Create New Blog</h3>

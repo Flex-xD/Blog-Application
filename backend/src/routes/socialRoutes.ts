@@ -1,10 +1,10 @@
 import { Router } from "express"
-import { llmBlogProcessing } from "../controllers/AIController";
 import verifyToken from "../middleware/authMiddleware";
+import { followSuggestionForUser } from "../controllers/socialController";
 
 const socialRoutes = Router();
 
-socialRoutes.post("/follow-suggestions", verifyToken, llmBlogProcessing);
+socialRoutes.get("/follow-suggestions", verifyToken, followSuggestionForUser);
 
 export default socialRoutes;
 

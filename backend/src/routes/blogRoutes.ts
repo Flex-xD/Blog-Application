@@ -14,10 +14,10 @@ blogRouter.get("/user-saved-blogs", verifyToken, getUserSavedBlogs)
 
 // ? POST BLOG
 blogRouter.post("/create", verifyToken, upload.single('image'), createBlogController);
-blogRouter.post("/:blogToBeLikedId/like" , verifyToken , likeOnBlog);
+blogRouter.post("/:blogToBeLikedId/like", verifyToken, likeOnBlog);
 
 // ? LIKE  , UNLIKE AND COMMENT ON BLOG
-blogRouter.post("/like" , verifyToken , likeOnBlog);
-blogRouter.post("/unlike" , verifyToken , unlikeBlog);
+blogRouter.post("/like", verifyToken, likeOnBlog);
+blogRouter.post("/unlike", verifyToken, unlikeBlog);
 
 export default blogRouter;

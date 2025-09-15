@@ -1,6 +1,7 @@
 TODO (31 | 8 | 25 ) :
 
 <!-- 1. Add the functionality of uploading a image in the blog using multer. (and make everything compatible) --> DONE
+
 2. Create Like and unlike controller and test them , then connect with the frontend
 3. test follow and unfollow controllers and connect them with the frontend
 4. Make a controller for saving Blog and connect with the frontend

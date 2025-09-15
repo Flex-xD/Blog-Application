@@ -9,6 +9,10 @@ import Navbar from '../Components/Navbar';
 import { popularBlogs, PopularPosts, suggestedUsersForSocial } from './components/PopularPosts';
 import type { IUser } from '@/types';
 import ProfileModal from '../Components/UserProfileModal';
+import apiClient from '@/utility/axiosClient';
+import { SOCIAL_ENDPOINTS } from '@/constants/constants';
+import { toast } from 'sonner';
+import type { Axios, AxiosError } from 'axios';
 
 
 
@@ -65,6 +69,17 @@ const SocialComponent = () => {
     const handleUserClick = (user: IUser) => {
         setSelectedUser(user);
         setProfileModalOpen(true)
+    }
+
+    const handleSuggestedUsersFromTheBackend = async () => {
+        try {
+            const response = await apiClient.get(SOCIAL_ENDPOINTS.SUGGESTIONS_USERS_FOR_FOLLOWING);
+            if (!response) {
+            }
+        } catch (error:any) {
+            console.log({ error });
+            return toast.error(error.message);
+        }
     }
 
     const toggleFollow = (userId: string) => {

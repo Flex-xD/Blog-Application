@@ -3,6 +3,7 @@ import { sendError, sendResponse } from "../utils/helperFunction";
 import { IAuthRequest } from "../middleware/authMiddleware";
 import { Response } from "express";
 import User, { IUser } from "../models/userModel";
+import mongoose from "mongoose";
 
 
 // TEST THE CONTROLLER 
@@ -50,17 +51,18 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
         ];
 
         const randomAggregationPipeline = [
-            { $match: { _id: { $ne: userId } } },
-            {$sample:{size:10}}
+            { $match: { _id: { $ne: new mongoose.Types.ObjectId(userId as string) } } },
+            { $sample: { size: 10 } }
         ]
 
-        const [mutualFollowSuggestions , randomFollowSuggestions] = await Promise.all([
-            User.aggregate(mutualSuggestionAggregationPipeline) , 
+        const [mutualFollowSuggestions, randomFollowSuggestions] = await Promise.all([
+            User.aggregate(mutualSuggestionAggregationPipeline),
             User.aggregate(randomAggregationPipeline)
         ])
 
-        const suggestedUsers = [...mutualFollowSuggestions , ...randomFollowSuggestions];
-        
+        const suggestedUsers = [...mutualFollowSuggestions, ...randomFollowSuggestions];
+
+        // ? THINK WHAT KIND OF RESPOSE YOU WANT TO SEND TO THE FRONTEND TO DISPLAY DATA AND THEN SEND THE REQUIRED FIELDS AND NOT THE WHOLE DOCUMENT
         sendResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,

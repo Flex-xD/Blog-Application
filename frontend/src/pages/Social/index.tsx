@@ -9,10 +9,8 @@ import Navbar from '../Components/Navbar';
 import { popularBlogs, PopularPosts, suggestedUsersForSocial } from './components/PopularPosts';
 import type { IUser } from '@/types';
 import ProfileModal from '../Components/UserProfileModal';
-import apiClient from '@/utility/axiosClient';
-import { SOCIAL_ENDPOINTS } from '@/constants/constants';
-import { toast } from 'sonner';
-import type { Axios, AxiosError } from 'axios';
+import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
+import { useUserProfileData } from '@/customHooks/UserDataFetching';
 
 
 
@@ -58,28 +56,30 @@ const trendingPosts = [
 ];
 
 const SocialComponent = () => {
-    const [searchQuery, setSearchQuery] = useState('');
+
     const [followedUsers, setFollowedUsers] = useState<string[]>(
         suggestedUsersForSocial.filter(user => user._id).map(user => user._id)
     );
-
     const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
     const [profileModalOpen, setProfileModalOpen] = useState<boolean>(false);
 
+
     const handleUserClick = (user: IUser) => {
         setSelectedUser(user);
-        setProfileModalOpen(true)
+        setProfileModalOpen(true);
     }
 
-    const handleSuggestedUsersFromTheBackend = async () => {
-        try {
-            const response = await apiClient.get(SOCIAL_ENDPOINTS.SUGGESTIONS_USERS_FOR_FOLLOWING);
-            if (!response) {
-            }
-        } catch (error:any) {
-            console.log({ error });
-            return toast.error(error.message);
-        }
+    console.log(selectedUser);
+    const { data } = useUserProfileData();
+    const userId = data?._id;
+    const isFollowing = selectedUser?.followers.includes(userId ?? "") ? true : false;
+
+    const { mutateAsync, isPending, isError } = useFollowOrUnfollowMutation(selectedUser?._id ?? "", userId ?? "");
+
+
+    // BEFORE TESTING THIS OUT  , FIRST FETCH THE SUGGESTED USER'S FROM THE BACKEND
+    const handleFollowAndUnfollow = async () => {
+        await mutateAsync(isFollowing);
     }
 
     const toggleFollow = (userId: string) => {
@@ -89,7 +89,6 @@ const SocialComponent = () => {
                 : [...prev, userId]
         );
     };
-
     const handleUnfollow = () => {
         console.log("Unfollowed !");
     }
@@ -125,7 +124,10 @@ const SocialComponent = () => {
                                 <CardContent className="space-y-4">
                                     {suggestedUsersForSocial.map((user) => (
                                         <motion.div
-                                            onClick={() => handleUserClick(user)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleUserClick(user)
+                                            }}
                                             key={user._id}
                                             whileHover={{ y: -2 }}
                                             className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
@@ -145,7 +147,11 @@ const SocialComponent = () => {
                                             <Button
                                                 variant={followedUsers.includes(user._id) ? 'outline' : 'default'}
                                                 size="sm"
-                                                onClick={() => toggleFollow(user._id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleFollow(user._id);
+                                                    setProfileModalOpen(false)
+                                                }}
                                                 className="gap-1"
                                             >
                                                 {followedUsers.includes(user._id) ? (

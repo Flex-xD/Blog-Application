@@ -7,7 +7,8 @@ export const AUTH_ENDPOINTS = {
     LOGIN: `${BASE_URL}/auth/login`,
     REGISTER: `${BASE_URL}/auth/register`,
     LOGOUT: `${BASE_URL}/auth/logout`,
-    GET_USER_DATA: `${BASE_URL}/user/user-data`
+    GET_USER_DATA: `${BASE_URL}/user/user-data` , 
+
 }
 
 export const BLOG_ENDPOINTS = {
@@ -19,4 +20,5 @@ export const SOCIAL_ENDPOINTS = {
     SUGGESTIONS_USERS_FOR_FOLLOWING: `${BASE_URL}/social/follow-suggestions`,
     FOLLOW_USER: (userId: string) => `/api/user/${userId}/follow`,
     UNFOLLOW_USER: (userId: string) => `/api/user/${userId}/unfollow`,
+    USER_SUGGESTIONS:`${BASE_URL}/social/follow-suggestions`
 }

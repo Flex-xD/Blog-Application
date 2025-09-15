@@ -43,7 +43,6 @@ const useFollowOrUnfollowMutation = (targetUserId: string, currentUserId: string
         ,
         onSuccess: (data) => {
             console.log(data.msg)
-            queryClient.invalidateQueries()
         },
         onError: (error: errorResponse, _, context) => {
             console.log({ error });
@@ -52,6 +51,11 @@ const useFollowOrUnfollowMutation = (targetUserId: string, currentUserId: string
                 return toast.error(error.msg);
 
             }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOCIAL.FOLLOWING_STATUS(targetUserId) });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE.FOLLOWERS(targetUserId) });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE.FOLLOWING(currentUserId) });
         }
     })
 }

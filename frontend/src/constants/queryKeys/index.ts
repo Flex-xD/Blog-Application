@@ -20,6 +20,7 @@ export const QUERY_KEYS = {
     COMMENTS: {
         BY_BLOG: (blogId: string) => ["comments", "blog", blogId] as const,
     },
+    
     SOCIAL: {
         FOLLOWING_STATUS: (targetUserId: string) => ["social", "following-status", targetUserId] as const,
         SUGGESTIONS: (userId: string) => ["social", "suggestions", userId] as const, // follow suggestions

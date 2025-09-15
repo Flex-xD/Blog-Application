@@ -40,3 +40,16 @@ export interface IBlog {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface apiReponse<T> {
+    statusCode: number,
+    success: boolean,
+    data?: T,
+    msg: string
+}
+
+export interface errorResponse {
+    statusCode: number,
+    success: boolean,
+    msg: string
+}

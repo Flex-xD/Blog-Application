@@ -7,7 +7,6 @@ import mongoose, { isValidObjectId, ObjectId, PipelineStage, Types } from "mongo
 import { IFeedQuery } from "../types";
 import cloudinary from "../config/cloudinary";
 import streamifier from "streamifier";
-import { STATUS_CODES } from "http";
 
 function uploadBufferToCloudinary(
     fileBuffer: Buffer,
@@ -115,7 +114,7 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
                     height,
                     format,
                 };
-            } 
+            }
             const userBlog = new Blog({
                 title,
                 image: imageInfo ? imageInfo : undefined,
@@ -264,22 +263,13 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
         const followPipeline: PipelineStage[] = [
             {
                 $match: {
-                    author: { $in: following },
+                    "authorDetails._id": { $in: following },
                     createdAt: { $lte: new Date() },
                 },
             },
             { $sort: { createdAt: -1 } },
             { $skip: (pageNum - 1) * followLimit },
             { $limit: followLimit },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "author",
-                    foreignField: "_id",
-                    as: "authorDetails",
-                },
-            },
-            { $unwind: "$authorDetails" },
             {
                 $project: {
                     title: 1,
@@ -294,7 +284,6 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
                 },
             },
         ];
-
         const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
             followPipeline,
         );
@@ -303,20 +292,11 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
         const randomPipeline: PipelineStage[] = [
             {
                 $match: {
-                    author: { $nin: following },
+                    "authorDetails._id": { $nin: following },
                     createdAt: { $lte: new Date() },
                 },
             },
             { $sample: { size: randomLimit } },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "author",
-                    foreignField: "_id",
-                    as: "authorDetails",
-                },
-            },
-            { $unwind: "$authorDetails" },
             {
                 $project: {
                     title: 1,
@@ -331,7 +311,6 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
                 },
             },
         ];
-
         const randomBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
             randomPipeline,
         );

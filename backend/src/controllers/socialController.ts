@@ -52,6 +52,14 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
 
         const randomAggregationPipeline = [
             { $match: { _id: { $ne: new mongoose.Types.ObjectId(userId as string) } } },
+            {
+                $lookup:{
+                    from:"blogs" , 
+                    localField:"userBlogs" , 
+                    foreignField:"_id" , 
+                    as:"userBlogs"
+                }
+            } ,
             { $sample: { size: 10 } }
         ]
 
@@ -62,7 +70,8 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
 
         const suggestedUsers = [...mutualFollowSuggestions, ...randomFollowSuggestions];
 
-        // ? THINK WHAT KIND OF RESPOSE YOU WANT TO SEND TO THE FRONTEND TO DISPLAY DATA AND THEN SEND THE REQUIRED FIELDS AND NOT THE WHOLE DOCUMENT
+        // * THINK WHAT KIND OF RESPOSE YOU WANT TO SEND TO THE FRONTEND TO DISPLAY DATA AND THEN SEND THE REQUIRED FIELDS AND NOT THE WHOLE DOCUMENT
+
         sendResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,

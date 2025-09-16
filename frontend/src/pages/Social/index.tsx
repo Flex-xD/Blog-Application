@@ -11,6 +11,7 @@ import type { IUser } from '@/types';
 import ProfileModal from '../Components/UserProfileModal';
 import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
 import { useUserProfileData } from '@/customHooks/UserDataFetching';
+import useSuggestedUserData from '@/customHooks/SuggestedUserFetching';
 
 
 
@@ -75,12 +76,14 @@ const SocialComponent = () => {
     const isFollowing = selectedUser?.followers.includes(userId ?? "") ? true : false;
 
     const { mutateAsync, isPending, isError } = useFollowOrUnfollowMutation(selectedUser?._id ?? "", userId ?? "");
-
-
-    // BEFORE TESTING THIS OUT  , FIRST FETCH THE SUGGESTED USER'S FROM THE BACKEND
     const handleFollowAndUnfollow = async () => {
         await mutateAsync(isFollowing);
     }
+
+    const {data:suggestedUsersData} =  useSuggestedUserData();
+    console.log("This is the suggested user data : " , suggestedUsersData);
+
+    // BEFORE TESTING THIS OUT  , FIRST FETCH THE SUGGESTED USER'S FROM THE BACKEND
 
     const toggleFollow = (userId: string) => {
         setFollowedUsers(prev =>
@@ -122,7 +125,7 @@ const SocialComponent = () => {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    {suggestedUsersForSocial.map((user) => (
+                                    {suggestedUsersData?.map((user) => (
                                         <motion.div
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -258,7 +261,7 @@ const SocialComponent = () => {
                     onFollow={toggleFollow}
                     onUnfollow={handleUnfollow}
                     currentUserId="current-user-id-here" // Pass the current user's ID
-                    blogs={popularBlogs} // Pass the selected user's blogs
+                    blogs={selectedUser.userBlogs} // Pass the selected user's blogs
                 />
             )}
         </>

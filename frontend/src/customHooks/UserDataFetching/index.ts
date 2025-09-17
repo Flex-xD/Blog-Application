@@ -15,7 +15,6 @@ export const useUserProfileData = () => {
             queryKey: ["profile", "me"],
             queryFn: async () => {
                 const response = await apiClient.get(AUTH_ENDPOINTS.GET_USER_DATA);
-                console.log(response);
                 if (response.data.data) {
                     setIsAuthenticated(true)
                 }

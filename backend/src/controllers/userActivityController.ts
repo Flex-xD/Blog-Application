@@ -33,17 +33,17 @@ export const followOtherUsers = async (req: IAuthRequest, res: Response) => {
     try {
         const session = await mongoose.startSession();
         const { userId } = req;
-        const { userToUnfollowId } = req.params;
+        const { userToFollowId } = req.params;
         try {
             session.startTransaction();
-            if (!userToUnfollowId || !isValidObjectId(userToUnfollowId)) {
+            if (!userToFollowId || !isValidObjectId(userToFollowId)) {
                 return sendResponse(res, {
                     statusCode: StatusCodes.NOT_FOUND,
                     success: false,
                     msg: "User to be unfollow ID is required !"
                 })
             }
-            if (userId === userToUnfollowId) {
+            if (userId === userToFollowId) {
                 return sendResponse(res, {
                     statusCode: StatusCodes.CONFLICT,
                     success: false,
@@ -53,7 +53,7 @@ export const followOtherUsers = async (req: IAuthRequest, res: Response) => {
 
             const [user, userToFollow] = await Promise.all([
                 await User.findById(userId).session(session) as IUser,
-                await User.findById(userToUnfollowId).session(session) as IUser,
+                await User.findById(userToFollowId).session(session) as IUser,
             ])
 
             if (!user || !userToFollow) {
@@ -65,7 +65,7 @@ export const followOtherUsers = async (req: IAuthRequest, res: Response) => {
             }
 
             if (
-                user.following.includes(new Types.ObjectId(userToUnfollowId)) ||
+                user.following.includes(new Types.ObjectId(userToFollowId)) ||
                 userId && userToFollow.followers.includes(new Types.ObjectId(userId))
             ) {
                 return sendResponse(res, {
@@ -74,14 +74,14 @@ export const followOtherUsers = async (req: IAuthRequest, res: Response) => {
                     msg: 'Already following this user',
                 });
             }
-            user.following.push(userToUnfollowId as unknown as mongoose.Types.ObjectId);
+            user.following.push(userToFollowId as unknown as mongoose.Types.ObjectId);
             userToFollow.followers.push(userId as unknown as mongoose.Types.ObjectId);
             await Promise.all([
                 user.save({ session }),
                 userToFollow.save({ session })
             ])
             await session.commitTransaction();
-            logger.info(`User ${userId} followed user ${userToUnfollowId}`);
+            logger.info(`User ${userId} followed user ${userToFollowId}`);
             sendResponse(res, {
                 statusCode: StatusCodes.OK,
                 success: true,

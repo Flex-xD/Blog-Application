@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, TrendingUp, UserPlus, Check } from 'lucide-react';
+import { Users, TrendingUp, UserPlus, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import Navbar from '../Components/Navbar';
-import { popularBlogs, PopularPosts, suggestedUsersForSocial } from './components/PopularPosts';
-import type { IUser } from '@/types';
+import { PopularPosts, suggestedUsersForSocial } from './components/PopularPosts';
+import type { IBlog, IUser } from '@/types';
 import ProfileModal from '../Components/UserProfileModal';
 import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
 import { useUserProfileData } from '@/customHooks/UserDataFetching';
 import useSuggestedUserData from '@/customHooks/SuggestedUserFetching';
+import { Skeleton } from "@/components/ui/skeleton"
 
 
 
@@ -70,18 +71,17 @@ const SocialComponent = () => {
         setProfileModalOpen(true);
     }
 
-    console.log(selectedUser);
     const { data } = useUserProfileData();
     const userId = data?._id;
-    const isFollowing = selectedUser?.followers.includes(userId ?? "") ? true : false;
+    const isFollowingUser = selectedUser?.followers.includes(userId ?? "") ? true : false;
 
-    const { mutateAsync, isPending, isError } = useFollowOrUnfollowMutation(selectedUser?._id ?? "", userId ?? "");
-    const handleFollowAndUnfollow = async () => {
-        await mutateAsync(isFollowing);
+    const { mutateAsync: followAndUnfollowFn, isPending: isFollowAndUnfollowPending, isError } = useFollowOrUnfollowMutation(selectedUser?._id ?? "", userId ?? "");
+
+    const handleFollowAndUnfollow = async (isFollowingUser: boolean) => {
+        await followAndUnfollowFn(isFollowingUser);
     }
 
-    const {data:suggestedUsersData} =  useSuggestedUserData();
-    console.log("This is the suggested user data : " , suggestedUsersData);
+    const { data: suggestedUsersData } = useSuggestedUserData();
 
     // BEFORE TESTING THIS OUT  , FIRST FETCH THE SUGGESTED USER'S FROM THE BACKEND
 
@@ -117,6 +117,7 @@ const SocialComponent = () => {
                         {/* Left Column - User Suggestions & Trending Topics */}
                         <div className="lg:col-span-1 space-y-6">
                             {/* Suggested Creators */}
+                            
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
@@ -125,7 +126,7 @@ const SocialComponent = () => {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    {suggestedUsersData?.map((user) => (
+                                    {(Array.isArray(suggestedUsersData) ? suggestedUsersData : []).map((user: IUser) => (
                                         <motion.div
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -151,13 +152,14 @@ const SocialComponent = () => {
                                                 variant={followedUsers.includes(user._id) ? 'outline' : 'default'}
                                                 size="sm"
                                                 onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleFollow(user._id);
+                                                    // e.stopPropagation();
+                                                    handleFollowAndUnfollow(isFollowingUser)
+                                                    // toggleFollow(user._id);
                                                     setProfileModalOpen(false)
                                                 }}
                                                 className="gap-1"
                                             >
-                                                {followedUsers.includes(user._id) ? (
+                                                {isFollowingUser ? (
                                                     <>
                                                         <Check className="h-4 w-4" /> Following
                                                     </>
@@ -258,15 +260,47 @@ const SocialComponent = () => {
                     user={selectedUser}
                     isOpen={profileModalOpen}
                     onClose={() => setProfileModalOpen(false)}
-                    onFollow={toggleFollow}
-                    onUnfollow={handleUnfollow}
-                    currentUserId="current-user-id-here" // Pass the current user's ID
-                    blogs={selectedUser.userBlogs} // Pass the selected user's blogs
+                    isFollowingUser={isFollowingUser}
+                    handleFollowAndUnfollow={handleFollowAndUnfollow}
+                    currentUserId={data?._id} // Pass the current user's ID
+                    blogs={selectedUser.userBlogs as unknown as IBlog[]} // Pass the selected user's blogs
                 />
             )}
         </>
     );
 };
+
+
+//  ? SKELETON FOR THE SuggestedUser's divs
+// export function SuggestedUsersSkeleton() {
+//     return (
+//         <Card>
+//             <CardHeader>
+//                 <CardTitle className="flex items-center gap-2">
+//                     <Users className="h-5 w-5 text-indigo-600" />
+//                     <span>Suggested Creators</span>
+//                 </CardTitle>
+//             </CardHeader>
+//             <CardContent className="space-y-4">
+//                 {Array.from({ length: 10 }).map((_, i) => (
+//                     <div
+//                         key={i}
+//                         className="flex items-center justify-between p-3 rounded-lg"
+//                     >
+//                         <div className="flex items-center gap-3">
+//                             <Skeleton className="h-10 w-10 rounded-full" />
+//                             <div className="space-y-2">
+//                                 <Skeleton className="h-4 w-32" />
+//                                 <Skeleton className="h-3 w-24" />
+//                             </div>
+//                         </div>
+//                         <Skeleton className="h-8 w-20 rounded-lg" />
+//                     </div>
+//                 ))}
+//             </CardContent>
+//         </Card>
+//     )
+// }
 
 
 

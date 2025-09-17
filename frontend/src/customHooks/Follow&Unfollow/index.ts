@@ -24,6 +24,8 @@ const useFollowOrUnfollowMutation = (targetUserId: string, currentUserId: string
             const endpoint = isCurrentlyFollowing
                 ? SOCIAL_ENDPOINTS.UNFOLLOW_USER(targetUserId) :
                 SOCIAL_ENDPOINTS.FOLLOW_USER(targetUserId)
+                console.log("This is the ID of selected USER : " , targetUserId);
+                console.log("This is the enpoint : ",endpoint);
             const response = await apiClient.post<ApiResponse>(endpoint);
             console.log(response.data)
             return response.data;

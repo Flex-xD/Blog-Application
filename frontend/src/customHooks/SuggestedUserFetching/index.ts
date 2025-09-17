@@ -11,13 +11,12 @@ const useSuggestedUserData = () => {
     return useQuery({
         queryKey: data?._id ? [QUERY_KEYS.SOCIAL.SUGGESTIONS(data._id)] : [],
         queryFn: async () => {
-            const response  = await apiClient.get<apiReponse<IUser[]>>(SOCIAL_ENDPOINTS.USER_SUGGESTIONS);
-            console.log(response.data.data);
+            const response  = await apiClient.get<apiReponse<IUser>>(SOCIAL_ENDPOINTS.USER_SUGGESTIONS);
+            // console.log(response.data.data)
             return response.data.data;
         },
-        // enabled: !!data?._id
+        enabled: !!data?._id
     })
 }
 
-// TEST THIS IF IT IS FETCHING OR NOT FROM THE BACKEND API
 export default useSuggestedUserData;

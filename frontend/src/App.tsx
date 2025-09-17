@@ -26,9 +26,8 @@ const routes: IRoute[] = [
 ]
 
 const App = () => {
-  const { data, isLoading } = useUserProfileData();
+  const { isLoading } = useUserProfileData();
   if (isLoading) return <div className='h-screen w-screen flex items-center justify-center'><Loader /></div>
-  console.log(data)
   return (
     <BrowserRouter>
       <Routes>

@@ -6,6 +6,7 @@ const userActivityRouter = Router();
 
 userActivityRouter.get("/user-data", verifyToken, getUserInfo);
 userActivityRouter.post("/:userToFollowId/follow", verifyToken, followOtherUsers);
+userActivityRouter.post("/:userToUnllowId/follow", verifyToken, followOtherUsers);
 userActivityRouter.post("/feed", verifyToken, );
 
 export default userActivityRouter;

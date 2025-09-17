@@ -18,8 +18,8 @@ interface ProfileModalProps {
     user: IUser;
     isOpen: boolean;
     onClose: () => void;
-    onFollow: (userId: string) => void;
-    onUnfollow: (userId: string) => void;
+    handleFollowAndUnfollow:(isFollowing:boolean) => void;
+    isFollowingUser:boolean;
     currentUserId?: string;
     blogs: IBlog[];
 }
@@ -28,32 +28,13 @@ const ProfileModal = ({
     user,
     isOpen,
     onClose,
-    onFollow,
-    onUnfollow,
+    handleFollowAndUnfollow,
+    isFollowingUser ,
     currentUserId,
     blogs
 }: ProfileModalProps) => {
-    const [isFollowing, setIsFollowing] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const blogsPerPage = 3;
-
-    // Check if current user is following this profile
-    useEffect(() => {
-        if (currentUserId && user.followers.includes(currentUserId)) {
-            setIsFollowing(true);
-        } else {
-            setIsFollowing(false);
-        }
-    }, [user.followers, currentUserId]);
-
-    const handleFollowToggle = () => {
-        if (isFollowing) {
-            onUnfollow(user._id);
-        } else {
-            onFollow(user._id);
-        }
-        setIsFollowing(!isFollowing);
-    };
 
     // Pagination for blogs
     const totalPages = Math.ceil(blogs.length / blogsPerPage);
@@ -165,16 +146,16 @@ const ProfileModal = ({
                                             </div>
                                         </div>
 
-                                        {currentUserId && currentUserId !== user._id && (
+                                        {currentUserId !== user._id && (
                                             <button
-                                                onClick={handleFollowToggle}
-                                                className={`px-4 py-2 rounded-lg font-medium transition-all ${isFollowing
+                                                onClick={() => handleFollowAndUnfollow(isFollowingUser)}
+                                                className={`px-4 py-2 rounded-lg font-medium transition-all ${isFollowingUser
                                                     ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                                     : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
                                                     }`}
                                             >
                                                 <div className="flex items-center">
-                                                    {isFollowing ? (
+                                                    {isFollowingUser ? (
                                                         <>
                                                             <UserCheck size={16} className="mr-1" />
                                                             Following

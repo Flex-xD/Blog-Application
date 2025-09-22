@@ -56,6 +56,7 @@ const useFollowOrUnfollowMutation = (targetUserId: string, currentUserId: string
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SOCIAL.FOLLOWING_STATUS(targetUserId) });
+            queryClient.invalidateQueries({queryKey:QUERY_KEYS.SOCIAL.SUGGESTIONS(currentUserId)})
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE.FOLLOWERS(targetUserId) });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE.FOLLOWING(currentUserId) });
         }

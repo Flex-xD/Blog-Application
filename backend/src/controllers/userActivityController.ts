@@ -10,7 +10,7 @@ import { isValidObjectId, logger } from "../utils";
 export const getUserInfo = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
-        const response = await User.findById(userId).populate("userBlogs") as IUser;
+        const response = await User.findById(userId).populate("userBlogs").populate("following followers") as IUser;
 
         if (!response) return sendResponse(res, {
             statusCode: StatusCodes.BAD_REQUEST,

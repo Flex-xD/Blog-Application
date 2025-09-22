@@ -27,7 +27,7 @@ const Navbar = () => {
     return (
         <motion.nav
             style={{ opacity, scale }}
-            className="w-full px-4 sm:px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50"
+            className="w-full px-4 sm:px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-49"
         >
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 mr-3 flex-shrink-0">

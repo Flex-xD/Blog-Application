@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, TrendingUp, UserPlus, Check, Loader2 } from 'lucide-react';
+import { Users, TrendingUp, UserPlus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,12 +8,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import Navbar from '../Components/Navbar';
 import { PopularPosts, suggestedUsersForSocial } from './components/PopularPosts';
 import type { IBlog, IUser } from '@/types';
-import ProfileModal from '../Components/UserProfileModal';
 import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
 import { useUserProfileData } from '@/customHooks/UserDataFetching';
 import useSuggestedUserData from '@/customHooks/SuggestedUserFetching';
-import { Skeleton } from "@/components/ui/skeleton"
+import ProfileModal from './components/UserProfileModal';
 
+
+// ? FIX THE BUG (I AM NOT ABLE TO UNFOLLOW THE USER AND THE UI IS ALSO NOT UPDATING LIKE IT SHOULD BE , MAY BE THE PROBLEM IS WITH THE isFollowing constant that's hold the old value , the main thing is I want to simultaneously update the UI as soon as I hit follow or unfollow)
+// * Now the UI is updating now , want to unfollow the user with the same the same api 
 
 
 type TrendingTopic = {
@@ -62,6 +64,7 @@ const SocialComponent = () => {
     const [followedUsers, setFollowedUsers] = useState<string[]>(
         suggestedUsersForSocial.filter(user => user._id).map(user => user._id)
     );
+
     const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
     const [profileModalOpen, setProfileModalOpen] = useState<boolean>(false);
 
@@ -71,11 +74,17 @@ const SocialComponent = () => {
         setProfileModalOpen(true);
     }
 
+    const handleUserClickOnFollowButton = (user: IUser) => {
+        setSelectedUser(user);
+    }
+
     const { data } = useUserProfileData();
+    console.log("User Profile Data : ", data);
     const userId = data?._id;
+
     const isFollowingUser = selectedUser?.followers.includes(userId ?? "") ? true : false;
 
-    const { mutateAsync: followAndUnfollowFn, isPending: isFollowAndUnfollowPending, isError } = useFollowOrUnfollowMutation(selectedUser?._id ?? "", userId ?? "");
+    const { mutateAsync: followAndUnfollowFn } = useFollowOrUnfollowMutation(selectedUser?._id ?? "", userId ?? "");
 
     const handleFollowAndUnfollow = async (isFollowingUser: boolean) => {
         await followAndUnfollowFn(isFollowingUser);
@@ -83,18 +92,6 @@ const SocialComponent = () => {
 
     const { data: suggestedUsersData } = useSuggestedUserData();
 
-    // BEFORE TESTING THIS OUT  , FIRST FETCH THE SUGGESTED USER'S FROM THE BACKEND
-
-    const toggleFollow = (userId: string) => {
-        setFollowedUsers(prev =>
-            prev.includes(userId)
-                ? prev.filter(id => id !== userId)
-                : [...prev, userId]
-        );
-    };
-    const handleUnfollow = () => {
-        console.log("Unfollowed !");
-    }
 
     return (
         <>
@@ -117,7 +114,7 @@ const SocialComponent = () => {
                         {/* Left Column - User Suggestions & Trending Topics */}
                         <div className="lg:col-span-1 space-y-6">
                             {/* Suggested Creators */}
-                            
+
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
@@ -144,7 +141,7 @@ const SocialComponent = () => {
                                                 <div>
                                                     <p className="font-medium">{user.username}</p>
                                                     <p className="text-sm text-muted-foreground">
-                                                        @{user.username} · {user.followers.toLocaleString()} followers
+                                                        @{user.username} · {user.followers.length} followers
                                                     </p>
                                                 </div>
                                             </div>
@@ -152,9 +149,9 @@ const SocialComponent = () => {
                                                 variant={followedUsers.includes(user._id) ? 'outline' : 'default'}
                                                 size="sm"
                                                 onClick={(e) => {
-                                                    // e.stopPropagation();
+                                                    e.stopPropagation();
+                                                    handleUserClickOnFollowButton(user)
                                                     handleFollowAndUnfollow(isFollowingUser)
-                                                    // toggleFollow(user._id);
                                                     setProfileModalOpen(false)
                                                 }}
                                                 className="gap-1"

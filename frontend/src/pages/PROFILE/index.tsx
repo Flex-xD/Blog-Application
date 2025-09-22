@@ -25,8 +25,8 @@ export function UserProfilePage() {
             user={{
                 ...user,
                 profilePicture: typeof user.profilePicture === "object" && user.profilePicture !== null
-                    ? user.profilePicture.url
-                    : user.profilePicture
+                    ? user.profilePicture
+                    : undefined
             }}
             blogs={userBlogs}
             isCurrentUser={true} // Set to true if viewing own profile

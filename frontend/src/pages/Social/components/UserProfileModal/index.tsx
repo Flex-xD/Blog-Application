@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X,
     Calendar,
-    Users,
     UserCheck,
     UserPlus,
     BookOpen,
@@ -11,7 +10,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import type { IBlog, IUser } from '@/types';
-import { BlogCard } from '../BlogCard';
+import { BlogCard } from '@/pages/Components/BlogCard';
 
 
 interface ProfileModalProps {

@@ -25,5 +25,10 @@ export const QUERY_KEYS = {
         FOLLOWING_STATUS: (targetUserId: string) => ["social", "following-status", targetUserId] as const,
         SUGGESTIONS: (userId: string) => ["social", "suggestions", userId] as const, // follow suggestions
         MUTUALS: (userId: string) => ["social", "mutuals", userId] as const, // mutual followers with a user
+    } , 
+
+    LIKES: {
+        ALL:["likes"] as const , 
+        PERSONAL_LIKES:(userId:string) => ["likes" , "user"  , userId ] , 
     }
 };

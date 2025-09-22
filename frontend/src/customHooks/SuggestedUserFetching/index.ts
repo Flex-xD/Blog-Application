@@ -9,7 +9,7 @@ import type { apiReponse, IUser } from "@/types";
 const useSuggestedUserData = () => {
     const {data} = useUserProfileData();
     return useQuery({
-        queryKey: data?._id ? [QUERY_KEYS.SOCIAL.SUGGESTIONS(data._id)] : [],
+        queryKey: data?._id ? QUERY_KEYS.SOCIAL.SUGGESTIONS(data._id) : [],
         queryFn: async () => {
             const response  = await apiClient.get<apiReponse<IUser>>(SOCIAL_ENDPOINTS.USER_SUGGESTIONS);
             // console.log(response.data.data)

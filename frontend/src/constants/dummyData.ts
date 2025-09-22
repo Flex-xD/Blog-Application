@@ -1,4 +1,4 @@
-import type { IBlog } from "@/types";
+import type { IBlog, IUser } from "@/types";
 
 // ? DUMMY DATA FOR FEED PAGE 
 
@@ -210,4 +210,208 @@ export const suggestedUsers = [
     { name: "Sarah Williams", avatar: "https://randomuser.me/api/portraits/women/44.jpg", role: "Frontend Lead" },
     { name: "Michael Chen", avatar: "https://randomuser.me/api/portraits/men/33.jpg", role: "UX Engineer" },
     { name: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/65.jpg", role: "React Specialist" },
+];
+
+
+export const fakeUsersArray: IUser[] = [
+    {
+        _id: '1',
+        username: 'EmmaJohnson',
+        email: 'emma.johnson@example.com',
+        password: 'hashed_password_1',
+        bio: 'Digital artist and creative writer. Exploring the intersection of technology and art.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
+            format: 'jpg',
+            width: 1887,
+            height: 1887,
+            publicId: 'emma_johnson_profile'
+        },
+        followers: ['2', '3', '4'],
+        following: ['2', '5'],
+        saves: ['101', '102'],
+        userBlogs: ['201', '202'],
+        createdAt: new Date('2022-03-15'),
+        updatedAt: new Date('2023-08-10')
+    },
+    {
+        _id: '2',
+        username: 'AlexChen',
+        email: 'alex.chen@example.com',
+        password: 'hashed_password_2',
+        bio: 'Tech enthusiast and software developer. Building the future one line of code at a time.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
+            format: 'jpg',
+            width: 1887,
+            height: 1887,
+            publicId: 'alex_chen_profile'
+        },
+        followers: ['1', '3', '5', '6'],
+        following: ['1', '3', '7'],
+        saves: ['103', '104'],
+        userBlogs: ['203', '204'],
+        createdAt: new Date('2021-11-20'),
+        updatedAt: new Date('2023-07-22')
+    },
+    {
+        _id: '3',
+        username: 'SophiaMartinez',
+        email: 'sophia.martinez@example.com',
+        password: 'hashed_password_3',
+        bio: 'Travel blogger and photographer. Capturing moments and stories from around the world.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80',
+            format: 'jpg',
+            width: 2071,
+            height: 2071,
+            publicId: 'sophia_martinez_profile'
+        },
+        followers: ['1', '2', '4', '7', '8'],
+        following: ['2', '5', '9'],
+        saves: ['105', '106'],
+        userBlogs: ['205', '206'],
+        createdAt: new Date('2022-05-10'),
+        updatedAt: new Date('2023-09-05')
+    },
+    {
+        _id: '4',
+        username: 'JamesWilson',
+        email: 'james.wilson@example.com',
+        password: 'hashed_password_4',
+        bio: 'Food critic and culinary expert. Exploring flavors and culinary traditions globally.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+            format: 'jpg',
+            width: 2070,
+            height: 2070,
+            publicId: 'james_wilson_profile'
+        },
+        followers: ['1', '3', '5', '9'],
+        following: ['1', '6', '10'],
+        saves: ['107', '108'],
+        userBlogs: ['207', '208'],
+        createdAt: new Date('2022-01-30'),
+        updatedAt: new Date('2023-08-28')
+    },
+    {
+        _id: '5',
+        username: 'OliviaBrown',
+        email: 'olivia.brown@example.com',
+        password: 'hashed_password_5',
+        bio: 'Fitness coach and wellness advocate. Helping people live healthier, happier lives.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80',
+            format: 'jpg',
+            width: 1888,
+            height: 1888,
+            publicId: 'olivia_brown_profile'
+        },
+        followers: ['2', '4', '6', '10'],
+        following: ['2', '3', '7'],
+        saves: ['109', '110'],
+        userBlogs: ['209', '210'],
+        createdAt: new Date('2021-12-05'),
+        updatedAt: new Date('2023-07-15')
+    },
+    {
+        _id: '6',
+        username: 'MichaelTaylor',
+        email: 'michael.taylor@example.com',
+        password: 'hashed_password_6',
+        bio: 'Entrepreneur and startup advisor. Passionate about innovation and business growth.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
+            format: 'jpg',
+            width: 1887,
+            height: 1887,
+            publicId: 'michael_taylor_profile'
+        },
+        followers: ['2', '4', '5', '7', '8'],
+        following: ['4', '8', '9'],
+        saves: ['111', '112'],
+        userBlogs: ['211', '212'],
+        createdAt: new Date('2022-02-18'),
+        updatedAt: new Date('2023-09-12')
+    },
+    {
+        _id: '7',
+        username: 'IsabellaGarcia',
+        email: 'isabella.garcia@example.com',
+        password: 'hashed_password_7',
+        bio: 'Fashion designer and style influencer. Creating trends and celebrating individuality.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1964&q=80',
+            format: 'jpg',
+            width: 1964,
+            height: 1964,
+            publicId: 'isabella_garcia_profile'
+        },
+        followers: ['3', '5', '6', '9', '10'],
+        following: ['3', '5', '10'],
+        saves: ['113', '114'],
+        userBlogs: ['213', '214'],
+        createdAt: new Date('2022-04-22'),
+        updatedAt: new Date('2023-08-05')
+    },
+    {
+        _id: '8',
+        username: 'WilliamLee',
+        email: 'william.lee@example.com',
+        password: 'hashed_password_8',
+        bio: 'Music producer and audio engineer. Crafting sounds that move the soul.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
+            format: 'jpg',
+            width: 1887,
+            height: 1887,
+            publicId: 'william_lee_profile'
+        },
+        followers: ['3', '6', '9'],
+        following: ['6', '9'],
+        saves: ['115', '116'],
+        userBlogs: ['215', '216'],
+        createdAt: new Date('2022-06-14'),
+        updatedAt: new Date('2023-07-30')
+    },
+    {
+        _id: '9',
+        username: 'MiaAnderson',
+        email: 'mia.anderson@example.com',
+        password: 'hashed_password_9',
+        bio: 'Environmental scientist and climate activist. Working towards a sustainable future.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
+            format: 'jpg',
+            width: 1887,
+            height: 1887,
+            publicId: 'mia_anderson_profile'
+        },
+        followers: ['4', '7', '8', '10'],
+        following: ['3', '6', '8'],
+        saves: ['117', '118'],
+        userBlogs: ['217', '218'],
+        createdAt: new Date('2022-01-08'),
+        updatedAt: new Date('2023-09-01')
+    },
+    {
+        _id: '10',
+        username: 'BenjaminClark',
+        email: 'benjamin.clark@example.com',
+        password: 'hashed_password_10',
+        bio: 'History professor and author. Uncovering stories from the past to understand our present.',
+        profilePicture: {
+            url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
+            format: 'jpg',
+            width: 1887,
+            height: 1887,
+            publicId: 'benjamin_clark_profile'
+        },
+        followers: ['4', '5', '7', '9'],
+        following: ['4', '7'],
+        saves: ['119', '120'],
+        userBlogs: ['219', '220'],
+        createdAt: new Date('2022-03-03'),
+        updatedAt: new Date('2023-08-20')
+    }
 ];

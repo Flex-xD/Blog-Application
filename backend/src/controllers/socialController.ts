@@ -11,6 +11,7 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
     try {
         const { userId } = req;
         const user: IUser | null = await User.findById(userId);
+        
         if (!user) {
             sendResponse(res, {
                 statusCode: StatusCodes.NOT_FOUND,
@@ -51,15 +52,22 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
         ];
 
         const randomAggregationPipeline = [
-            { $match: { _id: { $ne: new mongoose.Types.ObjectId(userId as string) } } },
             {
-                $lookup:{
-                    from:"blogs" , 
-                    localField:"userBlogs" , 
-                    foreignField:"_id" , 
-                    as:"userBlogs"
+                $match: {
+                    _id: { $ne: new mongoose.Types.ObjectId(userId as string) ,
+                        $nin:[...(user?.following || [])]
+                    },
+                    
                 }
-            } ,
+            },
+            {
+                $lookup: {
+                    from: "blogs",
+                    localField: "userBlogs",
+                    foreignField: "_id",
+                    as: "userBlogs"
+                }
+            },
             { $sample: { size: 10 } }
         ]
 

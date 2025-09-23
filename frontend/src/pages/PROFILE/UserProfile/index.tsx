@@ -14,7 +14,6 @@ import apiClient from "@/utility/axiosClient";
 import { AUTH_ENDPOINTS } from "@/constants/constants";
 import { toast } from "sonner";
 import FollowModal from "../components/followersAndFollowingModal";
-import { useUserProfileData } from "@/customHooks/UserDataFetching";
 
 interface UserProfileProps {
     user: IUser
@@ -34,39 +33,29 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     onEditProfile,
 }) => {
     const [activeTab, setActiveTab] = useState("blogs");
-    const { data: userData } = useUserProfileData();
 
     const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
     const [modalUsers, setModalUsers] = useState<IUser[]>([]);
     const [modalTitle, setModalTitle] = useState('');
 
     const handleShowFollowers = () => {
-        // Use actual user followers data instead of fake data
         setModalUsers(user.followers.length > 0 ? user.followers : []);
         setModalTitle('Followers');
         setIsFollowModalOpen(true);
     };
 
     const handleShowFollowing = () => {
-        // Use actual user following data instead of fake data
-        setModalUsers(user.following.length   > 0 ? user.following : []);
+        setModalUsers(user.following.length > 0 ? user.following : []);
         setModalTitle('Following');
         setIsFollowModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setIsFollowModalOpen(false);
-        // Small delay to allow animation to complete before clearing data
         setTimeout(() => {
             setModalUsers([]);
             setModalTitle('');
         }, 300);
-    };
-
-    const handleFollowUnfollow = (userId: string, isFollowing: boolean) => {
-        // Implement your actual follow/unfollow logic here
-        console.log(`${isFollowing ? 'Unfollowing' : 'Following'} user:`, userId);
-        // You might want to update the local state or refetch data here
     };
 
     if (isLoading) {
@@ -90,13 +79,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
             {/* Follow Modal - Rendered at the root level */}
             <FollowModal
-                users={modalUsers}
+                currentUser={user}
                 isOpen={isFollowModalOpen}
                 onClose={handleCloseModal}
                 title={modalTitle}
-                currentUserId={userData?._id}
-                handleFollowAndUnfollow={handleFollowUnfollow}
-                followedUsers={userData?.following || []}
+                followedUsers={user?.following || []}
             />
 
             {/* Profile Header */}
@@ -110,8 +97,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                     <div className="flex-shrink-0 relative">
                         <Avatar className="h-28 w-28 md:h-36 md:w-36 border-4 border-white shadow-lg">
-                            <AvatarImage 
-                                src={user.profilePicture ? user.profilePicture.url : ""} 
+                            <AvatarImage
+                                src={user.profilePicture ? user.profilePicture.url : ""}
                                 alt={user.username}
                                 className="object-cover"
                             />

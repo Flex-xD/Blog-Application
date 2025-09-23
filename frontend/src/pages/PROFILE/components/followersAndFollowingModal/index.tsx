@@ -4,42 +4,43 @@ import { X, Users, UserPlus, ChevronLeft, ChevronRight, Check, UserCheck, BookOp
 import type { IUser } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
 
 interface FollowModalProps {
-    users: IUser[];
+    currentUser :IUser , 
     isOpen: boolean;
     onClose: () => void;
     title: string;
-    currentUserId?: string;
-    handleFollowAndUnfollow: (userId: string, isFollowing: boolean) => void;
     followedUsers: IUser[];
 }
 
 const FollowModal = ({
-    users,
+    currentUser , 
     isOpen,
     onClose,
     title,
-    currentUserId,
-    handleFollowAndUnfollow,
     followedUsers
 }: FollowModalProps) => {
     const [currentPage, setCurrentPage] = useState(0);
     const usersPerPage = 6;
     const [isFollowingStates, setIsFollowingStates] = useState<Record<string, boolean>>({});
+    const [targetUserId  , setTargetUserId] = useState<string>("");
+
+    // console.log("These are the users : " , followedUsers);
+    // console.log("These are the followed users : " , followedUsers);
 
     // Initialize following states
     useEffect(() => {
         const states: Record<string, boolean> = {};
-        users.forEach(user => {
+        followedUsers.forEach(user => {
             states[user._id] = followedUsers.some(followedUser => followedUser._id === user._id);
         });
         setIsFollowingStates(states);
-    }, [users, followedUsers]);
+    }, [followedUsers, followedUsers]);
 
     // Pagination
-    const totalPages = Math.ceil(users.length / usersPerPage);
-    const currentUsers = users.slice(
+    const totalPages = Math.ceil(followedUsers.length / usersPerPage);
+    const currentUsers = followedUsers.slice(
         currentPage * usersPerPage,
         (currentPage + 1) * usersPerPage
     );
@@ -52,15 +53,18 @@ const FollowModal = ({
         setCurrentPage((prev) => Math.max(prev - 1, 0));
     };
 
-    const handleFollowClick = (e: React.MouseEvent, user: IUser) => {
+    const {mutateAsync:followUnfollowFn} = useFollowOrUnfollowMutation(targetUserId , currentUser._id);
+
+    const handleFollowUnfollow = (e: React.MouseEvent, user: IUser) => {
         e.stopPropagation();
-        if (currentUserId !== user._id) {
+        setTargetUserId(user._id);
+        if (currentUser._id !== user._id) {
             const isCurrentlyFollowing = isFollowingStates[user._id];
             setIsFollowingStates(prev => ({
                 ...prev,
                 [user._id]: !isCurrentlyFollowing
             }));
-            handleFollowAndUnfollow(user._id, isCurrentlyFollowing);
+            followUnfollowFn(isCurrentlyFollowing);
         }
     };
 
@@ -82,7 +86,7 @@ const FollowModal = ({
             document.body.style.overflow = 'unset';
             document.body.style.paddingRight = '0px';
         }
-        
+
         return () => {
             document.body.style.overflow = 'unset';
             document.body.style.paddingRight = '0px';
@@ -120,9 +124,9 @@ const FollowModal = ({
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ 
-                            type: 'spring', 
-                            damping: 25, 
+                        transition={{
+                            type: 'spring',
+                            damping: 25,
                             stiffness: 300,
                             duration: 0.3
                         }}
@@ -140,7 +144,7 @@ const FollowModal = ({
                                         {title}
                                     </h2>
                                     <p className="text-sm text-gray-600">
-                                        {users.length} {title.toLowerCase()}
+                                        {followedUsers.length} {title.toLowerCase()}
                                     </p>
                                 </div>
                             </div>
@@ -155,7 +159,7 @@ const FollowModal = ({
 
                         {/* Scrollable Content */}
                         <div className="overflow-y-auto flex-1">
-                            {users.length === 0 ? (
+                            {followedUsers.length === 0 ? (
                                 <div className="text-center py-12 text-gray-500">
                                     <Users className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                                     <p className="text-lg font-medium text-gray-600">No {title.toLowerCase()} to display</p>
@@ -171,7 +175,7 @@ const FollowModal = ({
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ duration: 0.2 }}
-                                                    whileHover={{ 
+                                                    whileHover={{
                                                         scale: 1.02,
                                                         transition: { duration: 0.2 }
                                                     }}
@@ -179,8 +183,8 @@ const FollowModal = ({
                                                 >
                                                     <div className="flex items-center gap-4 flex-1 min-w-0">
                                                         <Avatar className="h-14 w-14 border-2 border-white shadow-sm">
-                                                            <AvatarImage 
-                                                                src={user.profilePicture?.url} 
+                                                            <AvatarImage
+                                                                src={user.profilePicture?.url}
                                                                 alt={user.username}
                                                                 className="object-cover"
                                                             />
@@ -212,11 +216,11 @@ const FollowModal = ({
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    {currentUserId !== user._id && (
+                                                    {currentUser._id !== user._id && (
                                                         <Button
                                                             variant={isFollowingStates[user._id] ? "outline" : "default"}
                                                             size="sm"
-                                                            onClick={(e) => handleFollowClick(e, user)}
+                                                            onClick={(e) => handleFollowUnfollow(e, user)}
                                                             className="ml-4 gap-2 min-w-[100px] transition-all duration-200"
                                                         >
                                                             {isFollowingStates[user._id] ? (
@@ -251,11 +255,11 @@ const FollowModal = ({
                                                     <ChevronLeft size={16} />
                                                     Previous
                                                 </Button>
-                                                
+
                                                 <span className="text-sm font-medium text-gray-600">
                                                     Page {currentPage + 1} of {totalPages}
                                                 </span>
-                                                
+
                                                 <Button
                                                     variant="outline"
                                                     size="sm"

@@ -107,6 +107,7 @@ export const unfollowOtherUsers = async (req: IAuthRequest, res: Response) => {
         try {
             session.startTransaction();
             if (!userToUnfollowId || !isValidObjectId(userToUnfollowId)) {
+                await session.abortTransaction();
                 return sendResponse(res, {
                     statusCode: StatusCodes.NOT_FOUND,
                     success: false,
@@ -115,6 +116,7 @@ export const unfollowOtherUsers = async (req: IAuthRequest, res: Response) => {
             }
 
             if (userId === userToUnfollowId) {
+                await session.abortTransaction();
                 return sendResponse(res, {
                     statusCode: StatusCodes.CONFLICT,
                     success: false,
@@ -128,6 +130,7 @@ export const unfollowOtherUsers = async (req: IAuthRequest, res: Response) => {
             ]);
 
             if (!user || !userToUnfollow) {
+                await session.abortTransaction();
                 return sendResponse(res, {
                     statusCode: StatusCodes.NOT_FOUND,
                     success: false,
@@ -139,6 +142,7 @@ export const unfollowOtherUsers = async (req: IAuthRequest, res: Response) => {
                 !user.following.includes(new Types.ObjectId(userToUnfollowId)) ||
                 !userToUnfollow.followers.includes(new Types.ObjectId(userId as unknown as string))
             ) {
+                await session.abortTransaction();
                 return sendResponse(res, {
                     statusCode: StatusCodes.CONFLICT,
                     success: false,

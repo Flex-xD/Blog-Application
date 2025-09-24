@@ -55,11 +55,6 @@ const Feed = () => {
     };
 
 
-    const handleLike = (id: string) => {
-        console.log(`Liked blog ${id}`);
-        // Add your like logic here
-    };
-
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Sticky Navbar */}
@@ -115,7 +110,6 @@ const Feed = () => {
                                                 : blog.image
                                         }
                                         authorDetails={{ ...blog.authorDetails }}
-                                        onLike={handleLike}
                                     />
                                 ))
                             ) : (

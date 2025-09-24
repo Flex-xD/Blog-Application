@@ -5,13 +5,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 
 
-interface ApiResponse {
+export interface ApiResponse {
     statusCode: number,
     success: false,
     msg: string,
 }
 
-interface errorResponse {
+export interface errorResponse {
     statuCode: number,
     success: boolean,
     msg: string

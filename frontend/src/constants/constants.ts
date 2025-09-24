@@ -20,5 +20,6 @@ export const SOCIAL_ENDPOINTS = {
     SUGGESTIONS_USERS_FOR_FOLLOWING: `${BASE_URL}/social/follow-suggestions`,
     FOLLOW_USER: (userToFollowId: string) => `${BASE_URL}/user/${userToFollowId}/follow`,
     UNFOLLOW_USER: (userToFollowId: string) => `${BASE_URL}/user/${userToFollowId}/unfollow`,
-    USER_SUGGESTIONS: `${BASE_URL}/social/follow-suggestions`
+    USER_SUGGESTIONS: `${BASE_URL}/social/follow-suggestions` , 
+    LIKE_BLOG:(blogToLikeId:string) => `${BASE_URL}/social/${blogToLikeId}/like`
 }

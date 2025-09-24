@@ -11,6 +11,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import useLikeMutation from "@/customHooks/LikeBlogMutation";
 
 export interface BlogCardProps {
     _id: string
@@ -45,22 +46,21 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     likes,
     comments,
     createdAt,
-    onLike,
     onSave,
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [currentLikes, setCurrentLikes] = useState(likes);
+    const [likeStates , setLikeStates] = useState<Record<string , boolean>>();
 
-    const handleLike = () => {
+    const { mutateAsync: handleBlogLike } = useLikeMutation();
+
+    const handleLike = async ( e:React.MouseEvent,blogToBeLikedId:string) => {
+        e.stopPropagation();
+        await handleBlogLike(blogToBeLikedId);
         setIsLiked(!isLiked);
         setCurrentLikes;
-        // e.stopPropagation();
-        // const newLikeStatus = !isLiked;
-        // setIsLiked(newLikeStatus);
-        // setCurrentLikes(newLikeStatus ? currentLikes + 1 : currentLikes - 1);
-        // if (onLike) onLike(_id);
     };
 
     const handleSave = (e: React.MouseEvent) => {
@@ -152,7 +152,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         variant="ghost"
                                         size="sm"
                                         className="h-8 px-3 gap-2 text-sm rounded-full"
-                                        onClick={handleLike}
+                                        onClick={(e) => handleLike(e , _id)}
                                     >
                                         <Heart
                                             className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
@@ -260,7 +260,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         <Button
                                             variant="ghost"
                                             className="flex items-center space-x-2"
-                                            onClick={handleLike}
+                                            onClick={(e) =>  handleLike(e , _id)}
                                         >
                                             <Heart
                                                 className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}

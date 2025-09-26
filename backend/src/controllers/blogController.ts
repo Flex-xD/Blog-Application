@@ -407,53 +407,58 @@ export const unlikeBlog = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
         const { blogToUnlikeId } = req.params;
-        const session = await mongoose.startSession()
+        const session = await mongoose.startSession();
         session.startTransaction();
+
         try {
-            const blog = await Promise.all([
-                Blog.findById({
-                    _id: blogToUnlikeId,
-                    likes: { $in: userId }
-                }).session(session)
-            ])
+            const blog = await Blog.findOne({
+                _id: blogToUnlikeId,
+                likes: userId
+            }).session(session);
 
             if (!blog) {
-                const blogExists = await Blog.exists({
-                    _id: blogToUnlikeId
-                })
+                const blogExists = await Blog.exists({ _id: blogToUnlikeId });
                 if (!blogExists) {
                     return sendResponse(res, {
                         statusCode: StatusCodes.NOT_FOUND,
                         success: false,
-                        msg: "Blog does not exists !"
-                    })
+                        msg: "Blog does not exist!"
+                    });
                 }
+
                 return sendResponse(res, {
                     statusCode: StatusCodes.CONFLICT,
                     success: false,
                     msg: "Blog already unliked"
-                })
+                });
             }
-            const updatedBlog = await Blog.findByIdAndUpdate(blogToUnlikeId, {
-                likes: { $pull: userId }
-            }, { new: true, runValidators: true }
-            )
+
+            const updatedBlog = await Blog.findByIdAndUpdate(
+                blogToUnlikeId,
+                { $pull: { likes: userId } },
+                { new: true, runValidators: true, session }
+            );
+
+            await session.commitTransaction();
+            await session.endSession();
+
             sendResponse(res, {
                 statusCode: StatusCodes.OK,
-                success: false,
-                msg: "Blog unliked successfully !",
-                data: { likesCount: updatedBlog?.likes.length },
+                success: true,
+                msg: "Blog unliked successfully!",
+                data: { likesCount: updatedBlog?.likes.length }
+            });
 
-            })
         } catch (error) {
-            return sendError(res, { error });
-        } finally {
+            await session.abortTransaction();
             await session.endSession();
+            return sendError(res, { error });
         }
     } catch (error) {
         sendError(res, { error });
     }
-}
+};
+
 
 export const commentOnBlog = async () => {
 }

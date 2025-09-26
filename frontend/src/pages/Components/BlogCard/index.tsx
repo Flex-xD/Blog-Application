@@ -64,12 +64,12 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     const handleLikeAndUnlike = async (e: React.MouseEvent, blogToBeLikedId: string) => {
         e.stopPropagation();
         if (isLiked) {
-            setCurrentLikes((prev) => prev.filter((id) => id !== userInfo?._id))
             await handleBlogUnlike(blogToBeLikedId);
+            setCurrentLikes((prev) => prev.filter((id) => id !== userInfo?._id))
         } else {
+            await handleBlogLike(blogToBeLikedId);
             setCurrentLikes((prev) => [...prev, userInfo?._id ?? ""]);
         }
-        await handleBlogLike(blogToBeLikedId);
     };
 
     const handleSave = (e: React.MouseEvent) => {

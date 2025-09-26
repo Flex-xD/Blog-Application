@@ -6,36 +6,51 @@ import type { errorResponse } from "@/types";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { toast } from "sonner";
 
-
-const useUnLikeMutation = (userId:string) => {
+const useUnLikeMutation = (userId: string) => {
     const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: async (targetBlogId: string) => {
             const endpoint = SOCIAL_ENDPOINTS.UNLIKE_BLOG(targetBlogId);
             const response = await apiClient.post<ApiResponse>(endpoint);
-            return response.data
+            return response.data;
         },
-        onMutate: async (targetBlogId:string) => {
-            await queryClient.cancelQueries({ queryKey: QUERY_KEYS.LIKES.PERSONAL_LIKES(userId , targetBlogId) });
-            const previousStatus = queryClient.getQueryData<boolean>(QUERY_KEYS.LIKES.PERSONAL_LIKES(userId , targetBlogId));
-            queryClient.setQueryData(QUERY_KEYS.LIKES.ALL, !previousStatus);
-            return { previousStatus  , targetBlogId};
+        onMutate: async (targetBlogId: string) => {
+            await queryClient.cancelQueries({
+                queryKey: QUERY_KEYS.LIKES.PERSONAL_LIKES(userId, targetBlogId)
+            });
+
+            const previousLikes = queryClient.getQueryData<string[]>(
+                QUERY_KEYS.LIKES.PERSONAL_LIKES(userId, targetBlogId)
+            );
+
+            queryClient.setQueryData<string[]>(
+                QUERY_KEYS.LIKES.PERSONAL_LIKES(userId, targetBlogId),
+                (old = []) => old.filter((id) => id !== userId)
+            );
+
+            return { previousLikes, targetBlogId };
         },
         onSuccess: (data) => {
-            console.log(data);
+            console.log("Unliked:", data);
         },
-        onError: (error: errorResponse, _, context) => {
-            console.log({ error });
-            if (context?.previousStatus !== undefined) {
-                queryClient.setQueryData(QUERY_KEYS.LIKES.ALL, context.previousStatus);
-                return toast.error(error.msg);
-
+        onError: (error: errorResponse, _variables, context) => {
+            if (context?.previousLikes) {
+                queryClient.setQueryData(
+                    QUERY_KEYS.LIKES.PERSONAL_LIKES(userId, context.targetBlogId),
+                    context.previousLikes
+                );
+                toast.error(error.msg);
             }
         },
-        onSettled: async (_data , _error , targetBlogId , _context) => {
-            queryClient.invalidateQueries({queryKey:QUERY_KEYS.LIKES.PERSONAL_LIKES(userId , targetBlogId)})
-        },
-    })
-}
+        onSettled: (_data, _error, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.LIKES.PERSONAL_LIKES(userId, variables)
+            });
+        }
+    });
+};
+
+
 
 export default useUnLikeMutation;

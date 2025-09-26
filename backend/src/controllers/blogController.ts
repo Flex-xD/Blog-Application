@@ -357,14 +357,13 @@ export const likeOnBlog = async (req: IAuthRequest, res: Response) => {
     const { blogToBeLikedId } = req.params;
     const session = await mongoose.startSession();
     session.startTransaction();
-
     try {
         if (!isValidObjectId(blogToBeLikedId))
             if (!blogToBeLikedId) {
-                sendResponse(res, {
+                return sendResponse(res, {
                     statusCode: StatusCodes.BAD_REQUEST,
                     success: false,
-                    msg: "Blog to be liked ID not given !"
+                    msg: "Blog to be liked ID is not given !"
                 })
             }
         const blog = await Promise.all([
@@ -377,21 +376,16 @@ export const likeOnBlog = async (req: IAuthRequest, res: Response) => {
         if (!blog) {
             const blogExists = await Blog.exists({ _id: blogToBeLikedId });
             if (!blogExists) {
-                sendResponse(res, {
+                return sendResponse(res, {
                     statusCode: StatusCodes.NOT_FOUND,
                     success: false,
                     msg: "Blog not found !"
                 })
             }
-            sendResponse(res, {
-                statusCode: StatusCodes.CONFLICT,
-                success: false,
-                msg: "Blog already Liked !"
-            })
         }
 
         const updatedBlog = await Blog.findByIdAndUpdate(blogToBeLikedId, {
-            $addToSet: { likes: new mongoose.Types.ObjectId(blogToBeLikedId) },
+            $addToSet: { likes: new mongoose.Types.ObjectId(userId) },
         },
             { new: true, runValidators: true }
         )
@@ -437,7 +431,7 @@ export const unlikeBlog = async (req: IAuthRequest, res: Response) => {
                 return sendResponse(res, {
                     statusCode: StatusCodes.CONFLICT,
                     success: false,
-                    msg: "Blog already Liked"
+                    msg: "Blog already unliked"
                 })
             }
             const updatedBlog = await Blog.findByIdAndUpdate(blogToUnlikeId, {

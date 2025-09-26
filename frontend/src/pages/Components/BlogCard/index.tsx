@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, ArrowRight, Bookmark, Share2, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState  , useEffect} from "react";
 import {
     Dialog,
     DialogContent,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import useLikeMutation from "@/customHooks/LikeBlogMutation";
+import { useUserProfileData } from "@/customHooks/UserDataFetching";
+import useUnLikeMutation from "@/customHooks/UnlikeBlogMutation";
 
 export interface BlogCardProps {
     _id: string
@@ -49,18 +51,25 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     onSave,
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    const [currentLikes, setCurrentLikes] = useState(likes);
-    const [likeStates , setLikeStates] = useState<Record<string , boolean>>();
+    const [currentLikes, setCurrentLikes] = useState<string[]>(likes);
+    const { data: userInfo } = useUserProfileData();
+    const isLiked = currentLikes.includes(userInfo?._id ?? "");
 
-    const { mutateAsync: handleBlogLike } = useLikeMutation();
+    const { mutateAsync: handleBlogLike } = useLikeMutation(userInfo!._id);
+    const {mutateAsync:handleBlogUnlike} = useUnLikeMutation(userInfo!._id);
+    console.log("This is userId : ", userInfo?._id);
+    console.log("This is Blog ID : " , _id);
 
-    const handleLike = async ( e:React.MouseEvent,blogToBeLikedId:string) => {
+    const handleLikeAndUnlike = async (e: React.MouseEvent, blogToBeLikedId: string) => {
         e.stopPropagation();
+        if (isLiked) {
+            setCurrentLikes((prev) => prev.filter((id) => id !== userInfo?._id))
+            await handleBlogUnlike(blogToBeLikedId);
+        } else {
+            setCurrentLikes((prev) => [...prev, userInfo?._id ?? ""]);
+        }
         await handleBlogLike(blogToBeLikedId);
-        setIsLiked(!isLiked);
-        setCurrentLikes;
     };
 
     const handleSave = (e: React.MouseEvent) => {
@@ -152,12 +161,13 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         variant="ghost"
                                         size="sm"
                                         className="h-8 px-3 gap-2 text-sm rounded-full"
-                                        onClick={(e) => handleLike(e , _id)}
+                                        onClick={(e) => handleLikeAndUnlike(e, _id)}
                                     >
                                         <Heart
-                                            className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                                            className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
+                                                }`}
                                         />
-                                        <span>{currentLikes.length}</span>
+                                        <span>{currentLikes.length} likes</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -260,10 +270,11 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         <Button
                                             variant="ghost"
                                             className="flex items-center space-x-2"
-                                            onClick={(e) =>  handleLike(e , _id)}
+                                            onClick={(e) => handleLikeAndUnlike(e, _id)}
                                         >
                                             <Heart
-                                                className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                                                className={`h-5 w-5 ${likes.includes(userInfo?._id ?? "") ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
+                                                    }`}
                                             />
                                             <span>{currentLikes.length} likes</span>
                                         </Button>

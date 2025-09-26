@@ -7,11 +7,11 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { toast } from "sonner";
 
 
-const useLikeMutation = (userId:string) => {
+const useUnLikeMutation = (userId:string) => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (targetBlogId: string) => {
-            const endpoint = SOCIAL_ENDPOINTS.LIKE_BLOG(targetBlogId);
+            const endpoint = SOCIAL_ENDPOINTS.UNLIKE_BLOG(targetBlogId);
             const response = await apiClient.post<ApiResponse>(endpoint);
             return response.data
         },
@@ -38,4 +38,4 @@ const useLikeMutation = (userId:string) => {
     })
 }
 
-export default useLikeMutation;
+export default useUnLikeMutation;

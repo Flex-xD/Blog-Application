@@ -29,6 +29,6 @@ export const QUERY_KEYS = {
 
     LIKES: {
         ALL:["likes"] as const , 
-        PERSONAL_LIKES:(userId:string) => ["likes" , "user"  , userId ] , 
+        PERSONAL_LIKES:(userId:string , blogId:string) => ["likes" , userId , blogId] , 
     }
 };

@@ -23,6 +23,7 @@ const routes: IRoute[] = [
   { path: "/profile", isPrivate: true, redirectTo: "/auth", element: <UserProfilePage /> },
   { path: "/feed", isPrivate: true, redirectTo: "/auth", element: <Feed /> },
   { path: "/social", isPrivate: true, redirectTo: "/auth", element: <Social /> },
+  { path: "/testing", isPrivate: false, redirectTo: "/auth", element: <Social /> },
 ]
 
 const App = () => {

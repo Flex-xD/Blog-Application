@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { Request, Response } from "express";
 import axios, { AxiosError } from "axios";
 import { PERSONALITY_CONTEXT } from "../constants/AI/index";
+import { sendError, sendResponse } from "../utils/helperFunction";
 
 interface IParsedAIResponse {
     Title: string;
@@ -11,25 +12,26 @@ interface IParsedAIResponse {
 export const llmBlogProcessing = async (req: Request, res: Response) => {
     const { prompt } = req.body as { prompt: string };
     if (!prompt || prompt.trim() === "" || prompt.length > 1000) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            message: "Prompt is required and must be under 1000 characters",
-            success: false,
-        });
+        return sendResponse(res, {
+            statusCode: StatusCodes.BAD_REQUEST,
+            msg: "Prompt is required and must be under 1000 characters",
+            success: false
+        })
     }
 
     if (!process.env.OPENROUTER_API_KEY) {
-        console.error("Missing OPENROUTER_API_KEY in environment variables");
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: "Server configuration error",
-            success: false,
-        });
+        return sendResponse(res, {
+            statusCode: StatusCodes.NOT_FOUND,
+            msg: "Server configuration error !",
+            success: false
+        })
     }
 
     try {
         const response = await axios.post(
             'https://openrouter.ai/api/v1/chat/completions',
             {
-                model: 'mistralai/mistral-7b-instruct:free',
+                model: 'openai/gpt-4o-mini',
                 messages: [
                     { role: 'system', content: PERSONALITY_CONTEXT },
                     { role: 'user', content: prompt }
@@ -46,11 +48,11 @@ export const llmBlogProcessing = async (req: Request, res: Response) => {
 
         const data = response.data;
         if (!data?.choices?.[0]?.message?.content) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                message: "Invalid response structure from LLM API",
-                success: false,
-                raw: data,
-            });
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                msg: "Invalid response structure from LLM API",
+                success: false
+            })
         }
 
         const content = data.choices[0].message.content;
@@ -76,47 +78,35 @@ export const llmBlogProcessing = async (req: Request, res: Response) => {
                 };
                 console.log("Parsed Fallback Response:", parsedResponse);
             } else {
-                return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                    message: "LLM response not in expected JSON format and could not be parsed",
-                    success: false,
-                    raw: content,
-                });
+                return sendResponse(res, {
+                    statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+                    msg: "LLM response not in expected JSON format and could not be parsed",
+                    success: false
+                })
             }
         }
 
         const { Title, Body } = parsedResponse;
         if (!Title || !Body) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                message: "Response missing expected keys (Title, Body)",
-                success: false,
-                data: parsedResponse,
-            });
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                msg: "Response missing keys expected !",
+                success: false
+            })
         }
-
-        return res.status(StatusCodes.OK).json({
-            message: "LLM processing successful",
-            success: true,
-            data: {
-                title: Title,
-                body: Body,
-            },
-        });
+        const responseData = {
+            title:Title ,
+            body:Body
+        }
+        console.log(responseData);
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            msg: "LLM Processing successfull !",
+            data: responseData, 
+            success: false
+        })
 
     } catch (error: unknown) {
-        if (error instanceof AxiosError || error instanceof Error) {
-            console.error("LLM Error:", error.message, { prompt: prompt });
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                message: "Internal Server Error",
-                success: false,
-                error: error instanceof AxiosError ? error.response?.data : error.message,
-            });
-        } else {
-            console.error("LLM Error: Unknown error", { prompt: prompt });
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                message: "Internal Server Error",
-                success: false,
-                error: "Unknown error",
-            });
-        }
-    }
-};
+        return sendError(res, { error })
+    };
+}

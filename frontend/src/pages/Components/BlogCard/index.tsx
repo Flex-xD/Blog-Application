@@ -272,10 +272,10 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                             className="flex items-center space-x-2"
                                             onClick={(e) => handleLikeAndUnlike(e, _id)}
                                         >
-                                            <Heart
-                                                className={`h-5 w-5 ${likes.includes(userInfo?._id ?? "") ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
-                                                    }`}
-                                            />
+                                    <Heart
+                                            className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
+                                                }`}
+                                        />
                                             <span>{currentLikes.length} likes</span>
                                         </Button>
                                         <Button

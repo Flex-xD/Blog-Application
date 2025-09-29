@@ -1,3 +1,5 @@
+import type { Variants } from "framer-motion";
+
 export interface IUser {
     username: string;
     email: string;
@@ -53,3 +55,42 @@ export interface errorResponse {
     success: boolean,
     msg: string
 }
+
+interface ITransition {
+    type?: "tween" | "spring" | "keyframes";
+    duration?: number;
+    ease?: string | number[];
+}
+
+interface IModalVariant {
+    opacity: number;
+    scale: number;
+    transition: ITransition;
+}
+
+export interface IModalVariants {
+    open: IModalVariant;
+    closed: IModalVariant;
+}
+
+// ✅ Now define variants with `satisfies Variants`
+export const modalVariants = {
+    open: {
+        opacity: 1,
+        scale: 1,
+        transition: {
+            type: "tween",
+            duration: 0.2,
+            ease: "easeInOut",
+        },
+    },
+    closed: {
+        opacity: 0,
+        scale: 0.9,
+        transition: {
+            type: "tween",
+            duration: 0.15,
+            ease: "easeInOut",
+        },
+    },
+} satisfies Variants;

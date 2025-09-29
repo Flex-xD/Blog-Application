@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, ArrowRight, Bookmark, Share2, Clock } from "lucide-react";
-import { useState  , useEffect} from "react";
+import { useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -58,8 +58,8 @@ export const BlogCard: React.FC<BlogCardProps> = ({
 
     const { mutateAsync: handleBlogLike } = useLikeMutation(userInfo!._id);
     const {mutateAsync:handleBlogUnlike} = useUnLikeMutation(userInfo!._id);
-    console.log("This is userId : ", userInfo?._id);
-    console.log("This is Blog ID : " , _id);
+    // console.log("This is userId : ", userInfo?._id);
+    // console.log("This is Blog ID : " , _id);
 
     const handleLikeAndUnlike = async (e: React.MouseEvent, blogToBeLikedId: string) => {
         e.stopPropagation();

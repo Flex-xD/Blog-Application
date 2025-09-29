@@ -4,7 +4,7 @@ import verifyToken from "../middleware/authMiddleware";
 
 const LLMRouter = Router();
 
-LLMRouter.post("/blog-llm-processing" , verifyToken ,  llmBlogProcessing);
+LLMRouter.post("/ai-enhancing" , verifyToken ,  llmBlogProcessing);
 
 export default LLMRouter;
 

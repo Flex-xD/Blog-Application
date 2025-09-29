@@ -52,7 +52,6 @@ const Feed = () => {
         }
     };
 
-
     // ? LOGIC FOR THE AI MODAL (I will seperate it later . . . )
     const [showAIModal, setShowAIModal] = useState(false);
     const [selectedTone, setSelectedTone] = useState<string>('');
@@ -60,6 +59,8 @@ const Feed = () => {
     const [contentToEnhance, setContentToEnhance] = useState('');
     const [enhancingContent, setEnhancingContent] = useState(false);
 
+
+    console.log(selectedTone);
     // Add this function to handle AI enhancement
     const handleAIEnhancement = async () => {
         setEnhancingContent(true);
@@ -86,7 +87,6 @@ const Feed = () => {
             setEnhancingContent(false);
         }
     };
-
 
 
     return (

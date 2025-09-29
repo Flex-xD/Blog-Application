@@ -6,7 +6,6 @@ import { modalVariants } from "@/types";
 import ModalWrapper from "@/pages/Components/ModelWrapper";
 import { backdropVariants } from "@/constants/varients";
 
-
 interface CreateAIModalProps {
     show: boolean;
     body: string;
@@ -82,8 +81,8 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
                                     key={tone.id}
                                     onClick={() => setSelectedTone(tone.id)}
                                     className={`p-4 rounded-xl border-2 text-left transition-all duration-150 ${selectedTone === tone.id
-                                            ? "border-indigo-500 bg-indigo-50 shadow-sm"
-                                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                        ? "border-indigo-500 bg-indigo-50 shadow-sm"
+                                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                         }`}
                                 >
                                     <div className="flex items-center space-x-3 mb-2">

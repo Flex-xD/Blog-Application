@@ -100,7 +100,7 @@ export const llmBlogProcessing = async (req: Request, res: Response) => {
     Body: ${sanitizedBody}
     Instructions: ${enhancementPrompt}
     Return the enhanced content in JSON format with 'Title' and 'Body' keys. Ensure the response is valid JSON.
-  `;
+    `;
 
     logger.info("Sending request to OpenRouter API", { promptLength: prompt.length, tone, hasCustomInstructions: !!customInstructions });
 

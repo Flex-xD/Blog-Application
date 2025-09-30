@@ -1,47 +1,78 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, Shield, X } from "lucide-react";
-import { modalVariants } from "@/types";
-import ModalWrapper from "@/pages/Components/ModelWrapper";
-import { backdropVariants } from "@/constants/varients";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Loader2, Sparkles, Shield, X } from 'lucide-react';
+import { modalVariants } from '@/types';
+import ModalWrapper from '@/pages/Components/ModelWrapper';
+import { backdropVariants } from '@/constants/varients';
+import useEnhanceContentMutation from '@/customHooks/AIEnhancement';
 
 interface CreateAIModalProps {
     show: boolean;
+    title: string;
     body: string;
     selectedTone: string | null;
     customInstructions: string;
     contentToEnhance: string;
-    enhancingContent: boolean;
     setShow: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedTone: React.Dispatch<React.SetStateAction<string>>;
     setCustomInstructions: React.Dispatch<React.SetStateAction<string>>;
     setContentToEnhance: React.Dispatch<React.SetStateAction<string>>;
-    handleAIEnhancement: () => void;
+    setTitle: React.Dispatch<React.SetStateAction<string>>;
+    setBody: React.Dispatch<React.SetStateAction<string>>; 
 }
 
 const tones = [
-    { id: "professional", name: "Professional", emoji: "💼", description: "Formal and business-like" },
-    { id: "casual", name: "Casual", emoji: "😊", description: "Friendly and informal" },
-    { id: "persuasive", name: "Persuasive", emoji: "🎯", description: "Convincing and compelling" },
-    { id: "educational", name: "Educational", emoji: "📚", description: "Informative and clear" },
-    { id: "storytelling", name: "Storytelling", emoji: "📖", description: "Narrative and engaging" },
-    { id: "inspirational", name: "Inspirational", emoji: "✨", description: "Motivational and uplifting" },
+    { id: 'professional', name: 'Professional', emoji: '💼', description: 'Formal and business-like' },
+    { id: 'casual', name: 'Casual', emoji: '😊', description: 'Friendly and informal' },
+    { id: 'persuasive', name: 'Persuasive', emoji: '🎯', description: 'Convincing and compelling' },
+    { id: 'educational', name: 'Educational', emoji: '📚', description: 'Informative and clear' },
+    { id: 'storytelling', name: 'Storytelling', emoji: '📖', description: 'Narrative and engaging' },
+    { id: 'inspirational', name: 'Inspirational', emoji: '✨', description: 'Motivational and uplifting' },
 ];
 
 const CreateAIModal: React.FC<CreateAIModalProps> = ({
     show,
+    title,
     body,
     selectedTone,
     customInstructions,
     contentToEnhance,
-    enhancingContent,
     setShow,
     setSelectedTone,
     setCustomInstructions,
     setContentToEnhance,
-    handleAIEnhancement,
+    setTitle,
+    setBody,
 }) => {
+    const { mutateAsync, isPending, isError, error } = useEnhanceContentMutation();
+
+    const handleEnhance = async () => {
+        try {
+            const payload = {
+                title: title || undefined, 
+                body: contentToEnhance || body, 
+                tone: selectedTone || undefined,
+                customInstructions: customInstructions || undefined,
+            };
+
+            const response = await mutateAsync(payload);
+            if (response.success && response.data) {
+                setTitle(response.data.title);
+                setBody(response.data.body); 
+                setContentToEnhance(response.data.body);
+                setShow(false);
+            }
+        } catch (err) {
+        }
+    };
+
+    const isButtonDisabled = Boolean(
+        isPending ||
+        !contentToEnhance.trim() ||
+        (selectedTone && customInstructions)
+    );
+
     return (
         <ModalWrapper show={show} backdropVariants={backdropVariants} zIndex={70}>
             <motion.div
@@ -81,8 +112,8 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
                                     key={tone.id}
                                     onClick={() => setSelectedTone(tone.id)}
                                     className={`p-4 rounded-xl border-2 text-left transition-all duration-150 ${selectedTone === tone.id
-                                        ? "border-indigo-500 bg-indigo-50 shadow-sm"
-                                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                            ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="flex items-center space-x-3 mb-2">
@@ -140,11 +171,11 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
                             Cancel
                         </Button>
                         <Button
-                            onClick={handleAIEnhancement}
-                            disabled={enhancingContent || !contentToEnhance.trim()}
+                            onClick={handleEnhance}
+                            disabled={isButtonDisabled}
                             className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                         >
-                            {enhancingContent ? (
+                            {isPending ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                     Enhancing...

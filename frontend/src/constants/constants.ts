@@ -14,6 +14,7 @@ export const AUTH_ENDPOINTS = {
 export const BLOG_ENDPOINTS = {
     CREATE_BLOG: `${BASE_URL}/blog/create`,
     USER_FEED: `${BASE_URL}/blog/feed`,
+    AI_ENHCANCEMENT:`${BASE_URL}/llm/ai-enhancing`
 }
 
 export const SOCIAL_ENDPOINTS = {
@@ -24,3 +25,4 @@ export const SOCIAL_ENDPOINTS = {
     LIKE_BLOG:(blogToLikeId:string) => `${BASE_URL}/social/${blogToLikeId}/like` ,
     UNLIKE_BLOG:(blogToUnlikeId:string) => `${BASE_URL}/social/${blogToUnlikeId}/unlike` 
 }
+

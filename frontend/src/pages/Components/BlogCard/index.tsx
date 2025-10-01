@@ -57,7 +57,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     const isLiked = currentLikes.includes(userInfo?._id ?? "");
 
     const { mutateAsync: handleBlogLike } = useLikeMutation(userInfo!._id);
-    const {mutateAsync:handleBlogUnlike} = useUnLikeMutation(userInfo!._id);
+    const { mutateAsync: handleBlogUnlike } = useUnLikeMutation(userInfo!._id);
     // console.log("This is userId : ", userInfo?._id);
     // console.log("This is Blog ID : " , _id);
 
@@ -272,10 +272,10 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                             className="flex items-center space-x-2"
                                             onClick={(e) => handleLikeAndUnlike(e, _id)}
                                         >
-                                    <Heart
-                                            className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
-                                                }`}
-                                        />
+                                            <Heart
+                                                className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
+                                                    }`}
+                                            />
                                             <span>{currentLikes.length} likes</span>
                                         </Button>
                                         <Button

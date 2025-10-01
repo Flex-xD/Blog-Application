@@ -2,11 +2,12 @@ import { Request, Response } from "express"
 import { sendError, sendResponse } from "../utils/helperFunction";
 import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../models/userModel";
-import Blog, { IBlog } from "../models/blogModel";
+import Blog, { IBlog, TUserComment } from "../models/blogModel";
 import mongoose, { isValidObjectId, ObjectId, PipelineStage, Types } from "mongoose";
 import { IFeedQuery } from "../types";
 import cloudinary from "../config/cloudinary";
 import streamifier from "streamifier";
+import { logger } from "../utils";
 
 function uploadBufferToCloudinary(
     fileBuffer: Buffer,
@@ -350,8 +351,6 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
     }
 };
 
-// * LIKE AND COMMENT AND REPLIES
-
 export const likeOnBlog = async (req: IAuthRequest, res: Response) => {
     const { userId } = req;
     const { blogToBeLikedId } = req.params;
@@ -460,5 +459,53 @@ export const unlikeBlog = async (req: IAuthRequest, res: Response) => {
 };
 
 
-export const commentOnBlog = async () => {
+export const commentOnBlog = async (req: IAuthRequest, res: Response) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const { userId } = req;
+        const {blogId} = req.params;
+        const { commentBody }: { commentBody: string } = req.body;
+        const [user , blog] = await Promise.all([
+            User.findById(userId).session(session) , 
+            Blog.findById(blogId).session(session)
+        ])
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found !"
+            })
+        }
+        if (!blog) {
+            return sendResponse(res , {
+                statusCode:StatusCodes.NOT_FOUND , 
+                success:false , 
+                msg:"Blog not found !"
+            })
+        }
+
+        const userComment:TUserComment = {
+            commentAuthor:{
+                _id:userId as unknown as mongoose.Types.ObjectId, 
+                profilePicture:user.profilePicture ? user?.profilePicture?.url : "", 
+                username:user.username
+            } , 
+            body:commentBody , 
+            date:new Date()
+        }
+        blog.comments.push(userComment)
+        await blog.save({session});
+        return sendResponse(res , {
+            statusCode:StatusCodes.CREATED , 
+            success :true , 
+            data:userComment , 
+            msg:"Comment posted successfully !"
+        })
+    } catch (error) {
+        await session.abortTransaction();
+        return sendError(res , {error});
+    } finally {
+        await session.endSession()
+    }
 }

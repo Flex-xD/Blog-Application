@@ -10,6 +10,16 @@ export interface IImageInfo {
     format?: string;
 }
 
+export type TUserComment = {
+    commentAuthor: {
+        _id: Types.ObjectId,
+        username: string,
+        profilePicture: string
+    },
+    body: string,
+    date: Date
+}
+
 export interface IBlog extends Document {
     _id: ObjectId
     title: string;
@@ -21,7 +31,7 @@ export interface IBlog extends Document {
         _id: mongoose.ObjectId
     }
     likes: Types.ObjectId[];
-    comments: Types.ObjectId[];
+    comments: TUserComment[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -52,12 +62,15 @@ const blogSchema = new Schema<IBlog>(
                 type: Schema.Types.ObjectId,
             },
         ],
-        comments: [
-            {
-                ref: "User",
-                type: Schema.Types.ObjectId,
+        comments: [{
+            commentAuthor: {
+                _id: Types.ObjectId,
+                username: string,
+                profilePicture: string
             },
-        ],
+            body: string,
+            date: Date
+        }],
         authorDetails: {
             username: {
                 type: String,

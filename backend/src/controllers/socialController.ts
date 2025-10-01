@@ -5,8 +5,6 @@ import { Response } from "express";
 import User, { IUser } from "../models/userModel";
 import mongoose from "mongoose";
 
-
-// TEST THE CONTROLLER 
 export const followSuggestionForUser = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;

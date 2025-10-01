@@ -7,14 +7,12 @@ import { createLogger, format, transports } from "winston";
 import { PERSONALITY_CONTEXT } from "../constants/AI/index";
 import { sendError, sendResponse } from "../utils/helperFunction";
 
-// Logger configuration
 const logger = createLogger({
     level: "info",
     format: format.combine(format.timestamp(), format.json()),
     transports: [new transports.Console()],
 });
 
-// Input validation schema
 const blogInputSchema = z.object({
     title: z.string().max(200, "Title must be 200 characters or less").optional(),
     body: z
@@ -40,7 +38,6 @@ const blogInputSchema = z.object({
     "Cannot provide both tone and custom instructions",
 );
 
-// Interface for parsed AI response
 interface IParsedAIResponse {
     Title: string;
     Body: string;

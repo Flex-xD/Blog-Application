@@ -2,12 +2,18 @@ import mongoose, { Schema, Document, Types, Model } from 'mongoose'
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
-    _id:string
+    _id: string
     username: string;
     email: string;
     password: string;
-    bio:string , 
-    profilePicture?: string;
+    bio: string,
+    profilePicture?: {
+        url: string;
+        publicId: string;
+        width?: number;
+        height?: number;
+        format?: string;
+    };
     followers: Types.ObjectId[];
     following: Types.ObjectId[];
     saves: Types.ObjectId[];
@@ -39,11 +45,17 @@ const UserSchema = new Schema<IUser>(
             minlength: 6,
         },
         profilePicture: {
-            type: String,
+            url: { type: String },
+            publicId: {
+                type: String,
+            },
+            width: { type: Number },
+            height: { type: Number },
+            format: { type: String },
         },
-        bio:{
+        bio: {
             type: String,
-            default: function(this: IUser) {
+            default: function (this: IUser) {
                 return `Hey, I am ${this.username ?? ''}`;
             }
         },
@@ -75,11 +87,11 @@ const UserSchema = new Schema<IUser>(
                 default: []
             },
         ],
-        createdAt:{
-            type:Date
-        } , 
-        updatedAt:{
-            type:Date
+        createdAt: {
+            type: Date
+        },
+        updatedAt: {
+            type: Date
         }
     },
     { timestamps: true }

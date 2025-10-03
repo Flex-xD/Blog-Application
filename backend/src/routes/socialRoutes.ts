@@ -1,7 +1,7 @@
 import { Router } from "express"
 import verifyToken from "../middleware/authMiddleware";
 import { followSuggestionForUser } from "../controllers/socialController";
-import { likeOnBlog, unlikeBlog } from "../controllers/blogController";
+import { commentOnBlog, likeOnBlog, unlikeBlog } from "../controllers/blogController";
 
 const socialRoutes = Router();
 
@@ -11,6 +11,7 @@ socialRoutes.get("/follow-suggestions", verifyToken, followSuggestionForUser);
 socialRoutes.post("/:blogToBeLikedId/like", verifyToken, likeOnBlog);
 
 socialRoutes.post("/:blogToUnlikeId/unlike", verifyToken, unlikeBlog);
+socialRoutes.post("/:blogId/comment" , verifyToken ,  commentOnBlog);
 
 export default socialRoutes;
 

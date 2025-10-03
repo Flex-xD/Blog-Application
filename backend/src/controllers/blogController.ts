@@ -464,47 +464,49 @@ export const commentOnBlog = async (req: IAuthRequest, res: Response) => {
     session.startTransaction();
     try {
         const { userId } = req;
-        const {blogId} = req.params;
+        const { blogId } = req.params;
         const { commentBody }: { commentBody: string } = req.body;
-        const [user , blog] = await Promise.all([
-            User.findById(userId).session(session) , 
-            Blog.findById(blogId).session(session)
-        ])
+        const user = await User.findById(userId).session(session)
         if (!user) {
+            await session.abortTransaction()
             return sendResponse(res, {
                 statusCode: StatusCodes.NOT_FOUND,
                 success: false,
                 msg: "User not found !"
             })
         }
+        const userComment: TUserComment = {
+            commentAuthor: {
+                _id: userId as unknown as mongoose.Types.ObjectId,
+                profilePicture: user.profilePicture?.url ? user?.profilePicture?.url : "",
+                username: user.username
+            },
+            body: commentBody,
+            date: new Date()
+        }
+        const blog = await Blog.findByIdAndUpdate(
+            blogId,
+            { $push: { comments: userComment } },
+            { new: true, session }
+        )
         if (!blog) {
-            return sendResponse(res , {
-                statusCode:StatusCodes.NOT_FOUND , 
-                success:false , 
-                msg:"Blog not found !"
+            await session.abortTransaction()
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "Blog not found !"
             })
         }
-
-        const userComment:TUserComment = {
-            commentAuthor:{
-                _id:userId as unknown as mongoose.Types.ObjectId, 
-                profilePicture:user.profilePicture ? user?.profilePicture?.url : "", 
-                username:user.username
-            } , 
-            body:commentBody , 
-            date:new Date()
-        }
-        blog.comments.push(userComment)
-        await blog.save({session});
-        return sendResponse(res , {
-            statusCode:StatusCodes.CREATED , 
-            success :true , 
-            data:userComment , 
-            msg:"Comment posted successfully !"
+        await session.commitTransaction()
+        return sendResponse(res, {
+            statusCode: StatusCodes.CREATED,
+            success: true,
+            data: userComment,
+            msg: "Comment posted successfully !"
         })
     } catch (error) {
         await session.abortTransaction();
-        return sendError(res , {error});
+        return sendError(res, { error });
     } finally {
         await session.endSession()
     }

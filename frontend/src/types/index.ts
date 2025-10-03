@@ -62,6 +62,16 @@ interface ITransition {
     ease?: string | number[];
 }
 
+export type TUserComment = {
+    commentAuthor: {
+        _id: string,
+        username: string,
+        profilePicture: string
+    },
+    body: string,
+    date: Date
+}
+
 interface IModalVariant {
     opacity: number;
     scale: number;

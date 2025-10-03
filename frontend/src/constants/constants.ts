@@ -23,6 +23,7 @@ export const SOCIAL_ENDPOINTS = {
     UNFOLLOW_USER: (userToFollowId: string) => `${BASE_URL}/user/${userToFollowId}/unfollow`,
     USER_SUGGESTIONS: `${BASE_URL}/social/follow-suggestions` , 
     LIKE_BLOG:(blogToLikeId:string) => `${BASE_URL}/social/${blogToLikeId}/like` ,
-    UNLIKE_BLOG:(blogToUnlikeId:string) => `${BASE_URL}/social/${blogToUnlikeId}/unlike` 
+    UNLIKE_BLOG:(blogToUnlikeId:string) => `${BASE_URL}/social/${blogToUnlikeId}/unlike`  , 
+    COMMENT_BLOG:(blogId:string) => `${BASE_URL}/socail/${blogId}/comment`
 }
 

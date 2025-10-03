@@ -18,6 +18,8 @@ export const QUERY_KEYS = {
 
     // Comments
     COMMENTS: {
+        ALL_COMMENTS:["comments"] , 
+        USER_COMMENTS:(userId:string) => ["comments" , "user" , userId] ,
         BY_BLOG: (blogId: string) => ["comments", "blog", blogId] as const,
     },
     

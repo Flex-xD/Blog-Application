@@ -1,7 +1,7 @@
 import { Router } from "express";
 import verifyToken from "../middleware/authMiddleware";
 import { upload } from "../middleware/multerMiddleware";
-import { createBlogController, getFeedController, getUserBlogs, getUserSavedBlogs } from "../controllers/blogController";
+import { commentOnBlog, createBlogController, getFeedController, getUserBlogs, getUserSavedBlogs } from "../controllers/blogController";
 
 const blogRouter = Router();
 
@@ -14,8 +14,6 @@ blogRouter.get("/user-saved-blogs", verifyToken, getUserSavedBlogs)
 
 // ? POST BLOG
 blogRouter.post("/create", verifyToken, upload.single('image'), createBlogController);
-
-// ? COMMENT AND REPLY ON BLOG
 
 
 export default blogRouter;

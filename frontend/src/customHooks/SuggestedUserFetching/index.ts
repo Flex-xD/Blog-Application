@@ -12,7 +12,6 @@ const useSuggestedUserData = () => {
         queryKey: data?._id ? QUERY_KEYS.SOCIAL.SUGGESTIONS(data._id) : [],
         queryFn: async () => {
             const response  = await apiClient.get<apiReponse<IUser>>(SOCIAL_ENDPOINTS.USER_SUGGESTIONS);
-            // console.log(response.data.data)
             return response.data.data;
         },
         enabled: !!data?._id

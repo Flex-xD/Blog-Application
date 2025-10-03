@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, type SetStateAction } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X,
   Send,
   Calendar,
   Clock,
   User
 } from 'lucide-react';
+import useCommentMutation from '@/customHooks/CommentOnBlog';
+import type { IUser } from '@/types';
+import { data } from 'react-router-dom';
 
 interface CommentAuthor {
   _id: string;
@@ -30,8 +32,8 @@ interface CommentModalProps {
   onClose: () => void;
   comments: Comment[];
   blogId: string;
-  onCommentSubmit: (blogId: string, commentBody: string) => Promise<void>;
-  currentUser?: CommentAuthor;
+  userInfo: IUser
+  setBlogComments: React.Dispatch<SetStateAction<Comment[]>>;
 }
 
 export const CommentModal: React.FC<CommentModalProps> = ({
@@ -39,20 +41,38 @@ export const CommentModal: React.FC<CommentModalProps> = ({
   onClose,
   comments,
   blogId,
-  onCommentSubmit,
-  currentUser
+  userInfo,
+  setBlogComments
 }) => {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+  const { mutateAsync: commentMutation, data: postedComment } = useCommentMutation(blogId, {
+    username: userInfo?.username || "",
+    profilePicture: userInfo?.profilePicture?.url,
+    _id: userInfo?._id || ""
+  });
+  console.log(postedComment?.data);
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || isSubmitting) return;
-
+    console.log(newComment);
     setIsSubmitting(true);
     try {
-      await onCommentSubmit(blogId, newComment.trim());
+      const response = await commentMutation({ commentBody: newComment.trim() });
       setNewComment('');
+      if (response?.data) {
+        setBlogComments([
+          ...comments,
+          {
+            ...response.data,
+            date: typeof response.data.date === 'string'
+              ? response.data.date
+              : response.data.date.toISOString()
+          }
+        ]);
+      }
     } catch (error) {
       console.error('Failed to submit comment:', error);
     } finally {
@@ -99,118 +119,52 @@ export const CommentModal: React.FC<CommentModalProps> = ({
         {/* Comments List */}
         <div className="flex-1 overflow-y-auto max-h-[400px] px-6 py-4">
           <AnimatePresence>
-            {comments.length === 0 ? (
+            {comments.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 className="text-center py-12 text-gray-500"
               >
                 <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium">No comments yet</p>
                 <p className="text-sm">Be the first to share your thoughts!</p>
               </motion.div>
-            ) : (
-              <motion.div
-                className="space-y-4"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.1
-                    }
-                  }
-                }}
-              >
-                {[
-    {
-        _id: "comment1",
-        commentAuthor: {
-            _id: "user2",
-            username: "sarah_writer",
-            profilePicture: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-        },
-        body: "This is such an insightful post! I really enjoyed reading about your perspective on this topic.",
-        date: "2024-01-15T10:30:00Z"
-    },
-    {
-        _id: "comment2",
-        commentAuthor: {
-            _id: "user3",
-            username: "tech_enthusiast",
-            profilePicture: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-        },
-        body: "Great points! Have you considered the implications of recent developments in this field?",
-        date: "2024-01-15T14:45:00Z"
-    },
-    {
-        _id: "comment3",
-        commentAuthor: {
-            _id: "user4",
-            username: "design_lover",
-            profilePicture: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-        },
-        body: "The examples you provided really helped clarify the concepts. Looking forward to more content like this!",
-        date: "2024-01-16T09:15:00Z"
-    },
-    {
-        _id: "comment4",
-        commentAuthor: {
-            _id: "user5",
-            username: "code_master",
-            profilePicture: ""
-        },
-        body: "Interesting approach. I've implemented something similar in my projects and found it works well.",
-        date: "2024-01-16T16:20:00Z"
-    }
-].map((comment, index) => (
-                  <motion.div
-                    key={comment._id || index}
-                    variants={{
-                      hidden: { opacity: 0, y: 20 },
-                      visible: { opacity: 1, y: 0 }
-                    }}
-                    whileHover={{
-                      y: -2,
-                      transition: { duration: 0.2 }
-                    }}
-                    className="p-4 rounded-lg border border-transparent hover:border-gray-200 hover:shadow-sm transition-all duration-200 bg-white"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-8 w-8 ring-2 ring-gray-100 hover:ring-indigo-100 transition-colors">
-                        <AvatarImage
-                          src={comment.commentAuthor?.profilePicture || undefined}
-                          alt={comment.commentAuthor?.username || "User"}
-                        />
-                        <AvatarFallback>
-                          {(comment.commentAuthor?.username?.[0] || "U").toUpperCase()}
-                        </AvatarFallback>
-
-                      </Avatar>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900 text-sm">
-                            {comment.commentAuthor.username}
-                          </span>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(comment.date)}</span>
-                            <Clock className="h-3 w-3 ml-1" />
-                            <span>{formatTime(comment.date)}</span>
-                          </div>
-                        </div>
-
-                        <p className="text-gray-700 text-sm leading-relaxed">
-                          {comment.body}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
             )}
+
+            {comments.map((comment, index) => (
+              <motion.div
+                key={comment._id || index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="p-4 rounded-lg border border-transparent hover:border-gray-200 hover:shadow-sm transition-all duration-200 bg-white"
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-8 w-8 ring-2 ring-gray-100 hover:ring-indigo-100 transition-colors">
+                    <AvatarImage
+                      src={comment.commentAuthor?.profilePicture || undefined}
+                      alt={comment.commentAuthor?.username || "User"}
+                    />
+                    <AvatarFallback>
+                      {(comment.commentAuthor?.username?.[0] || "U").toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-gray-900 text-sm">
+                        {comment.commentAuthor.username}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      {comment.body}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </AnimatePresence>
+
         </div>
 
         {/* Comment Input */}
@@ -218,11 +172,11 @@ export const CommentModal: React.FC<CommentModalProps> = ({
           <form onSubmit={handleSubmitComment} className="flex gap-3">
             <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-gray-100">
               <AvatarImage
-                src={currentUser?.profilePicture}
-                alt={currentUser?.username}
+                src={userInfo?.profilePicture?.url}
+                alt={userInfo?.username}
               />
               <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 font-medium">
-                {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+                {userInfo?.username?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
 

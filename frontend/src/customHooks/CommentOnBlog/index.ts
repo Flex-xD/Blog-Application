@@ -14,7 +14,7 @@ const useCommentMutation = (
     currentUser: { username: string; profilePicture?: string  , _id:string}
 ) => {
     const queryClient = useQueryClient();
-
+    console.log(SOCIAL_ENDPOINTS.COMMENT_BLOG(blogId));
     return useMutation<apiReponse<TUserComment>, errorResponse, CommentVariables>({
         mutationFn: async (variables) => {
             const response = await apiClient.post<apiReponse<TUserComment>>(
@@ -35,14 +35,13 @@ const useCommentMutation = (
             );
 
             const optimisticComment: TUserComment = {
-                _id: `temp-${Date.now()}`,
                 commentAuthor: {
                     _id: currentUser._id,
                     username: currentUser.username,
                     profilePicture: currentUser.profilePicture ?? "",
                 },
                 body: variables.commentBody,
-                date: new Date().toISOString(),
+                date: new Date(),
             };
 
             queryClient.setQueryData<TUserComment[]>(

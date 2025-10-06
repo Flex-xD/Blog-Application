@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { motion } from "framer-motion";
 import { ImageIcon, Link, PenSquare } from "lucide-react";
@@ -17,7 +18,7 @@ export const CreateBlogCard = ({
             setShowCreateModal(true);
         }
     };
-
+    // const {data:userInfo} = useUserProfileData();
     return (
         <motion.div
             whileHover={{ y: -2 }}

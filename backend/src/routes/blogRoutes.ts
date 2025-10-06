@@ -1,12 +1,13 @@
 import { Router } from "express";
 import verifyToken from "../middleware/authMiddleware";
 import { upload } from "../middleware/multerMiddleware";
-import { commentOnBlog, createBlogController, getFeedController, getUserBlogs, getUserSavedBlogs } from "../controllers/blogController";
+import { commentOnBlog, createBlogController, getFeedController, getPopularBlogsController, getUserBlogs, getUserSavedBlogs } from "../controllers/blogController";
 
 const blogRouter = Router();
 
 // ? USER'S FEED
 blogRouter.get("/feed", verifyToken, getFeedController);
+blogRouter.get("/popular-blogs" , verifyToken , getPopularBlogsController);
 
 // ? USER'S BLOGS
 blogRouter.get("/user-blogs", verifyToken, getUserBlogs);

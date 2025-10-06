@@ -1,27 +1,27 @@
-import * as React from "react";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare, LucideLogOut } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
-import { BlogCard } from "@/pages/Components/BlogCard";
-import type { IBlog, IUser } from "@/types";
-import Navbar from "@/pages/Components/Navbar";
-import apiClient from "@/utility/axiosClient";
-import { AUTH_ENDPOINTS } from "@/constants/constants";
-import { toast } from "sonner";
-import FollowModal from "../components/followersAndFollowingModal";
+import * as React from 'react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare, LucideLogOut } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { BlogCard } from '@/pages/Components/BlogCard';
+import type { IBlog, IUser } from '@/types';
+import Navbar from '@/pages/Components/Navbar';
+import apiClient from '@/utility/axiosClient';
+import { AUTH_ENDPOINTS } from '@/constants/constants';
+import { toast } from 'sonner';
+import FollowModal from '../components/followersAndFollowingModal';
+import { EditProfileModal } from '../components/EditProfileModal';
 
 interface UserProfileProps {
-    user: IUser
+    user: IUser;
     blogs: IBlog[];
     isLoading?: boolean;
     isCurrentUser?: boolean;
     onFollow?: () => void;
-    onEditProfile?: () => void;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -30,22 +30,41 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     isLoading = false,
     isCurrentUser = false,
     onFollow,
-    onEditProfile,
 }) => {
-    const [activeTab, setActiveTab] = useState("blogs");
-
+    const [activeTab, setActiveTab] = useState('blogs');
     const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
     const [modalUsers, setModalUsers] = useState<IUser[]>([]);
     const [modalTitle, setModalTitle] = useState('');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    const handleShowFollowers = () => {
-        setModalUsers(user.followers.length > 0 ? user.followers : []);
+    const handleShowFollowers = async () => {
+        // If followers are string IDs, fetch user objects here
+        if (user.followers.length > 0 && typeof user.followers[0] === 'string') {
+            try {
+                const { data } = await apiClient.post('/users/bulk', { ids: user.followers });
+                setModalUsers(data.users as IUser[]);
+            } catch (error) {
+                setModalUsers([]);
+            }
+        } else {
+            setModalUsers(user.followers.length > 0 ? user.followers as unknown as IUser[] : []);
+        }
         setModalTitle('Followers');
         setIsFollowModalOpen(true);
     };
 
-    const handleShowFollowing = () => {
-        setModalUsers(user.following.length > 0 ? user.following : []);
+    const handleShowFollowing = async () => {
+        // If following are string IDs, fetch user objects here
+        if (user.following.length > 0 && typeof user.following[0] === 'string') {
+            try {
+                const { data } = await apiClient.post('/users/bulk', { ids: user.following });
+                setModalUsers(data.users as IUser[]);
+            } catch (error) {
+                setModalUsers([]);
+            }
+        } else {
+            setModalUsers(user.following.length > 0 ? user.following as unknown as IUser[] : []);
+        }
         setModalTitle('Following');
         setIsFollowModalOpen(true);
     };
@@ -58,35 +77,38 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         }, 300);
     };
 
-    if (isLoading) {
-        return <ProfileSkeleton />;
-    }
-
     const handleLogout = async () => {
         try {
             await apiClient.post(AUTH_ENDPOINTS.LOGOUT);
             setTimeout(() => {
-                toast.success("Logged out Successfully !");
+                toast.success('Logged out Successfully!');
             }, 1000);
             window.location.reload();
         } catch (error) {
-            console.log(error)
-            toast.error("Error occurred while logging out !");
+            console.log(error);
+            toast.error('Error occurred while logging out!');
         }
+    };
+
+    if (isLoading) {
+        return <ProfileSkeleton />;
     }
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
-            {/* Follow Modal - Rendered at the root level */}
             <FollowModal
                 currentUser={user}
                 isOpen={isFollowModalOpen}
                 onClose={handleCloseModal}
                 title={modalTitle}
-                followedUsers={user?.following || []}
+                followedUsers={modalUsers}
+            />
+            <EditProfileModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                currentPicture={user.profilePicture?.url}
             />
 
-            {/* Profile Header */}
             <Navbar />
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -98,7 +120,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     <div className="flex-shrink-0 relative">
                         <Avatar className="h-28 w-28 md:h-36 md:w-36 border-4 border-white shadow-lg">
                             <AvatarImage
-                                src={user.profilePicture ? user.profilePicture.url : ""}
+                                src={user.profilePicture ? user.profilePicture.url : ''}
                                 alt={user.username}
                                 className="object-cover"
                             />
@@ -108,7 +130,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                         </Avatar>
                         {isCurrentUser && (
                             <button
-                                onClick={onEditProfile}
+                                onClick={() => setIsEditModalOpen(true)}
                                 className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-md border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                             >
                                 <Pencil className="h-4 w-4 text-indigo-600" />
@@ -140,7 +162,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                             Logout
                                         </Button>
                                         <Button
-                                            onClick={onEditProfile}
+                                            onClick={() => setIsEditModalOpen(true)}
                                             className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg transition-all duration-200"
                                         >
                                             <Pencil className="h-4 w-4" />
@@ -212,12 +234,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 </div>
             </motion.div>
 
-            {/* Content Tabs */}
-            <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-            >
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -225,9 +242,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 >
                     <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto bg-gray-100 p-1 h-auto rounded-xl mb-8">
                         {[
-                            { value: "blogs", label: "Blogs" },
-                            { value: "saved", label: "Saved" },
-                            { value: "about", label: "About" }
+                            { value: 'blogs', label: 'Blogs' },
+                            { value: 'saved', label: 'Saved' },
+                            { value: 'about', label: 'About' },
                         ].map((tab) => (
                             <TabsTrigger
                                 key={tab.value}
@@ -260,13 +277,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                         <BlogCard
                                             {...blog}
                                             image={
-                                                typeof blog.image === "string"
+                                                typeof blog.image === 'string'
                                                     ? {
                                                         url: blog.image,
-                                                        publicId: "",
+                                                        publicId: '',
                                                         width: 0,
                                                         height: 0,
-                                                        format: "",
+                                                        format: '',
                                                     }
                                                     : blog.image
                                             }
@@ -281,13 +298,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                         <PenSquare className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                                         <h3 className="text-xl font-semibold text-gray-700 mb-3">
                                             {isCurrentUser
-                                                ? "You haven't written any blogs yet"
-                                                : "No blogs published yet"}
+                                                ? 'You haven’t written any blogs yet'
+                                                : 'No blogs published yet'}
                                         </h3>
                                         <p className="text-gray-500 mb-6">
                                             {isCurrentUser
-                                                ? "Start sharing your thoughts with the world"
-                                                : "Check back later for updates"}
+                                                ? 'Start sharing your thoughts with the world'
+                                                : 'Check back later for updates'}
                                         </p>
                                         {isCurrentUser && (
                                             <Button className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
@@ -306,13 +323,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                     <Bookmark className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                                     <h3 className="text-xl font-semibold text-gray-700 mb-3">
                                         {isCurrentUser
-                                            ? "Your saved collection"
-                                            : "Saved blogs are private"}
+                                            ? 'Your saved collection'
+                                            : 'Saved blogs are private'}
                                     </h3>
                                     <p className="text-gray-500">
                                         {isCurrentUser
-                                            ? "Save blogs to read later by clicking the bookmark icon"
-                                            : "Only visible to the account owner"}
+                                            ? 'Save blogs to read later by clicking the bookmark icon'
+                                            : 'Only visible to the account owner'}
                                     </p>
                                 </div>
                             </Card>
@@ -352,7 +369,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                             {new Date(user.createdAt as unknown as string).toLocaleDateString('en-US', {
                                                 year: 'numeric',
                                                 month: 'long',
-                                                day: 'numeric'
+                                                day: 'numeric',
                                             })}
                                         </p>
                                     </div>
@@ -369,7 +386,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 const ProfileSkeleton = () => {
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-            {/* Header Skeleton */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                     <Skeleton className="h-36 w-36 rounded-full" />
@@ -392,12 +408,10 @@ const ProfileSkeleton = () => {
                 </div>
             </div>
 
-            {/* Tabs Skeleton */}
             <div className="flex justify-center">
                 <Skeleton className="h-12 w-96 rounded-xl" />
             </div>
 
-            {/* Content Skeleton */}
             <div className="space-y-6">
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="border rounded-xl p-6 space-y-4">
@@ -423,6 +437,6 @@ const ProfileSkeleton = () => {
             </div>
         </div>
     );
-}
+};
 
 export default UserProfile;

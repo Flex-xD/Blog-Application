@@ -4,7 +4,6 @@ import FeaturesSection from "./components/FeaturesSection"
 import CallToAction from "./components/CTA"
 
 const Home = () => {
-
   return (
     <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
       <Navbar />

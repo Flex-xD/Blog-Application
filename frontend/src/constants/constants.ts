@@ -14,7 +14,9 @@ export const AUTH_ENDPOINTS = {
 export const BLOG_ENDPOINTS = {
     CREATE_BLOG: `${BASE_URL}/blog/create`,
     USER_FEED: `${BASE_URL}/blog/feed`,
-    AI_ENHCANCEMENT:`${BASE_URL}/llm/ai-enhancing`
+    AI_ENHCANCEMENT:`${BASE_URL}/llm/ai-enhancing` , 
+    SAVE_BLOG:(blogId:string) => `${BASE_URL}/blog/${blogId}/save` , 
+    POPULAR:`${BASE_URL}/blog/popular-blogs`
 }
 
 export const SOCIAL_ENDPOINTS = {
@@ -24,6 +26,7 @@ export const SOCIAL_ENDPOINTS = {
     USER_SUGGESTIONS: `${BASE_URL}/social/follow-suggestions` , 
     LIKE_BLOG:(blogToLikeId:string) => `${BASE_URL}/social/${blogToLikeId}/like` ,
     UNLIKE_BLOG:(blogToUnlikeId:string) => `${BASE_URL}/social/${blogToUnlikeId}/unlike`  , 
-    COMMENT_BLOG:(blogId:string) => `${BASE_URL}/social/${blogId}/comment`
+    COMMENT_BLOG:(blogId:string) => `${BASE_URL}/social/${blogId}/comment` , 
+    UPDATE_PROFILE_PICTURE:`${BASE_URL}/social/update-profile-picture`
 }
 

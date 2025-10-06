@@ -1,3 +1,4 @@
+import usePopularBlogs from "@/customHooks/PopularBlogsFetching";
 import { BlogCard } from "@/pages/Components/BlogCard";
 import type { IBlog, IUser } from "@/types";
 import * as React from "react";
@@ -390,18 +391,19 @@ export const popularBlogs: IBlog[] = [
     }
 ];
 
-// Component to render the popular posts
 export const PopularPosts: React.FC = () => {
+        const { data } = usePopularBlogs(1, 10)
+        
     return (
         <div className="space-y-6">
-            {popularBlogs.map((post) => (
+            {data?.data.blogs?.map((post) => (
                 <BlogCard
                     key={post._id}
                     _id={post._id}
                     title={post.title}
                     body={post.body}
                     image={{
-                        url: post.image.url,
+                        url: post.image.url || "",
                         publicId: `blog-image-${post._id}`,
                         width: 1200,
                         height: 800,

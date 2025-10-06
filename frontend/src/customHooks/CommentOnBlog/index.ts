@@ -11,10 +11,9 @@ interface CommentVariables {
 
 const useCommentMutation = (
     blogId: string,
-    currentUser: { username: string; profilePicture?: string  , _id:string}
+    currentUser: { username: string; profilePicture?: string, _id: string }
 ) => {
     const queryClient = useQueryClient();
-    console.log(SOCIAL_ENDPOINTS.COMMENT_BLOG(blogId));
     return useMutation<apiReponse<TUserComment>, errorResponse, CommentVariables>({
         mutationFn: async (variables) => {
             const response = await apiClient.post<apiReponse<TUserComment>>(

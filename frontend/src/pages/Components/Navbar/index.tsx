@@ -7,6 +7,7 @@ import { useScroll, useTransform, motion } from "framer-motion"
 import { ChevronDown, PenSquare, Search, Menu, Home, Users, User } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useUserProfileData } from "@/customHooks/UserDataFetching"
 
 const Navbar = () => {
     const { scrollY } = useScroll()
@@ -21,6 +22,7 @@ const Navbar = () => {
         setIsCreatingBlog(value);
         navigate("/feed")
     }
+    const { data: userInfo } = useUserProfileData();
 
     const isActive = (path: string) => location.pathname === path;
 
@@ -29,13 +31,11 @@ const Navbar = () => {
             style={{ opacity, scale }}
             className="w-full px-4 sm:px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-49"
         >
-            {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 mr-3 flex-shrink-0">
                 <PenSquare className="h-6 w-6 text-indigo-600" />
                 <span className="text-xl font-bold text-gray-800 hidden sm:block">BlogCraft</span>
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6 space-x-3">
                 <Link
                     to="/feed"
@@ -51,23 +51,9 @@ const Navbar = () => {
                 >
                     Social
                 </Link>
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="text-gray-600 hover:bg-gray-100 gap-1">
-                            Categories <ChevronDown className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-48">
-                        <DropdownMenuItem>Technology</DropdownMenuItem>
-                        <DropdownMenuItem>Business</DropdownMenuItem>
-                        <DropdownMenuItem>Lifestyle</DropdownMenuItem>
-                        <DropdownMenuItem>Health</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
             </div>
 
-            {/* Search Bar - Desktop */}
+
             <div className="flex-1 max-w-xl mx-4 hidden lg:block">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -79,7 +65,6 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Right Side - Desktop */}
             <div className="hidden sm:flex items-center space-x-4">
                 <Button
                     variant="default"
@@ -90,10 +75,14 @@ const Navbar = () => {
                 </Button>
                 {isAuthenticated && (
                     <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
-                        <Avatar className="border-2 border-indigo-100 h-8 w-8">
-                            <AvatarImage src="https://github.com/shadcn.png" />
+                        <Avatar className="h-8 w-8 border-2 border-indigo-100 overflow-hidden">
+                            <AvatarImage
+                                src={userInfo?.profilePicture?.url}
+                                className="h-full w-full object-cover"
+                            />
                             <AvatarFallback>JD</AvatarFallback>
                         </Avatar>
+
                         <span className="font-medium text-gray-700 hidden md:inline">John Doe</span>
                     </Link>
                 )}

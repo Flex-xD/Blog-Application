@@ -4,12 +4,13 @@ import { IAuthRequest } from "../middleware/authMiddleware";
 import { Response } from "express";
 import User, { IUser } from "../models/userModel";
 import mongoose from "mongoose";
+import { uploadBufferToCloudinary } from "./blogController";
 
 export const followSuggestionForUser = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
         const user: IUser | null = await User.findById(userId);
-        
+
         if (!user) {
             sendResponse(res, {
                 statusCode: StatusCodes.NOT_FOUND,
@@ -52,10 +53,11 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
         const randomAggregationPipeline = [
             {
                 $match: {
-                    _id: { $ne: new mongoose.Types.ObjectId(userId as string) ,
-                        $nin:[...(user?.following || [])]
+                    _id: {
+                        $ne: new mongoose.Types.ObjectId(userId as string),
+                        $nin: [...(user?.following || [])]
                     },
-                    
+
                 }
             },
             {
@@ -86,5 +88,91 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
         })
     } catch (error) {
         sendError(res, { error });
+    }
+}
+
+export const followPopularUsersSuggestion = async (req:IAuthRequest , res:Response) => {
+}
+
+export const updateProfilePicture = async (req: IAuthRequest, res: Response) => {
+    let uploadedPublicId: null | string = null;
+    try {
+        const { userId } = req;
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: 'You are unauthorized!',
+            });
+        }
+
+        const user = await User.findById(userId).select('-password');
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: 'User not found',
+            });
+        }
+
+        let imageInfo: {
+            url: string;
+            publicId: string;
+            width?: number;
+            height?: number;
+            format?: string;
+        } | undefined;
+
+        if (req.file && req.file.buffer) {
+            if (user.profilePicture?.publicId) {
+                await deleteFromCloudinary(user.profilePicture.publicId);
+            }
+
+            const { secure_url, public_id, width, height, format } = await uploadBufferToCloudinary(
+                req.file.buffer,
+                req.file.originalname
+            );
+            uploadedPublicId = public_id;
+            imageInfo = {
+                url: secure_url,
+                publicId: public_id,
+                width,
+                height,
+                format,
+            };
+
+            user.profilePicture = imageInfo;
+            await user.save();
+        }
+        console.log("Profile picture upated successfully : " , imageInfo);
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: 'Profile picture updated successfully',
+            data: {
+                profilePicture: imageInfo,
+            },
+        });
+    } catch (error) {
+        // Clean up uploaded file if error occurs
+        if (uploadedPublicId) {
+            await deleteFromCloudinary(uploadedPublicId);
+        }
+        console.error('Error updating profile picture:', error);
+        return sendResponse(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            success: false,
+            msg: 'Error updating profile picture',
+        });
+    }
+}
+    ;
+
+async function deleteFromCloudinary(publicId: string) {
+    const cloudinary = require('cloudinary').v2;
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        console.error('Error deleting from Cloudinary:', error);
     }
 }

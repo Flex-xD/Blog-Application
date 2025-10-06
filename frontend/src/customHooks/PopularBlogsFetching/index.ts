@@ -5,7 +5,7 @@ import { BLOG_ENDPOINTS } from "@/constants/constants";
 import type { IBlog } from "@/types";
 import type { AxiosError } from "axios";
 
-interface FeedResponse {
+interface PopularBlogsResponse {
     statusCode: number;
     success: boolean;
     msg: string;
@@ -15,41 +15,42 @@ interface FeedResponse {
             page: number;
             limit: number;
             total: number;
+            totalPages: number;
             hasMore: boolean;
+            nextPage: number | null;
+            prevPage: number | null;
         };
     };
 }
 
-// This interface matches what your component expects
-interface UserFeedData {
+interface PopularBlogsData {
     data: {
         blogs: IBlog[];
         pagination: {
             page: number;
             limit: number;
             total: number;
+            totalPages: number;
             hasMore: boolean;
-            totalPages?: number; // Add this for compatibility
-            nextPage?: number | null;
-            prevPage?: number | null;
+            nextPage: number | null;
+            prevPage: number | null;
         };
     };
 }
 
-const useUserFeedData = (userId: string, page: number = 1, limit: number = 10) => {
-    return useQuery<UserFeedData, AxiosError>({
-        queryKey: QUERY_KEYS.BLOGS.FEED(userId, page, limit), // Now includes page and limit
-        queryFn: async (): Promise<UserFeedData> => {
-            const response = await apiClient.get<FeedResponse>(
-                `${BLOG_ENDPOINTS.USER_FEED}?page=${page}&limit=${limit}`
+const usePopularBlogs = (page: number = 1, limit: number = 10) => {
+    return useQuery<PopularBlogsData, AxiosError>({
+        queryKey: QUERY_KEYS.BLOGS.POPULAR(page, limit),
+        queryFn: async (): Promise<PopularBlogsData> => {
+            const response = await apiClient.get<PopularBlogsResponse>(
+                `${BLOG_ENDPOINTS.POPULAR}?page=${page}&limit=${limit}`
             );
-            
-            console.log("This is the response of the feedData : ", response.data);
-            
-            // Transform the API response to match component expectations
+
+            console.log("Popular blogs response:", response.data);
+
             const apiData = response.data.data;
             const pagination = apiData.pagination;
-            
+
             return {
                 data: {
                     blogs: apiData.blogs,
@@ -58,16 +59,15 @@ const useUserFeedData = (userId: string, page: number = 1, limit: number = 10) =
                         totalPages: Math.ceil(pagination.total / pagination.limit),
                         nextPage: pagination.hasMore ? pagination.page + 1 : null,
                         prevPage: pagination.page > 1 ? pagination.page - 1 : null,
-                    }
-                }
+                    },
+                },
             };
         },
-        enabled: !!userId,
-        staleTime: 5 * 60 * 1000,
+        staleTime: 5 * 60 * 1000, 
         retry: 1,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
     });
 };
 
-export default useUserFeedData;
+export default usePopularBlogs;

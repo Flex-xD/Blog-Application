@@ -4,26 +4,25 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Search, Home, Bookmark, Bell, PenSquare } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAppStore } from "@/store"
+import { useUserProfileData } from "@/customHooks/UserDataFetching"
 
 export const FeedNavbar = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAppStore();
+    const { data: userInfo } = useUserProfileData();
 
-
-    const handleNavbarNavigation = (endpoint:string) => {
+    const handleNavbarNavigation = (endpoint: string) => {
         navigate(endpoint);
     }
     return (
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
-                    {/* Left side - Logo */}
                     <Link to="/" className="flex items-center flex-shrink-0">
                         <PenSquare className="h-6 w-6 text-indigo-600" />
                         <span className="ml-2 text-xl font-bold text-gray-900 hidden sm:block">BlogCraft</span>
                     </Link>
 
-                    {/* Center - Search */}
                     <div className="flex-1 max-w-xl mx-4 hidden md:block">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -35,19 +34,16 @@ export const FeedNavbar = () => {
                         </div>
                     </div>
 
-                    {/* Right side - Navigation */}
                     <div className="flex items-center space-x-3">
-                        {/* Mobile Search */}
                         <Button variant="ghost" size="icon" className="md:hidden">
                             <Search className="h-5 w-5" />
                         </Button>
 
-                        {/* Desktop Navigation */}
                         <div className="hidden sm:flex items-center space-x-1">
                             <Button onClick={() => handleNavbarNavigation("/")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Home className="h-5 w-5" />
                             </Button>
-                            <Button  onClick={() => handleNavbarNavigation("/profile")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
+                            <Button onClick={() => handleNavbarNavigation("/profile")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Bookmark className="h-5 w-5" />
                             </Button>
                             <Button onClick={() => handleNavbarNavigation("/notifications")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
@@ -55,13 +51,19 @@ export const FeedNavbar = () => {
                             </Button>
                         </div>
 
-                        {/* Profile */}
                         {isAuthenticated && (
-                            <Avatar onClick={() => handleNavbarNavigation("/profile")} className="h-8 w-8 border-2 border-indigo-100 cursor-pointer">
-                                <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
+                            <Avatar
+                                onClick={() => handleNavbarNavigation("/profile")}
+                                className="h-10 w-10 border border-indigo-100 cursor-pointer overflow-hidden hover:scale-105 transition-transform duration-200"
+                            >
+                                <AvatarImage
+                                    src={userInfo?.profilePicture?.url}
+                                    className="object-cover h-full w-full"
+                                />
                                 <AvatarFallback>ME</AvatarFallback>
                             </Avatar>
                         )}
+
                     </div>
                 </div>
             </div>

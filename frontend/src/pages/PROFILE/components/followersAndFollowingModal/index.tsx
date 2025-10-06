@@ -29,7 +29,7 @@ const FollowModal = ({
     // console.log("These are the users : " , followedUsers);
     // console.log("These are the followed users : " , followedUsers);
 
-    // Initialize following states
+    // ? Initialize following states
     useEffect(() => {
         const states: Record<string, boolean> = {};
         followedUsers.forEach(user => {
@@ -68,7 +68,6 @@ const FollowModal = ({
         }
     };
 
-    // Format date
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',

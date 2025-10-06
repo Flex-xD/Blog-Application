@@ -14,10 +14,6 @@ import useSuggestedUserData from '@/customHooks/SuggestedUserFetching';
 import ProfileModal from './components/UserProfileModal';
 
 
-// ? FIX THE BUG (I AM NOT ABLE TO UNFOLLOW THE USER AND THE UI IS ALSO NOT UPDATING LIKE IT SHOULD BE , MAY BE THE PROBLEM IS WITH THE isFollowing constant that's hold the old value , the main thing is I want to simultaneously update the UI as soon as I hit follow or unfollow)
-// * Now the UI is updating now , want to unfollow the user with the same the same api 
-
-
 type TrendingTopic = {
     id: string;
     name: string;
@@ -79,6 +75,7 @@ const SocialComponent = () => {
     }
 
     const { data } = useUserProfileData();
+
     console.log("User Profile Data : ", data);
     const userId = data?._id;
 
@@ -90,8 +87,7 @@ const SocialComponent = () => {
         await followAndUnfollowFn(isFollowingUser);
     }
 
-    const { data: suggestedUsersData } = useSuggestedUserData();
-
+    const { data: suggestedUsersData } = useSuggestedUserData(data?._id ?? "");
 
     return (
         <>

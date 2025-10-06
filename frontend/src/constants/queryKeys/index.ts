@@ -12,28 +12,29 @@ export const QUERY_KEYS = {
         ALL: ["blogs"] as const, // global blogs (explore page, all blogs)
         BY_ID: (blogId: string) => ["blogs", "id", blogId] as const, // single blog
         BY_USER: (userId: string) => ["blogs", "user", userId] as const, // blogs of a specific user
-        FEED: (userId: string) => ["blogs", "feed", userId] as const, // personalized feed for a user
+        FEED: (userId: string, page?: number, limit?: number) => ["blogs", "feed", userId, page, limit] as const,
         SAVED: (userId: string) => ["blogs", "saved", userId] as const, // blogs a user has saved
+        POPULAR: (page: number, limit: number) => ["blogs", "popular", page, limit],
     },
 
     // Comments
     COMMENTS: {
-        ALL_COMMENTS:["comments"] , 
-        USER_COMMENTS:(userId:string) => ["comments" , "user" , userId] ,
+        ALL_COMMENTS: ["comments"],
+        USER_COMMENTS: (userId: string) => ["comments", "user", userId],
         BY_BLOG: (blogId: string) => ["comments", "blog", blogId] as const,
     },
-    
+
     SOCIAL: {
         FOLLOWING_STATUS: (targetUserId: string) => ["social", "following-status", targetUserId] as const,
         SUGGESTIONS: (userId: string) => ["social", "suggestions", userId] as const, // follow suggestions
         MUTUALS: (userId: string) => ["social", "mutuals", userId] as const, // mutual followers with a user
-    } , 
+    },
 
     LIKES: {
-        ALL:["likes"] as const , 
-        PERSONAL_LIKES:(userId:string , blogId:string) => ["likes" , userId , blogId] , 
+        ALL: ["likes"] as const,
+        PERSONAL_LIKES: (userId: string, blogId: string) => ["likes", userId, blogId],
     }
-,
+    ,
     CONTENT: {
         ENHANCEMENT: ["content", "enhancement"] as const, // AI content enhancement
     },

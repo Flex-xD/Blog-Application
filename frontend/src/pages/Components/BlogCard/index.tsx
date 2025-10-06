@@ -62,7 +62,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     const { mutateAsync: handleBlogLike } = useLikeMutation(userInfo!._id);
     const { mutateAsync: handleBlogUnlike } = useUnLikeMutation(userInfo!._id);
 
-    console.log("these are the : ", comments)
+    // console.log("these are the : ", comments)
     const handleLikeAndUnlike = async (e: React.MouseEvent, blogToBeLikedId: string) => {
         e.stopPropagation();
         if (isLiked) {
@@ -122,9 +122,12 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                         <div className="flex-1 p-6 flex flex-col">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8 border-2 border-white shadow">
-                                        <AvatarImage src={authorDetails.profilePicture} />
-                                        <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">
+                                    <Avatar className="h-8 w-8 border-2 border-white shadow overflow-hidden">
+                                        <AvatarImage
+                                            src={authorDetails.profilePicture}
+                                            className="h-full w-full object-cover"
+                                        />
+                                        <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-medium">
                                             {(authorDetails?.username?.[0] || "").toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
@@ -224,9 +227,12 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                     <DialogHeader>
                                         <div className="flex items-center justify-between mb-6">
                                             <div className="flex items-center space-x-3">
-                                                <Avatar className="h-10 w-10 border-2 border-white shadow">
-                                                    <AvatarImage src={authorDetails.profilePicture} />
-                                                    <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600">
+                                                <Avatar className="h-8 w-8 border-2 border-white shadow overflow-hidden">
+                                                    <AvatarImage
+                                                        src={authorDetails.profilePicture}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                    <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-medium">
                                                         {(authorDetails?.username?.[0] || "").toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>

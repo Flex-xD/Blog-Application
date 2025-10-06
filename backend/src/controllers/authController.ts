@@ -46,7 +46,13 @@ export const registerController = async (req: Request, res: Response) => {
         email,
         username,
         password,
-        profilePicture: "",
+        profilePicture: {
+            url:"" , 
+            width:0 , 
+            height:0 , 
+            publicId:"" , 
+            format:""
+        },
         following: [],
         followers: [],
         bio:"" , 

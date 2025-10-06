@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store";
-import usePostUserBlog, { type IUserBlog } from "@/customHooks/PostUserBlog";
+import usePostUserBlog from "@/customHooks/PostUserBlog";
 import useUserFeedData from "@/customHooks/UserFeedFetching";
 import { fakeUsersArray, trendingTopics } from "@/constants/dummyData";
 import { CreateBlogCard } from "./components/CreateBlogCard";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
-import { FeedNavbar } from "../Components/FeedNavbar";
+import { FeedNavbar } from "./components/FeedNavbar";
 import RightSidebar from "./components/RightSidebar";
 import CreateBlogCardModal from "./components/CreateBlogcardModal";
 import CreateAIModal from "./components/AIEnhancerModal";
 import UserFeed from "./components/UserFeedBlogs";
 import FeedTabs from "./components/Tabs";
+import { usePagination } from "@/customHooks/usePagination";
+import { Button } from "@/components/ui/button";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");
@@ -26,22 +28,64 @@ const Feed = () => {
     const [customInstructions, setCustomInstructions] = useState<string>("");
     const [contentToEnhance, setContentToEnhance] = useState<string>("");
 
+    const [useInfiniteScroll, setUseInfiniteScroll] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    // Use pagination hook
+    const pagination = usePagination(currentPage, 10);
+
     const { data: userData, isPending: userDataPending } = useUserProfileData();
-    const { data: userFeedData, isPending: userFeedDataPending, error: userFeedDataError } = useUserFeedData(userData?._id || "");
+    
+    // Use the hook with current page
+    const { 
+        data: userFeedData, 
+        isPending: userFeedDataPending, 
+        error: userFeedDataError,
+        refetch: refetchFeed 
+    } = useUserFeedData(userData?._id || "", currentPage);
+
     const { mutateAsync: postBlog, isPending: postingBlogPending } = usePostUserBlog();
 
+    // Update pagination when data changes
+    useEffect(() => {
+        if (userFeedData?.data?.pagination) {
+            pagination.setHasMore(userFeedData.data.pagination.hasMore);
+        }
+    }, [userFeedData?.data?.pagination]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        // The useUserFeedData hook will automatically refetch when currentPage changes
+    };
+
+    const handleRefresh = () => {
+        setCurrentPage(1);
+        pagination.goToPage(1);
+        refetchFeed();
+    };
+
+    const handleLoadMore = () => {
+        if (pagination.hasMore && !userFeedDataPending) {
+            const nextPage = currentPage + 1;
+            setCurrentPage(nextPage);
+            pagination.nextPage();
+        }
+    };
+
     const handleBlogPost = async () => {
-        const blogData: IUserBlog = {
+        await postBlog({
             title,
             body,
             image: selectedImage,
-        };
-        await postBlog(blogData);
+        });
         setTitle("");
         setBody("");
         setSelectedImage(null);
         setImagePreview(null);
         setShowCreateModal(false);
+        
+        // Refresh feed after posting new blog
+        handleRefresh();
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,23 +100,51 @@ const Feed = () => {
         }
     };
 
+    const togglePaginationMode = () => {
+        setUseInfiniteScroll(!useInfiniteScroll);
+        setCurrentPage(1);
+        pagination.goToPage(1);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <FeedNavbar />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     <div className="flex-1">
-                        <CreateBlogCard setShowCreateModal={setShowCreateModal} setSelectedImage={setSelectedImage} />
+                        <CreateBlogCard 
+                            setShowCreateModal={setShowCreateModal} 
+                            setSelectedImage={setSelectedImage} 
+                        />
                         <FeedTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+                        
                         <UserFeed
-                            userFeedData={userFeedData ?? { data: { blogs: [] } }}
+                            userFeedData={userFeedData}
                             userFeedDataError={userFeedDataError}
                             userDataPending={userDataPending}
                             userFeedDataPending={userFeedDataPending}
+                            onPageChange={handlePageChange}
+                            onRefresh={handleRefresh}
+                            onLoadMore={handleLoadMore}
+                            useInfiniteScroll={useInfiniteScroll}
+                            currentPage={currentPage}
+                            hasMore={pagination.hasMore}
                         />
                     </div>
                     <RightSidebar suggestedUsers={fakeUsersArray} trendingTopics={trendingTopics} />
                 </div>
+            </div>
+
+            {/* Pagination Mode Toggle */}
+            <div className="fixed bottom-6 right-6 z-40">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={togglePaginationMode}
+                    className="bg-white shadow-lg border border-gray-200 hover:bg-gray-50"
+                >
+                    {useInfiniteScroll ? 'Switch to Pages' : 'Switch to Infinite Scroll'}
+                </Button>
             </div>
 
             <AnimatePresence>

@@ -1,4 +1,3 @@
-// hooks/usePagination.ts
 import { useState, useCallback } from 'react';
 
 interface PaginationState {

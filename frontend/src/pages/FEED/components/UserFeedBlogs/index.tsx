@@ -1,12 +1,11 @@
-// components/UserFeed.tsx
 import { BlogCard } from "@/pages/Components/BlogCard";
 import { motion } from "framer-motion";
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, ArrowUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
-import { InfiniteScroll } from "../InfiniteScrollComponent";
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Pagination } from "../Pagination";
+import type { AxiosError } from "axios";
 
 interface Blog {
     _id: string;
@@ -51,18 +50,15 @@ interface UserFeedData {
 
 interface UserFeedProps {
     userFeedData?: UserFeedData;
-    userFeedDataError?: Error | null;
+    userFeedDataError?: AxiosError | Error | null | undefined;
     userDataPending: boolean;
     userFeedDataPending: boolean;
     onPageChange?: (page: number) => void;
     onRefresh?: () => void;
-    onLoadMore?: () => void; // Add this for infinite scroll
-    useInfiniteScroll?: boolean;
-    currentPage?: number; // Add this
-    hasMore?: boolean; // Add this
+    feedTitle?: string;
+    currentPage:number
 }
 
-// Safe access helper functions
 const getBlogs = (userFeedData?: UserFeedData): Blog[] => {
     return userFeedData?.data?.blogs || [];
 };
@@ -76,10 +72,6 @@ const getCurrentPage = (userFeedData?: UserFeedData): number => {
     return getPagination(userFeedData)?.page || 1;
 };
 
-const getHasMore = (userFeedData?: UserFeedData): boolean => {
-    return getPagination(userFeedData)?.hasMore || false;
-};
-
 const getTotalPages = (userFeedData?: UserFeedData): number => {
     return getPagination(userFeedData)?.totalPages || 1;
 };
@@ -91,53 +83,45 @@ export default function UserFeed({
     userFeedDataPending,
     onPageChange,
     onRefresh,
-    useInfiniteScroll = false,
+    feedTitle = "Your Feed",
 }: UserFeedProps) {
-    const [localBlogs, setLocalBlogs] = useState<Blog[]>([]);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const blogs = getBlogs(userFeedData);
-        const currentPage = getCurrentPage(userFeedData);
-
-        if (blogs.length > 0) {
-            if (currentPage === 1) {
-                setLocalBlogs(blogs);
-            } else if (useInfiniteScroll) {
-                setLocalBlogs(prev => {
-                    // Avoid duplicates by checking IDs
-                    const existingIds = new Set(prev.map(blog => blog._id));
-                    const newBlogs = blogs.filter(blog => !existingIds.has(blog._id));
-                    return [...prev, ...newBlogs];
-                });
-            } else {
-                setLocalBlogs(blogs);
-            }
-        } else {
-            // Reset if no blogs
-            if (currentPage === 1) {
-                setLocalBlogs([]);
-            }
-        }
-    }, [userFeedData, useInfiniteScroll]);
-
-    const handleLoadMore = () => {
-        const pagination = getPagination(userFeedData);
-        if (pagination?.hasMore && onPageChange) {
-            onPageChange(pagination.page + 1);
-        }
-    };
+    const blogs = useMemo(() => getBlogs(userFeedData), [userFeedData]);
+    const totalPages = useMemo(() => getTotalPages(userFeedData), [userFeedData]);
+    const feedCurrentPage = getCurrentPage(userFeedData);
 
     const handleRefresh = () => {
-        setLocalBlogs([]);
-        onRefresh?.();
+        if (onRefresh) {
+            onRefresh();
+        }
     };
-
     const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
         onPageChange?.(page);
     };
 
-    // Show loading state for initial load
-    if (userDataPending && localBlogs.length === 0) {
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 400);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [feedCurrentPage]);
+
+    if (userDataPending && blogs.length === 0) {
         return (
             <div className="h-screen w-screen flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -151,10 +135,10 @@ export default function UserFeed({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="space-y-6"
+            ref={containerRef}
         >
-            {/* Header with refresh button */}
             <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Your Feed</h2>
+                <h2 className="text-2xl font-bold">{feedTitle}</h2>
                 <Button
                     variant="outline"
                     size="sm"
@@ -167,11 +151,13 @@ export default function UserFeed({
                 </Button>
             </div>
 
-            {/* Error State */}
             {userFeedDataError && (
                 <div className="text-center py-8">
                     <p className="text-destructive mb-4">
-                        Error loading feed: {userFeedDataError.message}
+                        Error loading feed: {userFeedDataError.message || "Unknown error"}
+                        {(userFeedDataError as AxiosError)?.response?.status && (
+                            <span> (Status: {(userFeedDataError as AxiosError).response!.status})</span>
+                        )}
                     </p>
                     <Button onClick={handleRefresh}>
                         Retry
@@ -179,20 +165,23 @@ export default function UserFeed({
                 </div>
             )}
 
-            {/* Blog List */}
             {!userFeedDataError && (
                 <>
-                    {localBlogs.length > 0 ? (
+                    {blogs.length > 0 ? (
                         <>
-                            {useInfiniteScroll ? (
-                                <InfiniteScroll
-                                    onLoadMore={handleLoadMore}
-                                    hasMore={getHasMore(userFeedData)}
-                                    isLoading={userFeedDataPending}
-                                >
-                                    {localBlogs.map((blog) => (
+                            <div className="space-y-6">
+                                {blogs.map((blog, index) => (
+                                    <motion.div
+                                        key={blog._id || `blog-${index}`}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{
+                                            duration: 0.4,
+                                            delay: Math.min(index * 0.05, 0.3),
+                                            ease: "easeOut"
+                                        }}
+                                    >
                                         <BlogCard
-                                            key={`${blog._id}-${blog.createdAt}`}
                                             {...blog}
                                             image={
                                                 typeof blog.image === "string"
@@ -201,31 +190,18 @@ export default function UserFeed({
                                             }
                                             authorDetails={{ ...blog.authorDetails }}
                                         />
-                                    ))}
-                                </InfiniteScroll>
-                            ) : (
-                                <>
-                                    {localBlogs.map((blog) => (
-                                        <BlogCard
-                                            key={blog._id}
-                                            {...blog}
-                                            image={
-                                                typeof blog.image === "string"
-                                                    ? { url: blog.image, publicId: "", width: 0, height: 0, format: "" }
-                                                    : blog.image
-                                            }
-                                            authorDetails={{ ...blog.authorDetails }}
-                                        />
-                                    ))}
+                                    </motion.div>
+                                ))}
+                            </div>
 
-                                    {/* Traditional Pagination */}
-                                    <Pagination
-                                        currentPage={getCurrentPage(userFeedData)}
-                                        totalPages={getTotalPages(userFeedData)}
-                                        onPageChange={handlePageChange}
-                                        className="mt-8"
-                                    />
-                                </>
+                            {/* Pagination Component */}
+                            {totalPages > 1 && (
+                                <Pagination
+                                    currentPage={feedCurrentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                    className="mt-8"
+                                />
                             )}
                         </>
                     ) : userFeedDataPending ? (
@@ -245,6 +221,24 @@ export default function UserFeed({
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Scroll to Top Button */}
+            {showScrollTop && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="fixed bottom-6 left-6 z-50"
+                >
+                    <Button
+                        onClick={scrollToTop}
+                        size="icon"
+                        className="rounded-full shadow-lg h-12 w-12 bg-primary hover:bg-primary/90"
+                    >
+                        <ArrowUp className="h-5 w-5" />
+                    </Button>
+                </motion.div>
             )}
         </motion.div>
     );

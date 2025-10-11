@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import apiClient from "@/utility/axiosClient";
 import { BLOG_ENDPOINTS } from "@/constants/constants";
@@ -20,8 +20,7 @@ interface FeedResponse {
     };
 }
 
-// This interface matches what your component expects
-interface UserFeedData {
+export interface UserFeedData {
     data: {
         blogs: IBlog[];
         pagination: {
@@ -29,27 +28,29 @@ interface UserFeedData {
             limit: number;
             total: number;
             hasMore: boolean;
-            totalPages?: number; // Add this for compatibility
-            nextPage?: number | null;
-            prevPage?: number | null;
+            totalPages: number;
+            nextPage: number | null;
+            prevPage: number | null;
         };
     };
 }
 
-const useUserFeedData = (userId: string, page: number = 1, limit: number = 10) => {
+const useUserFeedData = (
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    options?: Omit<UseQueryOptions<UserFeedData, AxiosError>, "queryKey" | "queryFn">
+) => {
     return useQuery<UserFeedData, AxiosError>({
-        queryKey: QUERY_KEYS.BLOGS.FEED(userId, page, limit), // Now includes page and limit
+        queryKey: QUERY_KEYS.BLOGS.FEED(userId, page, limit),
         queryFn: async (): Promise<UserFeedData> => {
             const response = await apiClient.get<FeedResponse>(
                 `${BLOG_ENDPOINTS.USER_FEED}?page=${page}&limit=${limit}`
             );
-            
-            console.log("This is the response of the feedData : ", response.data);
-            
-            // Transform the API response to match component expectations
+
             const apiData = response.data.data;
             const pagination = apiData.pagination;
-            
+
             return {
                 data: {
                     blogs: apiData.blogs,
@@ -58,15 +59,17 @@ const useUserFeedData = (userId: string, page: number = 1, limit: number = 10) =
                         totalPages: Math.ceil(pagination.total / pagination.limit),
                         nextPage: pagination.hasMore ? pagination.page + 1 : null,
                         prevPage: pagination.page > 1 ? pagination.page - 1 : null,
-                    }
-                }
+                    },
+                },
             };
         },
         enabled: !!userId,
         staleTime: 5 * 60 * 1000,
-        retry: 1,
+        retry: 3,
+        retryDelay: (attempt) => Math.min(attempt * 1000, 5000),
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
+        ...options,
     });
 };
 

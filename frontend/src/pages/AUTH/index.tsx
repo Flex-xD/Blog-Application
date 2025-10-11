@@ -1,18 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useState } from "react";
-import { BookOpen, Feather, Lock, Mail, User } from "react-feather";
+import { BookOpen, Feather, Lock, Mail, User, PenTool } from "react-feather";
 import { toast } from "sonner";
 import useAuthMutation from "@/customHooks/AuthMutation";
-import { Loader } from "lucide-react";
+import { Loader, Sparkles } from "lucide-react";
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [activeField, setActiveField] = useState<string | null>(null);
-
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [username, setUsername] = useState<string>("");
-
     const [loginIdentifier, setLoginIdentifier] = useState<string>("");
 
     const { mutateAsync, isPending: isLoading } = useAuthMutation(!isLogin);
@@ -20,11 +18,11 @@ const AuthPage = () => {
     const validateAuth = (isSignup: boolean = false) => {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!isSignup ? !email.length && !username.length : !email.length) {
-            toast.error("All the fields are required !");
+            toast.error("All fields are required!");
             return false;
         }
         if (!isSignup ? !username.length && !emailPattern.test(email) : !emailPattern.test(email)) {
-            toast.error("Follow the correct email pattern!");
+            toast.error("Please enter a valid email address!");
             return false;
         }
         if (!password.length) {
@@ -40,47 +38,108 @@ const AuthPage = () => {
 
     const handleAuth = async () => {
         if (!validateAuth(!isLogin)) return;
-        await mutateAsync({ email: email, password: password, username: isLogin ? undefined : username });;
-    }
+        await mutateAsync({ 
+            email: email, 
+            password: password, 
+            username: isLogin ? undefined : username 
+        });
+    };
 
-    if (isLoading) return <div className='h-screen w-screen flex items-center justify-center'><Loader /></div>
+    if (isLoading) return (
+        <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center space-y-4"
+            >
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="p-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600"
+                >
+                    <Loader className="text-white" size={32} />
+                </motion.div>
+                <p className="text-lg font-medium text-gray-700">Crafting your experience...</p>
+            </motion.div>
+        </div>
+    );
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Animated background elements */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5 }}
+                className="absolute inset-0"
+            >
+                {[...Array(3)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        animate={{
+                            y: [0, -30, 0],
+                            x: [0, 15, 0],
+                        }}
+                        transition={{
+                            duration: 4 + i,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: i * 0.5,
+                        }}
+                        className={`absolute ${i === 0 ? 'w-8 h-8 left-1/4 top-1/4' : i === 1 ? 'w-6 h-6 right-1/3 top-1/2' : 'w-10 h-10 right-1/4 bottom-1/3'} bg-gradient-to-r from-indigo-200 to-purple-300 rounded-full opacity-20 blur-sm`}
+                    />
+                ))}
+            </motion.div>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-full max-w-md"
+                className="w-full max-w-md relative z-10"
             >
                 <motion.div
-                    whileHover={{ y: -2 }}
-                    className="bg-white rounded-xl shadow-lg overflow-hidden border border-stone-200/70"
+                    whileHover={{ y: -5 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/20"
                 >
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                    
                     <div className="p-8">
-                        <div className="flex flex-col items-center mb-8 space-y-3">
+                        {/* Header */}
+                        <div className="flex flex-col items-center mb-8 space-y-4">
                             <motion.div
-                                animate={{ rotate: isLogin ? 0 : 5 }}
-                                transition={{ type: "spring" }}
-                                className="p-3 rounded-full bg-amber-50 text-amber-600"
+                                animate={{ 
+                                    rotate: isLogin ? [0, -5, 0] : [0, 5, 0],
+                                    scale: [1, 1.1, 1]
+                                }}
+                                transition={{ 
+                                    duration: 2, 
+                                    repeat: Infinity,
+                                    ease: "easeInOut" 
+                                }}
+                                className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg"
                             >
-                                <BookOpen size={24} />
+                                <BookOpen size={28} className="text-white" />
                             </motion.div>
-                            <motion.h1
+                            
+                            <motion.div
                                 key={isLogin ? "login" : "register"}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="text-3xl font-serif font-bold text-stone-800"
+                                className="text-center"
                             >
-                                {isLogin ? "Welcome back" : "Join our story"}
-                            </motion.h1>
-                            <p className="text-stone-500 text-center">
-                                {isLogin
-                                    ? "Continue your reading journey"
-                                    : "Create your account to start writing"}
-                            </p>
+                                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                    {isLogin ? "Welcome Back" : "Join BlogCraft"}
+                                </h1>
+                                <p className="text-gray-600 mt-2">
+                                    {isLogin
+                                        ? "Continue your writing journey"
+                                        : "Start crafting amazing stories"}
+                                </p>
+                            </motion.div>
                         </div>
 
-                        <div className="space-y-5">
+                        {/* Form Fields */}
+                        <div className="space-y-6">
                             <AnimatePresence mode="wait">
                                 {!isLogin && (
                                     <motion.div
@@ -89,50 +148,51 @@ const AuthPage = () => {
                                         exit={{ opacity: 0, height: 0 }}
                                         transition={{ duration: 0.3 }}
                                     >
-                                        <div className="relative">
+                                        <div className="relative group">
                                             <motion.div
                                                 animate={{
-                                                    x: activeField === "email" ? 4 : 0,
-                                                    opacity: activeField === "email" ? 1 : 0.7
+                                                    scale: activeField === "email" ? 1.1 : 1,
+                                                    color: activeField === "email" ? "#6366f1" : "#9ca3af"
                                                 }}
                                                 className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                                             >
-                                                <Mail size={18} className="text-stone-400" />
+                                                <Mail size={18} />
                                             </motion.div>
                                             <motion.input
                                                 onFocus={() => setActiveField("email")}
                                                 onBlur={() => setActiveField(null)}
                                                 whileFocus={{
-                                                    borderColor: "#f59e0b",
-                                                    boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
+                                                    borderColor: "#6366f1",
+                                                    boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)"
                                                 }}
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="your@email.com"
-                                                className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
+                                                className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/50 focus:outline-none transition-all group-hover:border-indigo-300"
                                             />
                                         </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            <div className="relative">
+                            {/* Username/Email Field */}
+                            <div className="relative group">
                                 <motion.div
                                     animate={{
-                                        x: activeField === "username" ? 4 : 0,
-                                        opacity: activeField === "username" ? 1 : 0.7
+                                        scale: activeField === "username" ? 1.1 : 1,
+                                        color: activeField === "username" ? "#6366f1" : "#9ca3af"
                                     }}
                                     className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                                 >
-                                    <User size={18} className="text-stone-400" />
+                                    <User size={18} />
                                 </motion.div>
                                 <motion.input
                                     onFocus={() => setActiveField("username")}
                                     onBlur={() => setActiveField(null)}
                                     whileFocus={{
-                                        borderColor: "#f59e0b",
-                                        boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
+                                        borderColor: "#6366f1",
+                                        boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)"
                                     }}
                                     type="text"
                                     value={isLogin ? loginIdentifier : username}
@@ -152,107 +212,106 @@ const AuthPage = () => {
                                         }
                                     }}
                                     placeholder={isLogin ? "username or email" : "choose a username"}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/50 focus:outline-none transition-all group-hover:border-indigo-300"
                                 />
                             </div>
 
-                            <div className="relative">
+                            {/* Password Field */}
+                            <div className="relative group">
                                 <motion.div
                                     animate={{
-                                        x: activeField === "password" ? 4 : 0,
-                                        opacity: activeField === "password" ? 1 : 0.7
+                                        scale: activeField === "password" ? 1.1 : 1,
+                                        color: activeField === "password" ? "#6366f1" : "#9ca3af"
                                     }}
                                     className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                                 >
-                                    <Lock size={18} className="text-stone-400" />
+                                    <Lock size={18} />
                                 </motion.div>
                                 <motion.input
                                     onFocus={() => setActiveField("password")}
                                     onBlur={() => setActiveField(null)}
                                     whileFocus={{
-                                        borderColor: "#f59e0b",
-                                        boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
+                                        borderColor: "#6366f1",
+                                        boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)"
                                     }}
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 bg-stone-50 focus:outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/50 focus:outline-none transition-all group-hover:border-indigo-300"
                                 />
                             </div>
-
-                            {isLogin && (
-                                <div className="flex items-center justify-between pt-1">
-                                    <motion.label
-                                        whileTap={{ scale: 0.95 }}
-                                        className="flex items-center space-x-2 cursor-pointer"
-                                    >
-                                        <input type="checkbox" className="rounded text-amber-500" />
-                                        <span className="text-sm text-stone-600">Remember me</span>
-                                    </motion.label>
-                                    <motion.a
-                                        whileHover={{ scale: 1.02 }}
-                                        href="#"
-                                        className="text-sm text-amber-600 hover:text-amber-500"
-                                    >
-                                        Forgot password?
-                                    </motion.a>
-                                </div>
-                            )}
                         </div>
 
+                        {/* Action Button */}
                         <motion.button
-
-                            whileHover={{ y: -1 }}
+                            whileHover={{ 
+                                y: -2,
+                                scale: 1.02,
+                                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)"
+                            }}
                             whileTap={{ scale: 0.98 }}
-                            className="w-full mt-6 bg-stone-900 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-medium flex items-center justify-center space-x-2"
+                            className="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all"
                             disabled={isLoading}
-                            onClick={() => handleAuth()}
-
+                            onClick={handleAuth}
                         >
-                            <Feather size={18} />
-                            <span>{isLoading ? "Processing ... " : isLogin ? "Sign in" : "Begin writing"}</span>
+                            <motion.div
+                                animate={{ rotate: isLoading ? 360 : 0 }}
+                                transition={{ duration: 2, repeat: isLoading ? Infinity : 0 }}
+                            >
+                                {isLoading ? <Loader size={20} /> : <Feather size={20} />}
+                            </motion.div>
+                            <span>
+                                {isLoading 
+                                    ? "Crafting..." 
+                                    : isLogin 
+                                        ? "Sign In" 
+                                        : "Start Writing"
+                                }
+                            </span>
+                            {!isLogin && !isLoading && (
+                                <Sparkles size={16} className="text-yellow-200" />
+                            )}
                         </motion.button>
 
-                        <div className="mt-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-stone-200"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-3 bg-white text-stone-500">
-                                        Or continue with
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="mt-5 grid grid-cols-2 gap-3">
-                                {["Google", "Twitter"].map((provider) => (
-                                    <motion.button
-                                        key={provider}
-                                        whileHover={{ y: -2 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        type="button"
-                                        className="w-full inline-flex justify-center py-2.5 px-4 border border-stone-200 rounded-lg font-medium text-stone-700 hover:bg-stone-50 transition-colors"
-                                    >
-                                        {provider}
-                                    </motion.button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="mt-6 text-center">
+                        {/* Switch Auth Mode */}
+                        <div className="mt-8 text-center">
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setIsLogin(!isLogin)}
-                                className="text-sm text-amber-600 hover:text-amber-500 font-medium"
+                                className="text-sm text-gray-600 hover:text-indigo-600 font-medium transition-colors"
                             >
                                 {isLogin
-                                    ? "New here? Create an account"
-                                    : "Already have an account? Sign in"}
+                                    ? "New to BlogCraft? Join our community →"
+                                    : "Already have an account? Sign in →"
+                                }
                             </motion.button>
                         </div>
+
+                        {/* Features Preview */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="mt-8 pt-6 border-t border-gray-100"
+                        >
+                            <p className="text-xs text-gray-500 text-center mb-3">Unlock powerful features:</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                {["6 Writing Tones", "AI Enhancement", "Save Blogs", "Follow Writers", "Like & Comment", "Custom Styles"].map((feature, index) => (
+                                    <motion.div
+                                        key={feature}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.6 + index * 0.1 }}
+                                        className="flex items-center space-x-1 text-gray-600"
+                                    >
+                                        <PenTool size={10} className="text-indigo-500" />
+                                        <span>{feature}</span>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
                     </div>
                 </motion.div>
             </motion.div>

@@ -1,12 +1,13 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, Users, TrendingUp } from "lucide-react";
+import React from "react";
 
 interface FeedTabsProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
 }
 
-export default function FeedTabs({ activeTab, setActiveTab }: FeedTabsProps) {
+function FeedTabs({ activeTab, setActiveTab }: FeedTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
       <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 h-auto rounded-xl">
@@ -35,3 +36,5 @@ export default function FeedTabs({ activeTab, setActiveTab }: FeedTabsProps) {
     </Tabs>
   );
 }
+
+export default React.memo(FeedTabs)

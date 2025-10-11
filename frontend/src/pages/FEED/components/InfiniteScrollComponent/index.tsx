@@ -9,7 +9,7 @@ interface InfiniteScrollProps {
     children: React.ReactNode;
 }
 
-export function InfiniteScroll({
+function InfiniteScroll({
     onLoadMore,
     hasMore,
     isLoading,

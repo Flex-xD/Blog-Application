@@ -2,8 +2,8 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, ArrowRight, Bookmark, Share2, Clock } from "lucide-react";
-import { useState } from "react";
+import { Heart, MessageCircle, ArrowRight, Bookmark, Clock, Trash } from "lucide-react";
+import { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -12,32 +12,39 @@ import {
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import useLikeMutation from "@/customHooks/LikeBlogMutation";
-import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import useUnLikeMutation from "@/customHooks/UnlikeBlogMutation";
+import useSaveBlogMutation from "@/customHooks/SaveBlogMutation";
+import useUnsaveBlogMutation from "@/customHooks/unsaveBlog";
+import useDeleteBlogMutation from "@/customHooks/DeleteBlogMutation";
+import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import { CommentModal } from "./components/CommentModal";
 
 export interface BlogCardProps {
-    _id: string
+    _id: string;
     title: string;
     body: string;
     image: {
-        url: string,
-        publicId: string,
-        width: number,
-        height: number,
-        format: string
+        url: string;
+        publicId: string;
+        width: number;
+        height: number;
+        format: string;
     };
     authorDetails: {
-        username: string,
-        _id: string,
-        profilePicture: string
-    }
+        username: string;
+        _id: string;
+        profilePicture: string;
+    };
     likes: string[];
-    comments: any[]; // Updated to accept comment objects
+    comments: any[];
     createdAt: Date;
     updatedAt: Date;
-    onLike?: (id: string) => void;
     onSave?: (id: string) => void;
+    // Add this prop to check if blog is saved
+    isInitiallySaved?: boolean;
+    // Add this callback for when blog is deleted
+    onBlogDeleted?: () => void;
+    isSaveLoading?: boolean;
 }
 
 export const BlogCard: React.FC<BlogCardProps> = ({
@@ -49,25 +56,39 @@ export const BlogCard: React.FC<BlogCardProps> = ({
     likes,
     comments,
     createdAt,
-    onSave,
+    isInitiallySaved = false,
+    onBlogDeleted, // ADD THIS PROP
+    isSaveLoading = false,
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+    const [isSaved, setIsSaved] = useState(isInitiallySaved);
     const [currentLikes, setCurrentLikes] = useState<string[]>(likes);
     const [blogComments, setBlogComments] = useState<any[]>(comments);
     const { data: userInfo } = useUserProfileData();
-    const isLiked = currentLikes.includes(userInfo?._id ?? "");
 
+    // Update isSaved when isInitiallySaved changes (e.g., after refresh)
+    useEffect(() => {
+        setIsSaved(isInitiallySaved);
+    }, [isInitiallySaved]);
+
+    const isLiked = Array.isArray(currentLikes) && userInfo?._id
+        ? currentLikes.includes(userInfo._id)
+        : false;
+
+    // --- React Query mutations ---
     const { mutateAsync: handleBlogLike } = useLikeMutation(userInfo!._id);
     const { mutateAsync: handleBlogUnlike } = useUnLikeMutation(userInfo!._id);
+    const { mutate: saveBlogMutation, isPending: isSaving } = useSaveBlogMutation(_id, userInfo!._id);
+    const { mutate: unsaveBlogMutation, isPending: isUnsaving } = useUnsaveBlogMutation(_id, userInfo!._id);
+    const { mutate: deleteBlogMutation, isPending: isDeleting } = useDeleteBlogMutation(_id, userInfo!._id);
 
-    // console.log("these are the : ", comments)
+    // --- Handlers ---
     const handleLikeAndUnlike = async (e: React.MouseEvent, blogToBeLikedId: string) => {
         e.stopPropagation();
         if (isLiked) {
             await handleBlogUnlike(blogToBeLikedId);
-            setCurrentLikes((prev) => prev.filter((id) => id !== userInfo?._id))
+            setCurrentLikes((prev) => prev.filter((id) => id !== userInfo?._id));
         } else {
             await handleBlogLike(blogToBeLikedId);
             setCurrentLikes((prev) => [...prev, userInfo?._id ?? ""]);
@@ -76,22 +97,55 @@ export const BlogCard: React.FC<BlogCardProps> = ({
 
     const handleSave = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsSaved(!isSaved);
-        if (onSave) onSave(_id);
+        const newSavedState = !isSaved;
+        setIsSaved(newSavedState);
+
+        if (newSavedState) {
+            // Save the blog
+            saveBlogMutation();
+        } else {
+            // Unsave the blog
+            unsaveBlogMutation();
+        }
+
+        // Trigger a custom event to update the profile page
+        window.dispatchEvent(new CustomEvent('blogSaved', {
+            detail: { blogId: _id, isSaved: newSavedState }
+        }));
     };
+
+    // UPDATED: Handle blog deletion with callback
+    // UPDATED: Handle blog deletion with callback
+const handleBlogDelete = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!userInfo?._id || userInfo._id !== authorDetails._id) return;
+
+    deleteBlogMutation(undefined, {
+        onSuccess: () => {
+            setIsExpanded(false);
+            if (onBlogDeleted) {
+                onBlogDeleted();
+            }
+            // Force refresh all feeds
+            window.dispatchEvent(new CustomEvent('refreshAllFeeds'));
+        }
+    });
+};
 
     const openCommentModal = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsCommentModalOpen(true);
     };
 
+    // --- Misc ---
     const formattedDate = new Date(createdAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
     });
-
     const readingTime = Math.ceil(body.split(" ").length / 200);
+
+    const isSaveLoadingCombined = isSaveLoading || isSaving || isUnsaving;
 
     return (
         <>
@@ -150,6 +204,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                     size="icon"
                                     className="h-8 w-8"
                                     onClick={handleSave}
+                                    disabled={isSaveLoadingCombined}
                                 >
                                     <Bookmark
                                         className={`h-4 w-4 ${isSaved ? "fill-indigo-500 text-indigo-500" : ""}`}
@@ -173,8 +228,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                         onClick={(e) => handleLikeAndUnlike(e, _id)}
                                     >
                                         <Heart
-                                            className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
-                                                }`}
+                                            className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"}`}
                                         />
                                         <span>{currentLikes.length} likes</span>
                                     </Button>
@@ -202,7 +256,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                 </Card>
             </motion.div>
 
-            {/* Expanded Modal View */}
+            {/* Expanded Blog Modal */}
             <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
                 <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-2xl">
                     <AnimatePresence>
@@ -239,9 +293,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                                 <div>
                                                     <p className="font-medium">{authorDetails.username}</p>
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {formattedDate}
-                                                        </p>
+                                                        <p className="text-sm text-muted-foreground">{formattedDate}</p>
                                                         <span className="text-muted-foreground">•</span>
                                                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                                             <Clock className="h-3 w-3" />
@@ -251,23 +303,25 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={handleSave}
-                                                >
+                                                <Button variant="ghost" size="icon" onClick={handleSave} disabled={isSaveLoadingCombined}>
                                                     <Bookmark
                                                         className={`h-5 w-5 ${isSaved ? "fill-indigo-500 text-indigo-500" : ""}`}
                                                     />
                                                 </Button>
-                                                <Button variant="ghost" size="icon">
-                                                    <Share2 className="h-5 w-5" />
-                                                </Button>
+
+                                                {userInfo?._id === authorDetails._id && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={handleBlogDelete}
+                                                        disabled={isDeleting}
+                                                    >
+                                                        <Trash className="h-5 w-5 text-red-500" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
-                                        <DialogTitle className="text-3xl font-bold mb-4">
-                                            {title}
-                                        </DialogTitle>
+                                        <DialogTitle className="text-3xl font-bold mb-4">{title}</DialogTitle>
                                     </DialogHeader>
 
                                     <div className="prose prose-lg dark:prose-invert max-w-none">
@@ -285,8 +339,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                                             onClick={(e) => handleLikeAndUnlike(e, _id)}
                                         >
                                             <Heart
-                                                className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"
-                                                    }`}
+                                                className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"}`}
                                             />
                                             <span>{currentLikes.length} likes</span>
                                         </Button>
@@ -306,7 +359,6 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                 </DialogContent>
             </Dialog>
 
-            {/* Comment Modal */}
             {userInfo && (
                 <CommentModal
                     userInfo={userInfo}
@@ -319,5 +371,4 @@ export const BlogCard: React.FC<BlogCardProps> = ({
             )}
         </>
     );
-}
-    ;
+};

@@ -110,12 +110,16 @@ export const blogs: IBlog[] = [
     }
 ]
 
-export const trendingTopics = [
-    { name: "#ReactJS", posts: "12.5K" },
-    { name: "#TypeScript", posts: "8.2K" },
-    { name: "#NextJS", posts: "6.7K" },
-    { name: "#WebDev", posts: "5.9K" },
-    { name: "#AI", posts: "15.3K" },
+export type TypeTrendingTopics = {
+    id:string
+    name: string, postCount: string
+}
+export const trendingTopics:TypeTrendingTopics[]= [
+    { id:"1" , name: "#ReactJS", postCount: "12.5K" },
+    { id:"2" , name: "#TypeScript", postCount: "8.2K" },
+    { id:"3", name: "#NextJS", postCount: "6.7K" },
+    { id:"4" , name: "#WebDev", postCount: "5.9K" },
+    { id:"5" , name: "#AI", postCount: "15.3K" },
 ];
 
 export const fakeUsersArray: IUser[] = [

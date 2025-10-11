@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X,
@@ -12,13 +12,12 @@ import {
 import type { IBlog, IUser } from '@/types';
 import { BlogCard } from '@/pages/Components/BlogCard';
 
-
 interface ProfileModalProps {
     user: IUser;
     isOpen: boolean;
     onClose: () => void;
-    handleFollowAndUnfollow:(isFollowing:boolean) => void;
-    isFollowingUser:boolean;
+    handleFollowAndUnfollow: (isFollowing: boolean) => Promise<void>;
+    isFollowingUser: boolean;
     currentUserId?: string;
     blogs: IBlog[];
 }
@@ -28,14 +27,19 @@ const ProfileModal = ({
     isOpen,
     onClose,
     handleFollowAndUnfollow,
-    isFollowingUser ,
+    isFollowingUser,
     currentUserId,
     blogs
 }: ProfileModalProps) => {
     const [currentPage, setCurrentPage] = useState(0);
+    const [optimisticFollowing, setOptimisticFollowing] = useState(isFollowingUser);
     const blogsPerPage = 3;
 
-    // Pagination for blogs
+    // Sync with parent component's follow state
+    useEffect(() => {
+        setOptimisticFollowing(isFollowingUser);
+    }, [isFollowingUser]);
+
     const totalPages = Math.ceil(blogs.length / blogsPerPage);
     const currentBlogs = blogs.slice(
         currentPage * blogsPerPage,
@@ -50,13 +54,28 @@ const ProfileModal = ({
         setCurrentPage((prev) => Math.max(prev - 1, 0));
     };
 
-    // Format date
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    const handleOptimisticFollow = async () => {
+        const previousFollowingState = optimisticFollowing;
+        const newFollowingState = !optimisticFollowing;
+
+        // Optimistic update
+        setOptimisticFollowing(newFollowingState);
+
+        try {
+            await handleFollowAndUnfollow(previousFollowingState);
+        } catch (error) {
+            // Revert UI on failure
+            setOptimisticFollowing(previousFollowingState);
+            console.error('Follow/Unfollow failed:', error);
+        }
     };
 
     return (
@@ -136,25 +155,25 @@ const ProfileModal = ({
 
                                         <div className="flex gap-6 mb-4">
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900">{user.followers.length}</span>
+                                                <span className="font-semibold text-gray-900">{user.followers?.length || 0}</span>
                                                 <span className="text-sm text-gray-500">Followers</span>
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900">{user.following.length}</span>
+                                                <span className="font-semibold text-gray-900">{user.following?.length || 0}</span>
                                                 <span className="text-sm text-gray-500">Following</span>
                                             </div>
                                         </div>
 
-                                        {currentUserId !== user._id && (
+                                        {currentUserId && currentUserId !== user._id && (
                                             <button
-                                                onClick={() => handleFollowAndUnfollow(isFollowingUser)}
-                                                className={`px-4 py-2 rounded-lg font-medium transition-all ${isFollowingUser
+                                                onClick={handleOptimisticFollow}
+                                                className={`px-4 py-2 rounded-lg font-medium transition-all ${optimisticFollowing
                                                     ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                                                     : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
                                                     }`}
                                             >
                                                 <div className="flex items-center">
-                                                    {isFollowingUser ? (
+                                                    {optimisticFollowing ? (
                                                         <>
                                                             <UserCheck size={16} className="mr-1" />
                                                             Following

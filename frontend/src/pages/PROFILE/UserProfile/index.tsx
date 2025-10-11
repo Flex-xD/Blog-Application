@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare, LucideLogOut } from 'lucide-react';
+import { Pencil, Bookmark, UserPlus, Users, Calendar, Mail, PenSquare, LucideLogOut, Check, BookmarkCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
@@ -11,10 +11,14 @@ import { BlogCard } from '@/pages/Components/BlogCard';
 import type { IBlog, IUser } from '@/types';
 import Navbar from '@/pages/Components/Navbar';
 import apiClient from '@/utility/axiosClient';
-import { AUTH_ENDPOINTS } from '@/constants/constants';
+import { AUTH_ENDPOINTS, BLOG_ENDPOINTS } from '@/constants/constants';
 import { toast } from 'sonner';
 import FollowModal from '../components/followersAndFollowingModal';
 import { EditProfileModal } from '../components/EditProfileModal';
+import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
+import useUnsaveBlogMutation from '@/customHooks/unsaveBlog';
+import { useQuery } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/constants/queryKeys';
 
 interface UserProfileProps {
     user: IUser;
@@ -22,23 +26,223 @@ interface UserProfileProps {
     isLoading?: boolean;
     isCurrentUser?: boolean;
     onFollow?: () => void;
+    currentUserId?: string;
 }
 
+// Fetch saved blogs
+const useSavedBlogs = (userId: string) => {
+    return useQuery({
+        queryKey: QUERY_KEYS.BLOGS.SAVED(userId),
+        queryFn: async () => {
+            const { data } = await apiClient.get(BLOG_ENDPOINTS.USER_SAVED_BLOGS);
+            return data.data || [];
+        },
+        enabled: !!userId,
+    });
+};
+
 export const UserProfile: React.FC<UserProfileProps> = ({
-    user,
+    user: initialUser,
     blogs,
     isLoading = false,
     isCurrentUser = false,
     onFollow,
+    currentUserId = '',
 }) => {
     const [activeTab, setActiveTab] = useState('blogs');
     const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
     const [modalUsers, setModalUsers] = useState<IUser[]>([]);
     const [modalTitle, setModalTitle] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [user, setUser] = useState<IUser>(initialUser);
+    const [followersCount, setFollowersCount] = useState(initialUser.followers.length);
+    const [savedBlogsCount, setSavedBlogsCount] = useState(initialUser.saves?.length || 0);
+    const [savedBlogs, setSavedBlogs] = useState<IBlog[]>([]);
+    const [savedBlogIds, setSavedBlogIds] = useState<string[]>([]);
+    const [displayBlogs, setDisplayBlogs] = useState<IBlog[]>(blogs);
+
+    useEffect(() => {
+        setDisplayBlogs(blogs);
+    }, [blogs]);
+
+
+    const { mutateAsync: followAndUnfollowFn } = useFollowOrUnfollowMutation();
+    const { data: savedBlogsData, refetch: refetchSavedBlogs } = useSavedBlogs(user._id);
+
+    // Custom hook for handling unsave with proper error handling
+    const useBlogSaveUnsave = (blogId: string) => {
+        const unsaveMutation = useUnsaveBlogMutation(blogId, user._id);
+
+        const handleUnsave = async () => {
+            try {
+                await unsaveMutation.mutateAsync();
+
+                // Dispatch custom event for real-time updates
+                window.dispatchEvent(new CustomEvent('blogSaved', {
+                    detail: { blogId, isSaved: false }
+                }));
+
+                return true;
+            } catch (error) {
+                console.error('Failed to unsave blog:', error);
+                return false;
+            }
+        };
+
+        return { handleUnsave, isUnsaveLoading: unsaveMutation.isPending };
+    };
+
+    // Update the isBlogSaved function to use both user.saves and savedBlogIds
+    const isBlogSaved = (blogId: string) => {
+        if (!blogId) return false;
+
+        const blogIdStr = blogId.toString();
+
+        // Check in savedBlogIds first (most reliable)
+        const savedIdsStr = savedBlogIds
+            .filter(id => id !== undefined && id !== null)
+            .map(id => id.toString());
+        if (savedIdsStr.includes(blogIdStr)) return true;
+
+        // Fallback: Check in user.saves array
+        if (user.saves && Array.isArray(user.saves)) {
+            const savesStr = user.saves
+                .filter(save => save !== undefined && save !== null)
+                .map(save => save.toString());
+            if (savesStr.includes(blogIdStr)) return true;
+        }
+
+        return false;
+    };
+
+    // Update local state when initialUser changes
+    useEffect(() => {
+        setUser(initialUser);
+        setFollowersCount(initialUser.followers.length);
+        setSavedBlogsCount(initialUser.saves?.length || 0);
+
+        // Also update savedBlogIds from initialUser.saves
+        if (initialUser.saves && Array.isArray(initialUser.saves)) {
+            const savedIds = initialUser.saves
+                .filter(save => save !== undefined && save !== null)
+                .map(save => save.toString());
+            setSavedBlogIds(savedIds);
+        }
+    }, [initialUser]);
+
+    useEffect(() => {
+        if (savedBlogsData && isCurrentUser) {
+            setSavedBlogs(savedBlogsData);
+            // Extract just the blog IDs from saved blogs, filtering out any undefined
+            const savedIds = savedBlogsData
+                .map((blog: IBlog) => blog._id)
+                .filter((id: string | undefined) => id !== undefined && id !== null);
+            setSavedBlogIds(savedIds);
+            console.log('📚 Saved blog IDs updated:', savedIds);
+        }
+    }, [savedBlogsData, isCurrentUser]);
+
+    // Check initial follow status
+    useEffect(() => {
+        if (user.followers && currentUserId) {
+            const isUserFollowing = Array.isArray(user.followers)
+                ? user.followers.some((follower: string | IUser) =>
+                    typeof follower === 'string' ? follower === currentUserId : follower._id === currentUserId
+                )
+                : false;
+            setIsFollowing(isUserFollowing);
+        }
+    }, [user.followers, currentUserId]);
+
+    // Enhanced blog save/unsave event handler
+    useEffect(() => {
+        const handleBlogSaved = (event: CustomEvent) => {
+            const { blogId, isSaved } = event.detail;
+
+            // Update saved blogs count
+            setSavedBlogsCount(prev => isSaved ? prev + 1 : prev - 1);
+
+            // Update savedBlogIds
+            setSavedBlogIds(prev => {
+                if (isSaved) {
+                    return [...prev, blogId];
+                } else {
+                    return prev.filter(id => id !== blogId);
+                }
+            });
+
+            // Update user object
+            setUser(prevUser => {
+                if (isSaved) {
+                    return {
+                        ...prevUser,
+                        saves: [...(prevUser.saves || []), blogId]
+                    };
+                } else {
+                    return {
+                        ...prevUser,
+                        saves: (prevUser.saves || []).filter((id: string) => id !== blogId)
+                    };
+                }
+            });
+
+            // Refetch saved blogs if we're on the saved tab
+            if (activeTab === 'saved' && isCurrentUser) {
+                refetchSavedBlogs();
+            }
+        };
+
+        window.addEventListener('blogSaved', handleBlogSaved as EventListener);
+
+        return () => {
+            window.removeEventListener('blogSaved', handleBlogSaved as EventListener);
+        };
+    }, [activeTab, isCurrentUser, refetchSavedBlogs]);
+
+    const handleFollowAndUnfollow = async () => {
+        if (!currentUserId) {
+            toast.error('Please login to follow users');
+            return;
+        }
+
+        const previousFollowState = isFollowing;
+        const previousFollowersCount = followersCount;
+
+        // Optimistic update
+        setIsFollowing(!isFollowing);
+        setFollowersCount(previousFollowState ? followersCount - 1 : followersCount + 1);
+
+        try {
+            await followAndUnfollowFn(previousFollowState);
+
+            // Update local user data optimistically
+            const updatedFollowers = previousFollowState
+                ? user.followers.filter((follower: string | IUser) =>
+                    typeof follower === 'string' ? follower !== currentUserId : follower._id !== currentUserId
+                )
+                : [...user.followers, currentUserId];
+
+            // Update the user object with new state
+            setUser(prevUser => ({
+                ...prevUser,
+                followers: updatedFollowers
+            }));
+
+            toast.success(previousFollowState ? 'Unfollowed successfully!' : 'Followed successfully!');
+
+            if (onFollow) {
+                onFollow();
+            }
+        } catch (error) {
+            // Revert on error
+            setIsFollowing(previousFollowState);
+            setFollowersCount(previousFollowersCount);
+            console.error('Follow/Unfollow failed:', error);
+        }
+    };
 
     const handleShowFollowers = async () => {
-        // If followers are string IDs, fetch user objects here
         if (user.followers.length > 0 && typeof user.followers[0] === 'string') {
             try {
                 const { data } = await apiClient.post('/users/bulk', { ids: user.followers });
@@ -54,7 +258,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     };
 
     const handleShowFollowing = async () => {
-        // If following are string IDs, fetch user objects here
         if (user.following.length > 0 && typeof user.following[0] === 'string') {
             try {
                 const { data } = await apiClient.post('/users/bulk', { ids: user.following });
@@ -90,6 +293,55 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         }
     };
 
+    // Add this function in your UserProfile component
+    // Add this function in your UserProfile component
+    const handleBlogDeleted = (deletedBlogId: string) => {
+        // Remove from blogs
+        setDisplayBlogs(prev => prev.filter(blog => blog._id !== deletedBlogId));
+
+        // Also remove from saved blogs if it exists there
+        setSavedBlogs(prev => prev.filter(blog => blog._id !== deletedBlogId));
+        setSavedBlogIds(prev => prev.filter(id => id !== deletedBlogId));
+
+        // Update counts
+        setSavedBlogsCount(prev => Math.max(0, prev - 1));
+    };
+    // Enhanced BlogCard component with proper save/unsave handling
+    const EnhancedBlogCard = ({ blog, isSaved }: { blog: IBlog; isSaved: boolean }) => {
+        const { handleUnsave, isUnsaveLoading } = useBlogSaveUnsave(blog._id);
+
+        const handleSaveToggle = async () => {
+            if (isSaved) {
+                // Unsave the blog
+                await handleUnsave();
+            }
+            // Save is handled by BlogCard's internal logic
+        };
+
+        return (
+            <BlogCard
+                {...blog}
+                image={
+                    typeof blog.image === 'string'
+                        ? {
+                            url: blog.image,
+                            publicId: '',
+                            width: 0,
+                            height: 0,
+                            format: '',
+                        }
+                        : blog.image
+                }
+                onLike={() => { }}
+                onSave={handleSaveToggle}
+                isInitiallySaved={isSaved}
+                isSaveLoading={isUnsaveLoading}
+                // ADD THIS: Pass the deletion callback
+                onBlogDeleted={() => handleBlogDeleted(blog._id)}
+            />
+        );
+    };
+
     if (isLoading) {
         return <ProfileSkeleton />;
     }
@@ -116,6 +368,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 transition={{ duration: 0.8 }}
                 className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-100 mb-8"
             >
+                {/* ... (rest of the profile header remains the same) ... */}
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                     <div className="flex-shrink-0 relative">
                         <Avatar className="h-28 w-28 md:h-36 md:w-36 border-4 border-white shadow-lg">
@@ -171,11 +424,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                     </>
                                 ) : (
                                     <Button
-                                        onClick={onFollow}
-                                        className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg transition-all duration-200"
+                                        onClick={handleFollowAndUnfollow}
+                                        variant={isFollowing ? "outline" : "default"}
+                                        className={`gap-2 transition-all duration-200 ${isFollowing
+                                            ? 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+                                            : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg'
+                                            }`}
                                     >
-                                        <UserPlus className="h-4 w-4" />
-                                        Follow
+                                        {isFollowing ? (
+                                            <>
+                                                <Check className="h-4 w-4" />
+                                                Following
+                                            </>
+                                        ) : (
+                                            <>
+                                                <UserPlus className="h-4 w-4" />
+                                                Follow
+                                            </>
+                                        )}
                                     </Button>
                                 )}
                             </div>
@@ -197,7 +463,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                 </div>
                                 <div className="text-left">
                                     <p className="font-semibold text-gray-900 text-lg">
-                                        {user.followers.length}
+                                        {followersCount}
                                     </p>
                                     <p className="text-xs text-muted-foreground">Followers</p>
                                 </div>
@@ -224,7 +490,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                 </div>
                                 <div>
                                     <p className="font-semibold text-gray-900 text-lg">
-                                        {user.saves.length}
+                                        {savedBlogsCount}
                                     </p>
                                     <p className="text-xs text-muted-foreground">Saved</p>
                                 </div>
@@ -266,29 +532,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                         transition={{ duration: 0.3 }}
                     >
                         <TabsContent value="blogs" className="space-y-6">
-                            {blogs.length > 0 ? (
-                                blogs.map((blog, index) => (
+                            {displayBlogs.length > 0 ? ( // ← Change condition to displayBlogs
+                                displayBlogs.map((blog, index) => ( // ← Change to displayBlogs
                                     <motion.div
                                         key={blog._id}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.4, delay: index * 0.1 }}
                                     >
-                                        <BlogCard
-                                            {...blog}
-                                            image={
-                                                typeof blog.image === 'string'
-                                                    ? {
-                                                        url: blog.image,
-                                                        publicId: '',
-                                                        width: 0,
-                                                        height: 0,
-                                                        format: '',
-                                                    }
-                                                    : blog.image
-                                            }
-                                            onLike={() => { }}
-                                            onSave={() => { }}
+                                        <EnhancedBlogCard
+                                            blog={blog}
+                                            isSaved={isBlogSaved(blog._id)}
                                         />
                                     </motion.div>
                                 ))
@@ -298,7 +552,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                                         <PenSquare className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                                         <h3 className="text-xl font-semibold text-gray-700 mb-3">
                                             {isCurrentUser
-                                                ? 'You haven’t written any blogs yet'
+                                                ? "You haven't written any blogs yet"
                                                 : 'No blogs published yet'}
                                         </h3>
                                         <p className="text-gray-500 mb-6">
@@ -318,21 +572,49 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                         </TabsContent>
 
                         <TabsContent value="saved">
-                            <Card className="text-center py-16 border-2 border-dashed border-gray-200">
-                                <div className="mx-auto max-w-md">
-                                    <Bookmark className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                                    <h3 className="text-xl font-semibold text-gray-700 mb-3">
-                                        {isCurrentUser
-                                            ? 'Your saved collection'
-                                            : 'Saved blogs are private'}
-                                    </h3>
-                                    <p className="text-gray-500">
-                                        {isCurrentUser
-                                            ? 'Save blogs to read later by clicking the bookmark icon'
-                                            : 'Only visible to the account owner'}
-                                    </p>
-                                </div>
-                            </Card>
+                            {isCurrentUser ? (
+                                savedBlogs.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {savedBlogs.map((blog, index) => (
+                                            <motion.div
+                                                key={blog._id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.4, delay: index * 0.1 }}
+                                            >
+                                                <EnhancedBlogCard
+                                                    blog={blog}
+                                                    isSaved={true} // Always true for saved tab
+                                                />
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Card className="text-center py-16 border-2 border-dashed border-gray-200">
+                                        <div className="mx-auto max-w-md">
+                                            <Bookmark className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                            <h3 className="text-xl font-semibold text-gray-700 mb-3">
+                                                No saved blogs yet
+                                            </h3>
+                                            <p className="text-gray-500">
+                                                Save blogs to read later by clicking the bookmark icon
+                                            </p>
+                                        </div>
+                                    </Card>
+                                )
+                            ) : (
+                                <Card className="text-center py-16 border-2 border-dashed border-gray-200">
+                                    <div className="mx-auto max-w-md">
+                                        <Bookmark className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                        <h3 className="text-xl font-semibold text-gray-700 mb-3">
+                                            Saved blogs are private
+                                        </h3>
+                                        <p className="text-gray-500">
+                                            Only visible to the account owner
+                                        </p>
+                                    </div>
+                                </Card>
+                            )}
                         </TabsContent>
 
                         <TabsContent value="about">

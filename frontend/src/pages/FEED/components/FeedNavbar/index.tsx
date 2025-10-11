@@ -1,12 +1,17 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Home, Bookmark, Bell, PenSquare } from "lucide-react"
+import { Search, Home, Users, PenSquare } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAppStore } from "@/store"
 import { useUserProfileData } from "@/customHooks/UserDataFetching"
 
-export const FeedNavbar = () => {
+interface FeedNavbarProps {
+    searchQuery: string;
+    setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export const FeedNavbar: React.FC<FeedNavbarProps> = ({ searchQuery, setSearchQuery }) => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAppStore();
     const { data: userInfo } = useUserProfileData();
@@ -14,6 +19,11 @@ export const FeedNavbar = () => {
     const handleNavbarNavigation = (endpoint: string) => {
         navigate(endpoint);
     }
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    }
+
     return (
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,6 +40,9 @@ export const FeedNavbar = () => {
                                 type="search"
                                 placeholder="Search blogs, topics, or people..."
                                 className="pl-10 rounded-full bg-gray-100 border-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                value={searchQuery}
+                                onChange={handleSearch}
+                                aria-label="Search blogs"
                             />
                         </div>
                     </div>
@@ -43,11 +56,8 @@ export const FeedNavbar = () => {
                             <Button onClick={() => handleNavbarNavigation("/")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
                                 <Home className="h-5 w-5" />
                             </Button>
-                            <Button onClick={() => handleNavbarNavigation("/profile")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Bookmark className="h-5 w-5" />
-                            </Button>
-                            <Button onClick={() => handleNavbarNavigation("/notifications")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
-                                <Bell className="h-5 w-5" />
+                            <Button onClick={() => handleNavbarNavigation("/social")} variant="ghost" size="icon" className="text-gray-600 hover:bg-gray-100">
+                                <Users className="h-5 w-5" />
                             </Button>
                         </div>
 
@@ -63,7 +73,6 @@ export const FeedNavbar = () => {
                                 <AvatarFallback>ME</AvatarFallback>
                             </Avatar>
                         )}
-
                     </div>
                 </div>
             </div>

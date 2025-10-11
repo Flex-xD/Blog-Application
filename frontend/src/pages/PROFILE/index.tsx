@@ -5,15 +5,7 @@ import type { IBlog } from "@/types";
 
 
 export function UserProfilePage() {
-
-    const handleFollow = () => {
-        console.log("Follow action");
-    };
-
-    const handleEditProfile = () => {
-        console.log("Edit profile");
-    };
-
+    
     const { data: user, isLoading } = useUserProfileData();
     console.log(user);
     if (isLoading) return <div className=" h-screen w-screen flex items-center justify-center"><Loader /></div>
@@ -29,10 +21,8 @@ export function UserProfilePage() {
                     : undefined
             }}
             blogs={userBlogs}
-            isCurrentUser={true} // Set to true if viewing own profile
+            isCurrentUser={true}
             isLoading={isLoading}
-            onFollow={handleFollow}
-            onEditProfile={handleEditProfile}
         />
     )
 }

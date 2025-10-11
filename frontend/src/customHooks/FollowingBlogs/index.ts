@@ -5,7 +5,7 @@ import { BLOG_ENDPOINTS } from "@/constants/constants";
 import type { IBlog } from "@/types";
 import type { AxiosError } from "axios";
 
-interface PopularBlogsResponse {
+interface FollowingBlogsResponse {
     statusCode: number;
     success: boolean;
     msg: string;
@@ -15,38 +15,38 @@ interface PopularBlogsResponse {
             page: number;
             limit: number;
             total: number;
-            totalPages: number;
             hasMore: boolean;
-            nextPage: number | null;
-            prevPage: number | null;
+            totalPages?: number;
+            nextPage?: number | null;
+            prevPage?: number | null;
         };
     };
 }
 
-export interface PopularBlogsData {
+export interface UserFollowingBlogsData {
     data: {
         blogs: IBlog[];
         pagination: {
             page: number;
             limit: number;
             total: number;
-            totalPages: number;
             hasMore: boolean;
-            nextPage: number | null;
-            prevPage: number | null;
+            totalPages?: number;
+            nextPage?: number | null;
+            prevPage?: number | null;
         };
     };
 }
 
-const usePopularBlogs = (page: number = 1, limit: number = 10) => {
-    return useQuery<PopularBlogsData, AxiosError>({
-        queryKey: QUERY_KEYS.BLOGS.POPULAR(page, limit),
-        queryFn: async (): Promise<PopularBlogsData> => {
-            const response = await apiClient.get<PopularBlogsResponse>(
-                `${BLOG_ENDPOINTS.POPULAR}?page=${page}&limit=${limit}`
+const useUserFollowingBlogsData = (userId: string, page: number = 1, limit: number = 10) => {
+    return useQuery<UserFollowingBlogsData, AxiosError>({
+        queryKey: QUERY_KEYS.BLOGS.FOLLOWING(userId, page, limit),
+        queryFn: async (): Promise<UserFollowingBlogsData> => {
+            const response = await apiClient.get<FollowingBlogsResponse>(
+                `${BLOG_ENDPOINTS.USER_FOLLOWING_BLOGS}?page=${page}&limit=${limit}`
             );
 
-            console.log("Popular blogs response:", response.data);
+            console.log("This is the response of the following blogs data: ", response.data);
 
             const apiData = response.data.data;
             const pagination = apiData.pagination;
@@ -59,15 +59,16 @@ const usePopularBlogs = (page: number = 1, limit: number = 10) => {
                         totalPages: Math.ceil(pagination.total / pagination.limit),
                         nextPage: pagination.hasMore ? pagination.page + 1 : null,
                         prevPage: pagination.page > 1 ? pagination.page - 1 : null,
-                    },
-                },
+                    }
+                }
             };
         },
-        staleTime: 5 * 60 * 1000, 
+        enabled: !!userId,
+        staleTime: 5 * 60 * 1000,
         retry: 1,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
     });
 };
 
-export default usePopularBlogs;
+export default useUserFollowingBlogsData;

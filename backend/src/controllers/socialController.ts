@@ -3,7 +3,7 @@ import { sendError, sendResponse } from "../utils/helperFunction";
 import { IAuthRequest } from "../middleware/authMiddleware";
 import { Response } from "express";
 import User, { IUser } from "../models/userModel";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { uploadBufferToCloudinary } from "./blogController";
 
 export const followSuggestionForUser = async (req: IAuthRequest, res: Response) => {
@@ -91,7 +91,7 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
     }
 }
 
-export const followPopularUsersSuggestion = async (req:IAuthRequest , res:Response) => {
+export const followPopularUsersSuggestion = async (req: IAuthRequest, res: Response) => {
 }
 
 export const updateProfilePicture = async (req: IAuthRequest, res: Response) => {
@@ -144,7 +144,7 @@ export const updateProfilePicture = async (req: IAuthRequest, res: Response) => 
             user.profilePicture = imageInfo;
             await user.save();
         }
-        console.log("Profile picture upated successfully : " , imageInfo);
+        console.log("Profile picture upated successfully : ", imageInfo);
         return sendResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,
@@ -176,3 +176,118 @@ async function deleteFromCloudinary(publicId: string) {
         console.error('Error deleting from Cloudinary:', error);
     }
 }
+
+export const searchUsersController = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        const { query, page = "1", limit = "10" } = req.query as { query?: string; page?: string; limit?: string };
+
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!",
+            });
+        }
+
+        if (!query || query.trim() === "") {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Search query is required",
+            });
+        }
+
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid pagination parameters",
+            });
+        }
+
+        // Escape special characters in query for regex
+        const escapedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+        const regexQuery = new RegExp(escapedQuery, "i"); // Case-insensitive search
+
+        // Search users by username or email
+        const userPipeline = [
+            {
+                $match: {
+                    $or: [{ username: { $regex: regexQuery } }, { email: { $regex: regexQuery } }],
+                    _id: { $ne: new Types.ObjectId(userId) }, // Exclude current user
+                },
+            },
+            { $skip: (pageNum - 1) * limitNum },
+            { $limit: limitNum },
+            {
+                $project: {
+                    username: 1,
+                    email: 1,
+                    profilePicture: 1,
+                    followers: 1,
+                    following: 1,
+                    userBlogs: 1,
+                },
+            },
+        ];
+
+        const users = await User.aggregate(userPipeline);
+
+        // Count total matching users for pagination
+        const totalUsers = await User.countDocuments({
+            $or: [{ username: { $regex: regexQuery } }, { email: { $regex: regexQuery } }],
+            _id: { $ne: new Types.ObjectId(userId) },
+        });
+
+        const totalPages = Math.ceil(totalUsers / limitNum);
+
+        if (users.length === 0) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.OK,
+                success: true,
+                msg: "No users found",
+                data: {
+                    users: [],
+                    pagination: {
+                        page: pageNum,
+                        limit: limitNum,
+                        total: 0,
+                        totalPages: 0,
+                        hasMore: false,
+                        nextPage: null,
+                        prevPage: null,
+                    },
+                },
+            });
+        }
+
+        const responseData = {
+            users,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total: totalUsers,
+                totalPages,
+                hasMore: pageNum < totalPages,
+                nextPage: pageNum < totalPages ? pageNum + 1 : null,
+                prevPage: pageNum > 1 ? pageNum - 1 : null,
+            },
+        };
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Search results fetched successfully",
+            data: responseData,
+        });
+    } catch (error: any) {
+        console.error("Search Users Error:", error);
+        return sendError(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            error: error.message || "Internal server error",
+        });
+    }
+};

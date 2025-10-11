@@ -18,6 +18,7 @@ export const useUserProfileData = () => {
                 if (response.data.data) {
                     setIsAuthenticated(true)
                 }
+                console.log("THIS IS USER DATA : ",response.data.data)
                 return response.data.data as IUser;
             },
             staleTime: 5 * 60 * 1000,

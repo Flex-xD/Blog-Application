@@ -10,7 +10,7 @@ import { isValidObjectId, logger } from "../utils";
 export const getUserInfo = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
-        const response = await User.findById(userId).populate("userBlogs").populate("following followers") as IUser;
+        const response = await User.findById(userId).populate("userBlogs").populate("saves").populate("following followers") as IUser;
 
         if (!response) return sendResponse(res, {
             statusCode: StatusCodes.BAD_REQUEST,
@@ -29,164 +29,132 @@ export const getUserInfo = async (req: IAuthRequest, res: Response) => {
     }
 }
 
-export const followOtherUsers = async (req: IAuthRequest, res: Response) => {
+async function withTransactionRetry(fn: (session: mongoose.ClientSession) => Promise<any>, maxRetries = 3) {
+    const session = await mongoose.startSession();
     try {
-        const session = await mongoose.startSession();
-        const { userId } = req;
-        const { userToFollowId } = req.params;
-        try {
-            session.startTransaction();
-            if (!userToFollowId || !isValidObjectId(userToFollowId)) {
-                return sendResponse(res, {
-                    statusCode: StatusCodes.NOT_FOUND,
-                    success: false,
-                    msg: "User to be unfollow ID is required !"
-                })
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                session.startTransaction();
+                const result = await fn(session);
+                await session.commitTransaction();
+                return result;
+            } catch (err: any) {
+                await session.abortTransaction();
+                // Only retry for transient errors
+                if (!err.errorLabels?.includes("TransientTransactionError") || attempt === maxRetries - 1) {
+                    throw err;
+                }
             }
-            if (userId === userToFollowId) {
-                return sendResponse(res, {
-                    statusCode: StatusCodes.CONFLICT,
-                    success: false,
-                    msg: "You cannot unfollow yourself !"
-                })
-            }
+        }
+    } finally {
+        await session.endSession();
+    }
+}
 
+export const followOtherUsers = async (req: IAuthRequest, res: Response) => {
+    const { userId } = req;
+    const { userToFollowId } = req.params;
+
+    if (!userToFollowId || !isValidObjectId(userToFollowId)) {
+        return sendResponse(res, {
+            statusCode: StatusCodes.NOT_FOUND,
+            success: false,
+            msg: "User to follow ID is required!",
+        });
+    }
+
+    if (userId === userToFollowId) {
+        return sendResponse(res, {
+            statusCode: StatusCodes.CONFLICT,
+            success: false,
+            msg: "You cannot follow yourself!",
+        });
+    }
+
+    try {
+        await withTransactionRetry(async (session) => {
             const [user, userToFollow] = await Promise.all([
-                await User.findById(userId).session(session) as IUser,
-                await User.findById(userToFollowId).session(session) as IUser,
-            ])
+                User.findById(userId).session(session),
+                User.findById(userToFollowId).session(session),
+            ]);
 
             if (!user || !userToFollow) {
-                return sendResponse(res, {
-                    statusCode: StatusCodes.NOT_FOUND,
-                    success: false,
-                    msg: 'User not found',
-                });
+                throw new Error("User not found");
             }
 
-            if (
-                user.following.includes(new Types.ObjectId(userToFollowId)) ||
-                userId && userToFollow.followers.includes(new Types.ObjectId(userId))
-            ) {
-                return sendResponse(res, {
-                    statusCode: StatusCodes.CONFLICT,
-                    success: false,
-                    msg: 'Already following this user',
-                });
+            if (user.following.some((id) => id.equals(userToFollow._id))) {
+                throw new Error("Already following this user");
             }
-            user.following.push(userToFollowId as unknown as mongoose.Types.ObjectId);
-            userToFollow.followers.push(userId as unknown as mongoose.Types.ObjectId);
-            await Promise.all([
-                user.save({ session }),
-                userToFollow.save({ session })
-            ])
-            await session.commitTransaction();
+
+            user.following.push(userToFollow._id as unknown as mongoose.Types.ObjectId);
+            userToFollow.followers.push(user._id as unknown as mongoose.Types.ObjectId);
+
+            await Promise.all([user.save({ session }), userToFollow.save({ session })]);
+
             logger.info(`User ${userId} followed user ${userToFollowId}`);
             sendResponse(res, {
                 statusCode: StatusCodes.OK,
                 success: true,
-                msg: "User followed Successfully !"
-            })
-        } catch (error) {
-            await session.abortTransaction();
-            return sendError(res, { error })
-        } finally {
-            await session.endSession()
-        }
-    } catch (error) {
-        return sendError(res, { error });
+                msg: "User followed successfully!",
+            });
+        });
+    } catch (error: any) {
+        sendError(res, { error });
     }
-}
+};
 
+// Unfollow user controller
 export const unfollowOtherUsers = async (req: IAuthRequest, res: Response) => {
+    const { userId } = req;
+    const { userToUnfollowId } = req.params;
+
+    if (!userToUnfollowId || !isValidObjectId(userToUnfollowId)) {
+        return sendResponse(res, {
+            statusCode: StatusCodes.NOT_FOUND,
+            success: false,
+            msg: "User to unfollow ID is required!",
+        });
+    }
+
+    if (userId === userToUnfollowId) {
+        return sendResponse(res, {
+            statusCode: StatusCodes.CONFLICT,
+            success: false,
+            msg: "You cannot unfollow yourself!",
+        });
+    }
+
     try {
-        const session = await mongoose.startSession();
-        const { userId } = req;
-        const { userToUnfollowId } = req.params;
-
-        try {
-            session.startTransaction();
-            if (!userToUnfollowId || !isValidObjectId(userToUnfollowId)) {
-                await session.abortTransaction();
-                return sendResponse(res, {
-                    statusCode: StatusCodes.NOT_FOUND,
-                    success: false,
-                    msg: 'User to unfollow ID is required or invalid!',
-                });
-            }
-
-            if (userId === userToUnfollowId) {
-                await session.abortTransaction();
-                return sendResponse(res, {
-                    statusCode: StatusCodes.CONFLICT,
-                    success: false,
-                    msg: 'You cannot unfollow yourself!',
-                });
-            }
-
+        await withTransactionRetry(async (session) => {
             const [user, userToUnfollow] = await Promise.all([
-                User.findById(userId).session(session) as Promise<IUser>,
-                User.findById(userToUnfollowId).session(session) as Promise<IUser>,
+                User.findById(userId).session(session),
+                User.findById(userToUnfollowId).session(session),
             ]);
 
             if (!user || !userToUnfollow) {
-                await session.abortTransaction();
-                return sendResponse(res, {
-                    statusCode: StatusCodes.NOT_FOUND,
-                    success: false,
-                    msg: 'User not found',
-                });
+                throw new Error("User not found");
             }
 
-            if (
-                !user.following.includes(new Types.ObjectId(userToUnfollowId)) ||
-                !userToUnfollow.followers.includes(new Types.ObjectId(userId as unknown as string))
-            ) {
-                await session.abortTransaction();
-                return sendResponse(res, {
-                    statusCode: StatusCodes.CONFLICT,
-                    success: false,
-                    msg: 'You are not following this user',
-                });
+            if (!user.following.some((id) => id.equals(userToUnfollow._id))) {
+                throw new Error("You are not following this user");
             }
 
-            user.following = user.following.filter(
-                (id) => !id.equals(new Types.ObjectId(userToUnfollowId))
-            );
+            user.following = user.following.filter((id) => !id.equals(userToUnfollow._id));
+            userToUnfollow.followers = userToUnfollow.followers.filter((id) => !id.equals(user._id));
 
-            userToUnfollow.followers = userToUnfollow.followers.filter(
-                (id) => !id.equals(new Types.ObjectId(userId as unknown as string))
-            );
+            await Promise.all([user.save({ session }), userToUnfollow.save({ session })]);
 
-            await Promise.all([
-                user.save({ session }),
-                userToUnfollow.save({ session }),
-            ]);
-
-            await session.commitTransaction();
             logger.info(`User ${userId} unfollowed user ${userToUnfollowId}`);
             sendResponse(res, {
                 statusCode: StatusCodes.OK,
                 success: true,
-                msg: 'User unfollowed successfully!',
+                msg: "User unfollowed successfully!",
             });
-        } catch (error) {
-            await session.abortTransaction();
-            return sendError(res, { error });
-        } finally {
-            await session.endSession();
-        }
-    } catch (error) {
-        return sendError(res, { error });
+        });
+    } catch (error: any) {
+        sendError(res, { error });
     }
 };
 
-export const saveBlog = async (req: IAuthRequest, res: Response) => {
-    try {
 
-    } catch (error) {
-        sendError(res, { error })
-    }
-
-}
 

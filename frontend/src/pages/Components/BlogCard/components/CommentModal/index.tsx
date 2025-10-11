@@ -6,13 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
-  Calendar,
-  Clock,
   User
 } from 'lucide-react';
 import useCommentMutation from '@/customHooks/CommentOnBlog';
 import type { IUser } from '@/types';
-import { data } from 'react-router-dom';
 
 interface CommentAuthor {
   _id: string;
@@ -170,15 +167,18 @@ export const CommentModal: React.FC<CommentModalProps> = ({
         {/* Comment Input */}
         <div className="border-t border-gray-100 p-4">
           <form onSubmit={handleSubmitComment} className="flex gap-3">
-            <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-gray-100">
-              <AvatarImage
-                src={userInfo?.profilePicture?.url}
-                alt={userInfo?.username}
-              />
-              <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 font-medium">
-                {userInfo?.username?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
+            <div className="flex-shrink-0">
+              <Avatar className="h-10 w-10 ring-2 ring-gray-100 overflow-hidden">
+                <AvatarImage
+                  src={userInfo?.profilePicture?.url || ""}
+                  alt={userInfo?.username || "User"}
+                  className="object-cover w-full h-full"
+                />
+                <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 font-medium">
+                  {userInfo?.username?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
 
             <div className="flex-1 flex gap-2">
               <Input

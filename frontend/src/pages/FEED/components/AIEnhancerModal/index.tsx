@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, Shield, X } from 'lucide-react';
@@ -6,11 +6,11 @@ import { modalVariants } from '@/types';
 import ModalWrapper from '@/pages/Components/ModelWrapper';
 import { backdropVariants } from '@/constants/varients';
 import useEnhanceContentMutation from '@/customHooks/AIEnhancement';
+import { toast } from 'sonner';
+import { BlogFormContext } from '@/context';
 
 interface CreateAIModalProps {
     show: boolean;
-    title: string;
-    body: string;
     selectedTone: string | null;
     customInstructions: string;
     contentToEnhance: string;
@@ -18,8 +18,6 @@ interface CreateAIModalProps {
     setSelectedTone: React.Dispatch<React.SetStateAction<string>>;
     setCustomInstructions: React.Dispatch<React.SetStateAction<string>>;
     setContentToEnhance: React.Dispatch<React.SetStateAction<string>>;
-    setTitle: React.Dispatch<React.SetStateAction<string>>;
-    setBody: React.Dispatch<React.SetStateAction<string>>; 
 }
 
 const tones = [
@@ -33,8 +31,6 @@ const tones = [
 
 const CreateAIModal: React.FC<CreateAIModalProps> = ({
     show,
-    title,
-    body,
     selectedTone,
     customInstructions,
     contentToEnhance,
@@ -42,36 +38,33 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
     setSelectedTone,
     setCustomInstructions,
     setContentToEnhance,
-    setTitle,
-    setBody,
 }) => {
+    const { blogForm, dispatch } = useContext(BlogFormContext)!; 
     const { mutateAsync, isPending, isError, error } = useEnhanceContentMutation();
 
     const handleEnhance = async () => {
         try {
             const payload = {
-                title: title || undefined, 
-                body: contentToEnhance || body, 
+                title: blogForm.title || undefined,
+                body: contentToEnhance || blogForm.body,
                 tone: selectedTone || undefined,
                 customInstructions: customInstructions || undefined,
             };
 
             const response = await mutateAsync(payload);
             if (response.success && response.data) {
-                setTitle(response.data.title);
-                setBody(response.data.body); 
+                dispatch({ type: 'SET_TITLE', payload: response.data.title });
+                dispatch({ type: 'SET_BODY', payload: response.data.body });
                 setContentToEnhance(response.data.body);
                 setShow(false);
             }
         } catch (err) {
+            console.log({ err });
+            toast.error("Failed to enhance content, please try again later!");
         }
     };
 
-    const isButtonDisabled = Boolean(
-        isPending ||
-        !contentToEnhance.trim() ||
-        (selectedTone && customInstructions)
-    );
+    const isButtonDisabled = isPending || !contentToEnhance.trim();
 
     return (
         <ModalWrapper show={show} backdropVariants={backdropVariants} zIndex={70}>
@@ -111,10 +104,11 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
                                 <button
                                     key={tone.id}
                                     onClick={() => setSelectedTone(tone.id)}
-                                    className={`p-4 rounded-xl border-2 text-left transition-all duration-150 ${selectedTone === tone.id
+                                    className={`p-4 rounded-xl border-2 text-left transition-all duration-150 ${
+                                        selectedTone === tone.id
                                             ? 'border-indigo-500 bg-indigo-50 shadow-sm'
                                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
+                                    }`}
                                 >
                                     <div className="flex items-center space-x-3 mb-2">
                                         <span className="text-2xl">{tone.emoji}</span>
@@ -145,7 +139,7 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
                         <div className="flex items-center justify-between">
                             <h4 className="text-lg font-semibold text-gray-900">Content to Enhance</h4>
                             <button
-                                onClick={() => setContentToEnhance(body)}
+                                onClick={() => setContentToEnhance(blogForm.body)} // Use blogForm.body from context
                                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-150"
                             >
                                 Use current content

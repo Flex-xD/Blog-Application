@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,44 +7,30 @@ import { Loader2, ImageIcon, Sparkles } from "lucide-react";
 import { backdropVariants } from "@/constants/varients";
 import { modalVariants } from "@/types";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
+import { BlogFormContext } from "@/context";
 
 interface CreateBlogCardModalProps {
     show: boolean;
-    title: string;
-    body: string;
-    imagePreview: string | null;
-    postingBlogPending: boolean;
     setShow: React.Dispatch<React.SetStateAction<boolean>>;
-    setTitle: React.Dispatch<React.SetStateAction<string>>;
-    setBody: React.Dispatch<React.SetStateAction<string>>;
-    setSelectedImage: React.Dispatch<React.SetStateAction<File | null>>;
-    setImagePreview: React.Dispatch<React.SetStateAction<string | null>>;
     setShowAIModal: React.Dispatch<React.SetStateAction<boolean>>;
-    handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    handleBlogPost: () => void;
+    // Removed postingBlogPending prop; get from context
+    // Removed onClearImage prop; handle with dispatch inside
+    onPostSuccess: () => void; // New prop to call refreshFeed after successful post
 }
 
 const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
     show,
-    title,
-    body,
-    imagePreview,
-    postingBlogPending,
     setShow,
-    setTitle,
-    setBody,
-    setSelectedImage,
-    setImagePreview,
     setShowAIModal,
-    handleImageUpload,
-    handleBlogPost,
+    onPostSuccess
 }) => {
     const handleClose = () => {
         setShow(false);
-        setSelectedImage(null);
-        setImagePreview(null);
+        // No need for onClearImage; clear on close if desired, but already handled in parent effect or elsewhere
     };
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { data: userInfo } = useUserProfileData();
+    const { blogForm, handleImageUpload, handleBlogPost, dispatch, postBlogPending } = useContext(BlogFormContext)!; // Add postBlogPending here
     return (
         <AnimatePresence>
             {show && (
@@ -75,18 +61,15 @@ const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
 
                         <div className="flex-1 overflow-y-auto p-4">
                             <div className="space-y-4">
-                                {imagePreview && (
+                                {blogForm.imagePreview && (
                                     <div className="relative float-left mr-4 mb-2">
                                         <img
-                                            src={imagePreview}
+                                            src={blogForm.imagePreview}
                                             alt="Preview"
                                             className="w-32 h-32 object-cover rounded-lg"
                                         />
                                         <button
-                                            onClick={() => {
-                                                setSelectedImage(null);
-                                                setImagePreview(null);
-                                            }}
+                                            onClick={() => dispatch({ type: "SET_IMAGE", payload: { file: null, preview: null } })} // Handle clear directly with dispatch
                                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors duration-150"
                                         >
                                             ✕
@@ -95,8 +78,8 @@ const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
                                 )}
 
                                 <Input
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    value={blogForm.title}
+                                    onChange={(e) => dispatch({ type: "SET_TITLE", payload: e.target.value })}
                                     placeholder="Blog Title"
                                     className="text-xl font-bold border-none focus-visible:ring-0"
                                 />
@@ -109,20 +92,11 @@ const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
                                         />
                                         <AvatarFallback>ME</AvatarFallback>
                                     </Avatar>
-                                    <div>
-                                        <p className="font-medium">You</p>
-                                        <select className="text-sm text-gray-500 bg-transparent border-none focus:ring-0">
-                                            <option>Public</option>
-                                            <option>Followers Only</option>
-                                            <option>Private</option>
-                                        </select>
-                                    </div>
                                 </div>
 
-
                                 <textarea
-                                    value={body}
-                                    onChange={(e) => setBody(e.target.value)}
+                                    value={blogForm.body}
+                                    onChange={(e) => dispatch({ type: "SET_BODY", payload: e.target.value })}
                                     placeholder="Write your blog content here..."
                                     className="w-full min-h-[200px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 />
@@ -130,6 +104,7 @@ const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
                                 <div className="flex items-center gap-2">
                                     <Button variant="ghost" className="relative">
                                         <input
+                                            ref={fileInputRef}
                                             type="file"
                                             accept="image/*"
                                             onChange={handleImageUpload}
@@ -151,11 +126,15 @@ const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
                                 Cancel
                             </Button>
                             <Button
-                                onClick={handleBlogPost}
-                                disabled={postingBlogPending}
+                                onClick={async () => {
+                                    await handleBlogPost(); // Await the post
+                                    onPostSuccess(); // Refresh feed
+                                    setShow(false); // Close modal after success
+                                }}
+                                disabled={postBlogPending}
                                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                             >
-                                {postingBlogPending && (
+                                {postBlogPending && (
                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                 )}
                                 Publish

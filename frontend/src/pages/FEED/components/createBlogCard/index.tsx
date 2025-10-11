@@ -1,24 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { motion } from "framer-motion";
 import { ImageIcon, Link, PenSquare } from "lucide-react";
 
+interface CreateBlogCardProps {
+    setShowCreateModal: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 export const CreateBlogCard = ({
     setShowCreateModal,
-    setSelectedImage
-}: {
-    setShowCreateModal: React.Dispatch<React.SetStateAction<boolean>>;
-    setSelectedImage: React.Dispatch<React.SetStateAction<File | null>>;
-}) => {
-
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setSelectedImage(e.target.files[0]);
-            setShowCreateModal(true);
-        }
-    };
-    // const {data:userInfo} = useUserProfileData();
+}: CreateBlogCardProps) => {
     return (
         <motion.div
             whileHover={{ y: -2 }}
@@ -51,7 +42,6 @@ export const CreateBlogCard = ({
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={handleImageSelect}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                     <ImageIcon className="h-4 w-4 mr-2" />

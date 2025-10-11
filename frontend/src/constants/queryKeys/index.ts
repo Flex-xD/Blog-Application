@@ -7,13 +7,17 @@ export const QUERY_KEYS = {
         FOLLOWING: (userId: string) => ["profile", userId, "following"] as const,
     },
 
-    // Blogs
     BLOGS: {
-        ALL: ["blogs"] as const, // global blogs (explore page, all blogs)
-        BY_ID: (blogId: string) => ["blogs", "id", blogId] as const, // single blog
-        BY_USER: (userId: string) => ["blogs", "user", userId] as const, // blogs of a specific user
-        FEED: (userId: string, page?: number, limit?: number) => ["blogs", "feed", userId, page, limit] as const,
-        SAVED: (userId: string) => ["blogs", "saved", userId] as const, // blogs a user has saved
+        ALL: ["blogs"] as const,
+        BY_ID: (blogId: string) => ["blogs", "id", blogId] as const,
+        BY_USER: (userId: string) => ["blogs", "user", userId] as const,
+        FEED: (userId: string, page?: number, limit?: number, query?: string) =>
+            query
+                ? ["blogs", "feed", userId, page, limit, query] as const
+                : ["blogs", "feed", userId, page, limit] as const,
+        FOLLOWING: (userId: string, page?: number, limit?: number) =>
+            ["blogs", "following", userId, page, limit] as const,
+        SAVED: (userId: string) => ["blogs", "saved", userId] as const,
         POPULAR: (page: number, limit: number) => ["blogs", "popular", page, limit],
     },
 
@@ -38,4 +42,14 @@ export const QUERY_KEYS = {
     CONTENT: {
         ENHANCEMENT: ["content", "enhancement"] as const, // AI content enhancement
     },
+    USERS: {
+        SEARCH: (userId: string, page: number, limit: number, query: string) => [
+            "users",
+            "search",
+            userId,
+            page,
+            limit,
+            query,
+        ],
+    }
 };

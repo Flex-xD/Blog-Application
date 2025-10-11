@@ -43,6 +43,20 @@ export interface IBlog {
     updatedAt: Date;
 }
 
+export type BlogFormState = {
+    title: string;
+    body: string;
+    selectedImage: File | null;
+    imagePreview: string | null;
+};
+
+export type BlogFormAction =
+    | { type: "SET_TITLE"; payload: string }
+    | { type: "SET_BODY"; payload: string }
+    | { type: "SET_IMAGE"; payload: { file: File | null; preview: string | null } }
+    | { type: "RESET" };
+
+
 export interface apiReponse<T> {
     statusCode: number,
     success: boolean,
@@ -51,6 +65,8 @@ export interface apiReponse<T> {
 }
 
 export interface errorResponse {
+    [x: string]: any;
+    message: any;
     statusCode: number,
     success: boolean,
     msg: string

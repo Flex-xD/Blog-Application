@@ -188,7 +188,7 @@ export const getUserSavedBlogs = async (req: IAuthRequest, res: Response) => {
         if (!userId) {
             return sendResponse(res, { statusCode: StatusCodes.UNAUTHORIZED, success: false, msg: "You are unauthorized !" })
         }
-        const user: IUser | null = await User.findById(userId).populate("userBlogs");
+        const user: IUser | null = await User.findById(userId).populate("saves");
         if (!user) {
             return sendResponse(res, {
                 statusCode: StatusCodes.NOT_FOUND,
@@ -212,9 +212,17 @@ export const getUserSavedBlogs = async (req: IAuthRequest, res: Response) => {
 export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
+        const { blogId } = req.params;
+
         if (!userId) {
-            return sendResponse(res, { statusCode: StatusCodes.UNAUTHORIZED, success: false, msg: "You are unauthorized !" })
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!"
+            });
         }
+
+        // Find the user and populate their blogs
         const user: IUser | null = await User.findById(userId).populate("userBlogs");
         if (!user) {
             return sendResponse(res, {
@@ -224,10 +232,58 @@ export const deleteUserBlog = async (req: IAuthRequest, res: Response) => {
             });
         }
 
+        // Check if the blogId exists in the user's userBlogs array
+        if (!user.userBlogs.some(blog => blog._id.toString() === blogId)) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.FORBIDDEN,
+                success: false,
+                msg: "You are not authorized to delete this blog",
+            });
+        }
+
+        // Find the blog to get its images
+        const blog = await Blog.findById(blogId);
+        if (!blog) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "Blog not found",
+            });
+        }
+
+        // Delete all images from Cloudinary
+        if (blog.image?.publicId) {
+            await deleteFromCloudinary(blog.image.publicId);
+        }
+
+        // Delete the blog from the database
+        await Blog.findByIdAndDelete(blogId);
+
+        // Remove the blogId from the user's userBlogs array
+        user.userBlogs = user.userBlogs.filter(b => b._id.toString() !== blogId);
+        await user.save();
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Blog deleted successfully",
+        });
+
     } catch (error) {
+        console.error("Error deleting user blog:", error);
         sendError(res, { error });
     }
+};
+
+async function deleteFromCloudinary(publicId: string) {
+    const cloudinary = require('cloudinary').v2;
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        console.error('Error deleting from Cloudinary:', error);
+    }
 }
+
 
 export const getFeedController = async (req: IAuthRequest, res: Response) => {
     try {
@@ -267,7 +323,6 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
             new Types.ObjectId(userId),
         ];
 
-        // Get follow blogs
         const followPipeline: PipelineStage[] = [
             {
                 $match: {
@@ -367,7 +422,452 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
 };
 
 
+export const saveBlog = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        const { blogId } = req.params;
 
+        // Validate user authentication
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!",
+            });
+        }
+
+        // Validate blogId format
+        if (!Types.ObjectId.isValid(blogId)) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid blog ID",
+            });
+        }
+
+        // Find the user
+        const user = await User.findById(userId)
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found",
+            });
+        }
+
+        // Check if the blog exists
+        const blog = await Blog.findById(blogId);
+        if (!blog) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "Blog not found",
+            });
+        }
+
+        // Check if the blog is already saved
+        if (user.saves.includes(new Types.ObjectId(blogId))) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.CONFLICT,
+                success: false,
+                msg: "Blog already saved",
+            });
+        }
+
+        // Add blog to user's savedBlogs
+        user.saves.push(new Types.ObjectId(blogId));
+        await user.save();
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Blog saved successfully",
+            data: {
+                blogId,
+                savedAt: new Date(),
+            },
+        });
+    } catch (error) {
+        return sendError(res, {
+            error,
+        });
+    }
+};
+interface UnsaveBlogResponse {
+    blogId: string;
+    unsavedAt: string;
+}
+
+export const unsaveBlogController = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        const { blogId } = req.params;
+
+        // Validate user authentication
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!",
+            });
+        }
+
+        // Validate blogId format
+        if (!Types.ObjectId.isValid(blogId)) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid blog ID",
+            });
+        }
+
+        // Find the user
+        const user = await User.findById(userId);
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found",
+            });
+        }
+
+        // Check if the blog exists
+        const blog = await Blog.findById(blogId);
+        if (!blog) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "Blog not found",
+            });
+        }
+
+        // Check if the blog is saved by the user
+        if (!user.saves.includes(new Types.ObjectId(blogId))) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.CONFLICT,
+                success: false,
+                msg: "Blog is not saved by this user",
+            });
+        }
+
+        // Remove blog from user's saves
+        user.saves = user.saves.filter((id) => id.toString() !== blogId);
+        await user.save();
+
+        const responseData: UnsaveBlogResponse = {
+            blogId,
+            unsavedAt: new Date().toISOString(),
+        };
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Blog unsaved successfully",
+            data: responseData,
+        });
+    } catch (error:any) {
+        return sendError(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            error: error.message || "Failed to unsave blog",
+        });
+    }
+};
+
+export const searchBlogsController = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        const { query, page = "1", limit = "10" } = req.query as IFeedQuery & { query?: string };
+
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!",
+            });
+        }
+
+        if (!query || query.trim() === "") {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Search query is required",
+            });
+        }
+
+        const user: IUser | null = await User.findById(userId).select("following");
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found",
+            });
+        }
+
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid pagination parameters",
+            });
+        }
+
+        const followLimit = Math.ceil(limitNum * 0.3);
+        const randomLimit = limitNum - followLimit;
+        const following: Types.ObjectId[] = [
+            ...user.following,
+            new Types.ObjectId(userId),
+        ];
+
+        const escapedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+        const regexQuery = new RegExp(`\\b${escapedQuery}\\b`, "i"); 
+
+        const followPipeline: PipelineStage[] = [
+            {
+                $match: {
+                    "authorDetails._id": { $in: following },
+                    createdAt: { $lte: new Date() },
+                    $or: [
+                        { title: { $regex: regexQuery } },
+                        { body: { $regex: regexQuery } },
+                    ],
+                },
+            },
+            {
+                $addFields: {
+                    sortPriority: {
+                        $cond: [{ $regexMatch: { input: "$title", regex: regexQuery } }, 1, 2],
+                    },
+                },
+            },
+            { $sort: { sortPriority: 1, createdAt: -1 } },
+            { $skip: (pageNum - 1) * followLimit },
+            { $limit: followLimit },
+            {
+                $project: {
+                    title: 1,
+                    image: 1,
+                    body: 1,
+                    createdAt: 1,
+                    likes: 1,
+                    comments: 1,
+                    "authorDetails._id": 1,
+                    "authorDetails.username": 1,
+                    "authorDetails.profilePicture": 1,
+                },
+            },
+        ];
+        const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(followPipeline);
+
+        let randomBlogs: IBlogWithAuthor[] = [];
+        if (pageNum === 1 || followBlogs.length < followLimit) {
+            const actualRandomLimit = pageNum === 1 ? randomLimit : Math.max(0, limitNum - followBlogs.length);
+
+            if (actualRandomLimit > 0) {
+                const randomPipeline: PipelineStage[] = [
+                    {
+                        $match: {
+                            "authorDetails._id": { $nin: following },
+                            createdAt: { $lte: new Date() },
+                            $or: [
+                                { title: { $regex: regexQuery } },
+                                { body: { $regex: regexQuery } },
+                            ],
+                        },
+                    },
+                    {
+                        $addFields: {
+                            sortPriority: {
+                                $cond: [{ $regexMatch: { input: "$title", regex: regexQuery } }, 1, 2],
+                            },
+                        },
+                    },
+                    { $sort: { sortPriority: 1, createdAt: -1 } },
+                    { $skip: (pageNum - 1) * actualRandomLimit },
+                    { $limit: actualRandomLimit },
+                    {
+                        $project: {
+                            title: 1,
+                            image: 1,
+                            body: 1,
+                            createdAt: 1,
+                            likes: 1,
+                            comments: 1,
+                            "authorDetails._id": 1,
+                            "authorDetails.username": 1,
+                            "authorDetails.profilePicture": 1,
+                        },
+                    },
+                ];
+                randomBlogs = await Blog.aggregate<IBlogWithAuthor>(randomPipeline);
+            }
+        }
+
+        const blogs = [...followBlogs, ...randomBlogs];
+
+        const totalFollowBlogs = await Blog.countDocuments({
+            "authorDetails._id": { $in: following },
+            createdAt: { $lte: new Date() },
+            $or: [
+                { title: { $regex: regexQuery } },
+                { body: { $regex: regexQuery } },
+            ],
+        });
+
+        const totalPages = Math.ceil(totalFollowBlogs / followLimit);
+
+        if (blogs.length === 0) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.OK,
+                success: true,
+                msg: "No blogs found",
+                data: {
+                    blogs: [],
+                    pagination: {
+                        page: pageNum,
+                        limit: limitNum,
+                        total: 0,
+                        totalPages: 0,
+                        hasMore: false,
+                        nextPage: null,
+                        prevPage: null,
+                    },
+                },
+            });
+        }
+
+        const responseData = {
+            blogs,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total: totalFollowBlogs,
+                totalPages,
+                hasMore: pageNum < totalPages,
+                nextPage: pageNum < totalPages ? pageNum + 1 : null,
+                prevPage: pageNum > 1 ? pageNum - 1 : null,
+            },
+        };
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Search results fetched successfully",
+            data: responseData,
+        });
+    } catch (error: any) {
+        console.error("Search Blogs Error:", error);
+        return sendError(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            error: error.message || "Internal server error",
+        });
+    }
+};
+
+export const userFollowingBlogsController = async (req: IAuthRequest, res: Response) => {
+    try {
+        const { userId } = req;
+        if (!userId) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.UNAUTHORIZED,
+                success: false,
+                msg: "You are unauthorized!",
+            });
+        }
+
+        const user: IUser | null = await User.findById(userId).select("following");
+        if (!user) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "User not found",
+            });
+        }
+
+        const { page = "1", limit = "10" } = req.query as IFeedQuery;
+        const pageNum = Math.max(1, parseInt(page, 10));
+        const limitNum = parseInt(limit, 10);
+        if (isNaN(pageNum) || isNaN(limitNum) || limitNum < 1) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid pagination parameters",
+            });
+        }
+
+        const following: Types.ObjectId[] = [
+            ...user.following,
+        ];
+        console.log('Following IDs:', following);
+
+        const followingStrings = following.map(id => id.toString());
+
+        const sampleBlog = await Blog.findOne({ "authorDetails._id": { $in: followingStrings } });
+        console.log('Sample blog:', sampleBlog);
+
+        const followPipeline: PipelineStage[] = [
+            {
+                $match: {
+                    "authorDetails._id": { $in: followingStrings },
+                    createdAt: { $lte: new Date() },
+                },
+            },
+            { $sort: { createdAt: -1 } },
+            { $skip: (pageNum - 1) * limitNum },
+            { $limit: limitNum },
+            {
+                $project: {
+                    title: 1,
+                    image: { $ifNull: ["$image", null] },
+                    body: 1,
+                    createdAt: 1,
+                    likes: 1,
+                    comments: 1,
+                    "authorDetails._id": 1,
+                    "authorDetails.username": 1,
+                    "authorDetails.profilePicture": 1,
+                },
+            },
+        ];
+        const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(followPipeline);
+        console.log('Follow blogs:', followBlogs);
+
+        const totalFollowBlogs = await Blog.countDocuments({
+            "authorDetails._id": { $in: followingStrings },
+            createdAt: { $lte: new Date() },
+        });
+        console.log('Total follow blogs:', totalFollowBlogs);
+
+        const totalPages = Math.ceil(totalFollowBlogs / limitNum);
+
+        const responseData = {
+            blogs: followBlogs,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total: totalFollowBlogs,
+                totalPages,
+                hasMore: pageNum < totalPages,
+                nextPage: pageNum < totalPages ? pageNum + 1 : null,
+                prevPage: pageNum > 1 ? pageNum - 1 : null,
+            },
+        };
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Following blogs fetched successfully",
+            data: responseData,
+        });
+    } catch (error) {
+        console.error('Error in userFollowingBlogsController:', error);
+        return sendError(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            error,
+        });
+    }
+};
 export const getPopularBlogsController = async (req: IAuthRequest, res: Response) => {
     try {
         const { page = "1", limit = "10" } = req.query as { page?: string; limit?: string };

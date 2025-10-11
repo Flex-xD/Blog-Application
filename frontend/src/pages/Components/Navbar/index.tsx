@@ -1,10 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { useAppStore } from "@/store"
 import { useScroll, useTransform, motion } from "framer-motion"
-import { ChevronDown, PenSquare, Search, Menu, Home, Users, User } from "lucide-react"
+import { PenSquare, Search, Menu, Home, Users, User } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useUserProfileData } from "@/customHooks/UserDataFetching"
@@ -54,16 +53,18 @@ const Navbar = () => {
             </div>
 
 
-            <div className="flex-1 max-w-xl mx-4 hidden lg:block">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                        type="search"
-                        placeholder="Search for blogs, topics, or authors..."
-                        className="pl-10 rounded-full bg-gray-100 border-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                    />
+            {location.pathname !== '/profile' && location.pathname !== '/' && (
+                <div className="flex-1 max-w-xl mx-4 hidden lg:block">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            type="search"
+                            placeholder="Search for blogs . . ."
+                            className="pl-10 rounded-full bg-gray-100 border-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="hidden sm:flex items-center space-x-4">
                 <Button
@@ -80,20 +81,15 @@ const Navbar = () => {
                                 src={userInfo?.profilePicture?.url}
                                 className="h-full w-full object-cover"
                             />
-                            <AvatarFallback>JD</AvatarFallback>
+                            <AvatarFallback>ME</AvatarFallback>
                         </Avatar>
 
-                        <span className="font-medium text-gray-700 hidden md:inline">John Doe</span>
+                        <span className="font-medium text-gray-700 hidden md:inline">{userInfo?.username}</span>
                     </Link>
                 )}
             </div>
 
-            {/* Mobile Menu */}
             <div className="flex items-center space-x-2 sm:hidden">
-                {/* Mobile Search Icon */}
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                    <Search className="h-5 w-5" />
-                </Button>
 
                 <Sheet>
                     <SheetTrigger asChild>
@@ -103,7 +99,6 @@ const Navbar = () => {
                     </SheetTrigger>
                     <SheetContent side="right" className="w-80">
                         <div className="flex flex-col h-full">
-                            {/* Mobile Navigation */}
                             <div className="space-y-4 py-6">
                                 <Link
                                     to="/feed"
@@ -132,17 +127,6 @@ const Navbar = () => {
                                 )}
                             </div>
 
-                            {/* Mobile Categories */}
-                            <div className="py-6 border-t">
-                                <h3 className="px-3 text-sm font-medium text-gray-500 mb-3">Categories</h3>
-                                <div className="space-y-2">
-                                    {['Technology', 'Business', 'Lifestyle', 'Health'].map((category) => (
-                                        <Button key={category} variant="ghost" className="w-full justify-start text-gray-600">
-                                            {category}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
 
                             {/* Mobile Auth Section */}
                             <div className="mt-auto pt-6 border-t">

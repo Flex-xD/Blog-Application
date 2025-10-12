@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store";
 import { trendingTopics } from "@/constants/dummyData";
-import  {CreateBlogCard}  from "./components/CreateBlogCard";
+import { CreateBlogCard } from "./components/CreateBlogCard";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import { FeedNavbar } from "./components/FeedNavbar";
 import RightSidebar from "./components/RightSidebar";
@@ -11,10 +11,10 @@ import CreateAIModal from "./components/AIEnhancerModal";
 import UserFeed from "./components/UserFeedBlogs";
 import FeedTabs from "./components/Tabs";
 import useSuggestedUserData from "@/customHooks/SuggestedUserFetching";
-import { SuggestedUsersSkeleton } from "../Social";
 import useFeedRefresh from "@/customHooks/RefreshFeeds";
 import useFeedData from "@/customHooks/MainFeedData";
 import BlogFormProvider from "@/context";
+import { SuggestedUsersSkeleton } from "../Social";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");
@@ -26,7 +26,6 @@ const Feed = () => {
     const [contentToEnhance, setContentToEnhance] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [currentPage, setCurrentPage] = useState(1);
-    const MemoizedUserFeed = React.memo(UserFeed);
     const { data: userData, isPending: userDataPending } = useUserProfileData();
 
 
@@ -37,8 +36,6 @@ const Feed = () => {
 
     const refreshFeed = useFeedRefresh({ refetchFeed, refetchFollowing, refetchPopular, activeTab, searchQuery })
 
-    // ? GETTING SUGGESTED USER DATA
-    const { data: suggestedUserData, isPending: isSuggestedUsersLoading } = useSuggestedUserData(userData?._id || "");
 
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
@@ -70,7 +67,7 @@ const Feed = () => {
                                 setShowCreateModal={setShowCreateModal}
                             />
                             <FeedTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-                            <MemoizedUserFeed
+                            <UserFeed
                                 userFeedData={
                                     activeData && activeData.data
                                         ? {
@@ -104,14 +101,11 @@ const Feed = () => {
                                 }
                             />
                         </div>
-                        {isSuggestedUsersLoading ? (
-                            <SuggestedUsersSkeleton />
-                        ) : (
+            
                             <RightSidebar
-                                suggestedUsers={Array.isArray(suggestedUserData) ? suggestedUserData : []}
                                 trendingTopics={trendingTopics}
                             />
-                        )}
+                        
                     </div>
                 </div>
                 <AnimatePresence>
@@ -120,7 +114,7 @@ const Feed = () => {
                             show={showCreateModal}
                             setShow={setShowCreateModal}
                             setShowAIModal={setShowAIModal}
-                            onPostSuccess={refreshFeed} 
+                            onPostSuccess={refreshFeed}
                         />
                     )}
 

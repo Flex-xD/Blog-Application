@@ -1,48 +1,30 @@
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, UserPlus, Check } from "lucide-react";
+import { Users, TrendingUp, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input"; // Add Input component from ShadCN
+import { Input } from "@/components/ui/input";
 import Navbar from "../Components/Navbar";
-import type { IBlog, IUser } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import useDebounce from "@/customHooks/useDebounce";
 import useFollowOrUnfollowMutation from "@/customHooks/Follow&Unfollow";
-import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import useSuggestedUserData from "@/customHooks/SuggestedUserFetching";
-import useUserFollowingBlogsData from "@/customHooks/FollowingBlogs";
-import usePopularBlogs from "@/customHooks/PopularBlogsFetching";
-import useSearchUsersQuery from "@/customHooks/useSearchUsersQuery"; // Import the search users hook
-import useDebounce from "@/customHooks/useDebounce"; // Import the debounce hook
-import ProfileModal from "./components/UserProfileModal";
-import UserFeed from "../FEED/components/UserFeedBlogs";
+import useFeedData from "@/customHooks/MainFeedData";
+import useFeedRefresh from "@/customHooks/RefreshFeeds";
 
-type TrendingTopic = {
-    id: string;
-    name: string;
-    postCount: number;
+const ProfileModal = lazy(() => import("./components/UserProfileModal"));
+import UserFeed from "../FEED/components/UserFeedBlogs";
+import type { IBlog, IUser } from "@/types";
+import { useUserProfileData } from "@/customHooks/UserDataFetching";
+
+const topicVariants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
 };
 
-interface FeedData {
-    data: {
-        blogs: IBlog[];
-        pagination: {
-            page: number;
-            limit: number;
-            total: number;
-            totalPages: number;
-            hasMore: boolean;
-            nextPage: number | null;
-            prevPage: number | null;
-        };
-    };
-    success: boolean;
-    msg: string;
-}
-
-const trendingTopics: TrendingTopic[] = [
+const TRENDING_TOPICS = [
     { id: "1", name: "#ReactJS", postCount: 1250 },
     { id: "2", name: "#DesignSystems", postCount: 892 },
     { id: "3", name: "#WebDev", postCount: 756 },
@@ -50,306 +32,245 @@ const trendingTopics: TrendingTopic[] = [
     { id: "5", name: "#JavaScript", postCount: 543 },
 ];
 
+const SuggestedUsers = React.memo(function SuggestedUsers({
+    users,
+    isLoading,
+    searchQuery,
+    setSearchQuery,
+    onUserClick,
+    onFollow,
+    followedUsers,
+}: {
+    users: IUser[];
+    isLoading: boolean;
+    searchQuery: string;
+    setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+    onUserClick: (user: IUser) => void;
+    onFollow: (userId: string) => void;
+    followedUsers: string[];
+}) {
+    const debouncedQuery = useDebounce(searchQuery, 300);
+
+    const filteredUsers = useMemo(() => {
+        if (!Array.isArray(users)) return [];
+        const q = debouncedQuery.toLowerCase();
+        return users.filter(
+            (user) =>
+                !followedUsers.includes(user._id) &&
+                (user.username.toLowerCase().includes(q) ||
+                    user.email.toLowerCase().includes(q))
+        );
+    }, [users, followedUsers, debouncedQuery]);
+
+    if (isLoading) return <SuggestedUsersSkeleton />;
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                    <span>Suggested Creators</span>
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                <Input
+                    type="text"
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="mb-4"
+                />
+
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                        <motion.div
+                            key={user._id}
+                            whileHover={{ y: -2 }}
+                            className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 cursor-pointer"
+                            onClick={() => onUserClick(user)}
+                        >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                                    <AvatarImage src={user.profilePicture?.url} />
+                                    <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-sm truncate">{user.username}</p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        @{user.username} · {user.followers.length} followers
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFollow(user._id);
+                                }}
+                                className="gap-1 text-xs flex-shrink-0"
+                            >
+                                <UserPlus className="h-3 w-3" /> Follow
+                            </Button>
+                        </motion.div>
+                    ))
+                ) : (
+                    <p className="text-sm text-muted-foreground text-center">
+                        {debouncedQuery ? "No users found." : "No suggestions."}
+                    </p>
+                )}
+            </CardContent>
+        </Card>
+    );
+});
+
+const TrendingTopics = React.memo(() => (
+    <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                <span>Trending Topics</span>
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+            {TRENDING_TOPICS.map((topic, i) => (
+                <motion.div
+                    key={topic.id}
+                    variants={topicVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ delay: 0.05 * i }}
+                    className="p-3 rounded-lg hover:bg-muted/50 cursor-pointer"
+                >
+                    <p className="font-medium text-primary text-sm">{topic.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {topic.postCount.toLocaleString()} posts this week
+                    </p>
+                </motion.div>
+            ))}
+        </CardContent>
+    </Card>
+));
+
 const SocialComponent = () => {
-    const { data: userData, isLoading: isUserLoading, refetch: refetchUserData } = useUserProfileData();
-    const { data: suggestedUsersData, isLoading: isSuggestedUsersLoading } = useSuggestedUserData(userData?._id ?? "");
-    const { mutateAsync: followAndUnfollowFn } = useFollowOrUnfollowMutation();
-    const [currentPage, setCurrentPage] = useState(1);
+    const { data: userData, isLoading: isUserLoading, refetch: refetchUserData } =
+        useUserProfileData();
+    const { data: suggestedUsersData, isLoading: isSuggestedUsersLoading } =
+        useSuggestedUserData(userData?._id ?? "");
+
+    const { mutateAsync: followMutate } = useFollowOrUnfollowMutation();
+
     const [activeTab, setActiveTab] = useState("following");
-    const [searchQuery, setSearchQuery] = useState(""); // State for search input
-    const debouncedSearchQuery = useDebounce(searchQuery, 300); // Debounce with 300ms delay
-
-    const { data: userFollowingBlogs, isPending: followingBlogsPending, refetch: refetchFollowingBlogs } = useUserFollowingBlogsData(
-        userData?._id || "",
-        activeTab === "following" ? currentPage : 1
-    );
-    const { data: popularBlogs, isPending: popularBlogsPending } = usePopularBlogs(
-        activeTab === "trending" ? currentPage : 1
-    );
-
-    // Fetch searched users with debounced query
-    const { data: searchedUsersData, isLoading: isSearchUsersLoading } = useSearchUsersQuery({
-        userId: userData?._id || "",
-        query: debouncedSearchQuery,
-        page: 1,
-        limit: 10,
-    });
-
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
     const [followedUsers, setFollowedUsers] = useState<string[]>([]);
     const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
-    const [profileModalOpen, setProfileModalOpen] = useState<boolean>(false);
+    const [modalOpen, setModalOpen] = useState(false);
 
-    // Initialize followed users from backend
+    const { activeData, isPending, error, refetchFeed, refetchFollowing, refetchPopular } =
+        useFeedData(userData?._id || "", activeTab, searchQuery, currentPage);
+
+    const refreshFeed = useFeedRefresh({
+        refetchFeed,
+        refetchFollowing,
+        refetchPopular,
+        activeTab,
+        searchQuery,
+    });
+
     useEffect(() => {
         if (userData?.following) {
-            setFollowedUsers(userData.following.map((f) => f.toString()));
+            setFollowedUsers(userData.following.map(String));
         }
     }, [userData]);
 
-    // Handle follow/unfollow with optimistic update + refetch
-    const handleFollowAndUnfollow = useCallback(
-        async (userId: string, isFollowing: boolean) => {
-            const previousFollowedUsers = [...followedUsers];
-            const newFollowedUsers = isFollowing
-                ? followedUsers.filter((id) => id !== userId)
-                : [...followedUsers, userId];
-
-            setFollowedUsers(newFollowedUsers);
+    const handleFollow = useCallback(
+        async (userId: string) => {
+            const isFollowing = followedUsers.includes(userId);
+            const prev = [...followedUsers];
+            setFollowedUsers((p) =>
+                isFollowing ? p.filter((id) => id !== userId) : [...p, userId]
+            );
 
             try {
-                await followAndUnfollowFn({
+                await followMutate({
                     targetUserId: userId,
                     currentUserId: userData?._id || "",
                     isCurrentlyFollowing: isFollowing,
                 });
                 await refetchUserData();
-            } catch (error) {
-                setFollowedUsers(previousFollowedUsers);
-                console.error("Follow/Unfollow failed:", error);
+            } catch {
+                setFollowedUsers(prev);
             }
         },
-        [followedUsers, followAndUnfollowFn, userData?._id, refetchUserData]
+        [followedUsers, followMutate, userData?._id, refetchUserData]
     );
 
     const handleUserClick = useCallback((user: IUser) => {
         setSelectedUser(user);
-        setProfileModalOpen(true);
+        setModalOpen(true);
     }, []);
 
-    const handlePageChange = (page: number) => {
+    const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: "smooth" });
-    };
+    }, []);
 
-    const handleRefresh = () => {
+    useEffect(() => {
         setCurrentPage(1);
-        if (activeTab === "following") {
-            refetchFollowingBlogs();
-        }
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    // Determine which data to display based on activeTab
-    const getActiveData = (): FeedData | undefined => {
-        switch (activeTab) {
-            case "following":
-                return userFollowingBlogs as FeedData | undefined;
-            case "trending":
-                return popularBlogs as FeedData | undefined;
-            default:
-                return undefined;
-        }
-    };
-
-    // Determine pending state based on activeTab
-    const getActivePendingState = () => {
-        switch (activeTab) {
-            case "following":
-                return followingBlogsPending;
-            case "trending":
-                return popularBlogsPending;
-            default:
-                return false;
-        }
-    };
-
-    // Determine error state based on activeTab
-    const getActiveError = (): Error | null | undefined => {
-        switch (activeTab) {
-            case "following":
-                if (userFollowingBlogs?.error) {
-                    return new Error(userFollowingBlogs.error.msg || "Failed to fetch following blogs");
-                }
-                return null;
-            case "trending":
-                if (popularBlogs?.error) {
-                    return new Error(popularBlogs.error.msg || "Failed to fetch popular blogs");
-                }
-                return null;
-            default:
-                return null;
-        }
-    };
-
-    const activeData = getActiveData();
-    const activePending = getActivePendingState();
-    const activeError = getActiveError();
-
-    // Filter suggested users based on debounced search query
-    const filteredSuggestedUsers = debouncedSearchQuery
-        ? (searchedUsersData?.data?.users || []).filter(
-            (user) =>
-                !followedUsers.includes(user._id) &&
-                (user.username.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                    user.email.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
-        )
-        : Array.isArray(suggestedUsersData)
-            ? suggestedUsersData.filter((user) => !followedUsers.includes(user._id))
-            : [];
+        refreshFeed();
+    }, [activeTab, refreshFeed]);
 
     return (
         <>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <Navbar />
 
-                <Tabs defaultValue="following" className="w-full" onValueChange={setActiveTab}>
+                <Tabs defaultValue="following" onValueChange={setActiveTab}>
                     <div className="flex items-center justify-center p-2">
                         <TabsList className="grid w-full max-w-md grid-cols-2 bg-gray-100 p-1 rounded-xl sm:max-w-lg">
-                            <TabsTrigger value="following" className="text-xs sm:text-sm">Following</TabsTrigger>
-                            <TabsTrigger value="trending" className="text-xs sm:text-sm">Trending</TabsTrigger>
+                            <TabsTrigger value="following">Following</TabsTrigger>
+                            <TabsTrigger value="trending">Trending</TabsTrigger>
                         </TabsList>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                         {/* Left Column */}
-                        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
-                            {(isSuggestedUsersLoading || isSearchUsersLoading) ? (
-                                <SuggestedUsersSkeleton />
-                            ) : (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                                            <Users className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
-                                            <span>Suggested Creators</span>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-3">
-                                        {/* Search Input */}
-                                        <Input
-                                            type="text"
-                                            placeholder="Search users by username or email..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="mb-4"
-                                        />
-                                        {filteredSuggestedUsers.length > 0 ? (
-                                            filteredSuggestedUsers.map((user) => (
-                                                <motion.div
-                                                    key={user._id}
-                                                    whileHover={{ y: -2 }}
-                                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                                                    onClick={() => handleUserClick(user)}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onKeyDown={(e) => e.key === "Enter" && handleUserClick(user)}
-                                                >
-                                                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                                                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-                                                            <AvatarImage src={user.profilePicture?.url} alt={user.username} />
-                                                            <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="font-medium text-sm sm:text-base truncate">{user.username}</p>
-                                                            <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                                                                @{user.username} · {user.followers.length} followers
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <Button
-                                                        variant="default"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleFollowAndUnfollow(user._id, false);
-                                                        }}
-                                                        className="gap-1 text-xs sm:text-sm flex-shrink-0 ml-3 sm:ml-4"
-                                                        aria-label={`Follow ${user.username}`}
-                                                    >
-                                                        <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" /> Follow
-                                                    </Button>
-                                                </motion.div>
-                                            ))
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground text-center">
-                                                {debouncedSearchQuery ? "No users found for your search." : "No suggested users available."}
-                                            </p>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* Trending Topics */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                                        <span>Trending Topics</span>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {trendingTopics.map((topic, index) => (
-                                        <motion.div
-                                            key={topic.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.1 * index }}
-                                            className="p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                                            role="button"
-                                            tabIndex={0}
-                                        >
-                                            <p className="font-medium text-primary text-sm sm:text-base">{topic.name}</p>
-                                            <p className="text-xs sm:text-sm text-muted-foreground">
-                                                {topic.postCount.toLocaleString()} posts this week
-                                            </p>
-                                        </motion.div>
-                                    ))}
-                                </CardContent>
-                            </Card>
+                        <div className="lg:col-span-1 space-y-4">
+                            <SuggestedUsers
+                                users={suggestedUsersData || []}
+                                isLoading={isSuggestedUsersLoading}
+                                searchQuery={searchQuery}
+                                setSearchQuery={setSearchQuery}
+                                onUserClick={handleUserClick}
+                                onFollow={handleFollow}
+                                followedUsers={followedUsers}
+                            />
+                            <TrendingTopics />
                         </div>
 
                         {/* Main Content */}
-                        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+                        <div className="lg:col-span-3 space-y-4">
                             <TabsContent value="following">
                                 <UserFeed
-                                    userFeedData={
-                                        activeData && activeData.data
-                                            ? {
-                                                ...activeData,
-                                                data: {
-                                                    ...activeData.data,
-                                                    pagination: {
-                                                        ...activeData.data.pagination,
-                                                        totalPages: activeData.data.pagination?.totalPages ?? 0,
-                                                        nextPage: activeData.data.pagination?.nextPage ?? null,
-                                                        prevPage: activeData.data.pagination?.prevPage ?? null,
-                                                    },
-                                                },
-                                            }
-                                            : undefined
-                                    }
-                                    userFeedDataError={activeError}
+                                    userFeedData={activeData}
+                                    userFeedDataError={error}
                                     userDataPending={isUserLoading}
-                                    userFeedDataPending={activePending}
+                                    userFeedDataPending={isPending}
                                     onPageChange={handlePageChange}
-                                    onRefresh={handleRefresh}
+                                    onRefresh={refreshFeed}
                                     currentPage={currentPage}
                                     feedTitle="Following Feed"
                                 />
                             </TabsContent>
-
                             <TabsContent value="trending">
                                 <UserFeed
-                                    userFeedData={
-                                        activeData && activeData.data
-                                            ? {
-                                                ...activeData,
-                                                data: {
-                                                    ...activeData.data,
-                                                    pagination: {
-                                                        ...activeData.data.pagination,
-                                                        totalPages: activeData.data.pagination?.totalPages ?? 0,
-                                                        nextPage: activeData.data.pagination?.nextPage ?? null,
-                                                        prevPage: activeData.data.pagination?.prevPage ?? null,
-                                                    },
-                                                },
-                                            }
-                                            : undefined
-                                    }
-                                    userFeedDataError={activeError}
+                                    userFeedData={activeData}
+                                    userFeedDataError={error}
                                     userDataPending={isUserLoading}
-                                    userFeedDataPending={activePending}
+                                    userFeedDataPending={isPending}
                                     onPageChange={handlePageChange}
-                                    onRefresh={handleRefresh}
+                                    onRefresh={refreshFeed}
                                     currentPage={currentPage}
                                     feedTitle="Trending Posts"
                                 />
@@ -359,50 +280,49 @@ const SocialComponent = () => {
                 </Tabs>
             </div>
 
-            {selectedUser && (
-                <ProfileModal
-                    user={selectedUser}
-                    isOpen={profileModalOpen}
-                    onClose={() => setProfileModalOpen(false)}
-                    isFollowingUser={followedUsers.includes(selectedUser._id)}
-                    handleFollowAndUnfollow={() =>
-                        handleFollowAndUnfollow(selectedUser._id, followedUsers.includes(selectedUser._id))
-                    }
-                    currentUserId={userData?._id}
-                    blogs={selectedUser.userBlogs as unknown as IBlog[]}
-                />
-            )}
+            <Suspense fallback={null}>
+                {selectedUser && (
+                    <ProfileModal
+                        user={selectedUser}
+                        isOpen={modalOpen}
+                        onClose={() => setModalOpen(false)}
+                        isFollowingUser={followedUsers.includes(selectedUser._id)}
+                        handleFollowAndUnfollow={() =>
+                            handleFollow(selectedUser._id)
+                        }
+                        currentUserId={userData?._id}
+                        blogs={selectedUser.userBlogs as unknown as IBlog[]}
+                    />
+                )}
+            </Suspense>
         </>
     );
 };
 
-// Suggested Users Skeleton
-export function SuggestedUsersSkeleton() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <Skeleton className="h-4 w-32 sm:h-5 sm:w-40" />
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <Skeleton className="h-10 w-full mb-4" /> {/* Skeleton for search input */}
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
-                            <div className="space-y-2">
-                                <Skeleton className="h-3 w-24 sm:h-4 sm:w-32" />
-                                <Skeleton className="h-2 w-16 sm:h-3 sm:w-20" />
-                            </div>
+export const SuggestedUsersSkeleton = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+            <Skeleton className="h-10 w-full mb-4" />
+            {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-3">
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-2 w-16" />
                         </div>
-                        <Skeleton className="h-7 w-16 sm:h-8 sm:w-20 rounded-lg" />
                     </div>
-                ))}
-            </CardContent>
-        </Card>
-    );
-}
+                    <Skeleton className="h-7 w-16 rounded-lg" />
+                </div>
+            ))}
+        </CardContent>
+    </Card>
+);
 
-export default SocialComponent;
+export default React.memo(SocialComponent);

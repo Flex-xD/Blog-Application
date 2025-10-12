@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import { useEffect, type JSX } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/Home';
 import Auth from './pages/AUTH';
@@ -6,6 +6,7 @@ import { UserProfilePage } from './pages/PROFILE';
 import Feed from './pages/FEED';
 import WithAuth from './pages/AUTH/components/WithAuthWrapper';
 import Social from './pages/Social';
+import { useAppStore } from './store';
 
 interface IRoute {
   path: string,
@@ -21,10 +22,18 @@ const routes: IRoute[] = [
   { path: "/profile", isPrivate: true, redirectTo: "/auth", element: <UserProfilePage /> },
   { path: "/feed", isPrivate: true, redirectTo: "/auth", element: <Feed /> },
   { path: "/social", isPrivate: true, redirectTo: "/auth", element: <Social /> },
-  { path: "/testing", isPrivate: false, redirectTo: "/auth", element: <Social /> },
 ]
 
 const App = () => {
+  const {  setIsAuthenticated, isHydrated, setHydrated } = useAppStore();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    setIsAuthenticated(!!token);
+    setHydrated(true);
+  }, [setIsAuthenticated, setHydrated]);
+
+  if (!isHydrated) return null; 
 
   return (
     <BrowserRouter>
@@ -47,7 +56,7 @@ const App = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  )
-}
+  );
+};
 
 export default App

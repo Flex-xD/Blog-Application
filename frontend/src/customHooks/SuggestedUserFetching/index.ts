@@ -9,7 +9,7 @@ const useSuggestedUserData = (userId:string) => {
     return useQuery({
         queryKey: userId ? QUERY_KEYS.SOCIAL.SUGGESTIONS(userId) : [],
         queryFn: async () => {
-            const response  = await apiClient.get<apiReponse<IUser>>(SOCIAL_ENDPOINTS.USER_SUGGESTIONS);
+            const response  = await apiClient.get<apiReponse<IUser[]>>(SOCIAL_ENDPOINTS.USER_SUGGESTIONS);
             console.log("This is suggestedUser data : " , response.data.data);
             return response.data.data;
         },

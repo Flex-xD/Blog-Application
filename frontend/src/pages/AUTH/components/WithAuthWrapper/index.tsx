@@ -12,14 +12,13 @@ interface WithAuthProps {
 const WithAuth = ({ isPrivate, redirectTo, allowAuthenticated, children }: WithAuthProps) => {
     const { isAuthenticated } = useAppStore();
 
-    if (isPrivate) {
-        return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
-    } else {
-        if (allowAuthenticated === false && isAuthenticated) {
-            return <Navigate to={redirectTo} replace />;
-        }
-        return children;
+    if (isPrivate && !isAuthenticated) return <Navigate to={redirectTo} replace />;
+
+    if (!isPrivate && allowAuthenticated === false && isAuthenticated) {
+        return <Navigate to={redirectTo} replace />;
     }
+
+    return children;
 };
 
 export default WithAuth;

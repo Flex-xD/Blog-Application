@@ -1,9 +1,8 @@
 import { BlogCard } from "@/pages/Components/BlogCard";
 import { motion } from "framer-motion";
 import { Loader2, RefreshCw, ArrowUp } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Pagination } from "../Pagination";
 import type { AxiosError } from "axios";
 
@@ -56,7 +55,7 @@ interface UserFeedProps {
     onPageChange?: (page: number) => void;
     onRefresh?: () => void;
     feedTitle?: string;
-    currentPage:number
+    currentPage: number
 }
 
 const getBlogs = (userFeedData?: UserFeedData): Blog[] => {
@@ -76,7 +75,7 @@ const getTotalPages = (userFeedData?: UserFeedData): number => {
     return getPagination(userFeedData)?.totalPages || 1;
 };
 
-export default function UserFeed({
+function UserFeed({
     userFeedData,
     userFeedDataError,
     userDataPending,
@@ -223,7 +222,6 @@ export default function UserFeed({
                 </>
             )}
 
-            {/* Scroll to Top Button */}
             {showScrollTop && (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -243,3 +241,5 @@ export default function UserFeed({
         </motion.div>
     );
 }
+
+export default React.memo(UserFeed);

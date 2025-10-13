@@ -15,8 +15,13 @@ dotenv.config();
 const port = process.env.PORT || 3000;
 const app = express();
 
+const allowedOrigins = [
+    'https://blog-application-frontend-hety.onrender.com',
+    'http://localhost:5173'
+];
+
 const corsOptions = {
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
 
 }
@@ -28,7 +33,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/llm", LLMRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/user", userActivityRouter);
-app.use("/api/social" , socialRoutes);
+app.use("/api/social", socialRoutes);
 
 
 app.listen(port, () => {

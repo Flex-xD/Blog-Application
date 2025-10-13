@@ -13,69 +13,69 @@ const createtoken = async (userId: string, email: string) => {
 
 export const registerController = async (req: Request, res: Response) => {
     try {
-        
-    const { email, username, password } = req.body as authControllerType;
-    if (!email || !username || !password) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields !" });
-    }
-    const existingUser = await User.findOne({
-        $or: [{ email }, { username }]
-    });
 
-    if (existingUser) {
-        if (existingUser.email === email) {
-            return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Email already exists!" });
-        } else {
-            return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Username already taken!" });
+        const { email, username, password } = req.body as authControllerType;
+        if (!email || !username || !password) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Please fill in all the fields !" });
         }
-    }
-    const usernameRegex = /^[a-z_.]+$/;
-    if (!usernameRegex.test(username)) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Username can only contain lowercase letters, underscores (_), and dots (.)" });
-    }
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
-    if (!passwordRegex.test(password)) {
-        return sendResponse(res, {
-            statusCode: StatusCodes.BAD_REQUEST,
-            success: false,
-            msg: "Password must contain at least one letter and one number !"
-        })
-    }
+        const existingUser = await User.findOne({
+            $or: [{ email }, { username }]
+        });
 
-    const user: IUser = await User.create({
-        email,
-        username,
-        password,
-        profilePicture: {
-            url:"" , 
-            width:0 , 
-            height:0 , 
-            publicId:"" , 
-            format:""
-        },
-        following: [],
-        followers: [],
-        bio:"" , 
-        saves: [],
-        userBlogs: [],
-    });
-    const token = await createtoken(user._id as string, user.email);
-    res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: maxage,
-        sameSite: "strict",
-        secure: false
-    })
-    console.log("User Registered !");
-    return sendResponse(res, {
-        statusCode: StatusCodes.CREATED,
-        success: true,
-        msg: "User Registered !",
-        data: user
-    })
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Email already exists!" });
+            } else {
+                return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Username already taken!" });
+            }
+        }
+        const usernameRegex = /^[a-z_.]+$/;
+        if (!usernameRegex.test(username)) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Username can only contain lowercase letters, underscores (_), and dots (.)" });
+        }
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/;
+        if (!passwordRegex.test(password)) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Password must contain at least one letter and one number !"
+            })
+        }
+
+        const user: IUser = await User.create({
+            email,
+            username,
+            password,
+            profilePicture: {
+                url: "",
+                width: 0,
+                height: 0,
+                publicId: "",
+                format: ""
+            },
+            following: [],
+            followers: [],
+            bio: "",
+            saves: [],
+            userBlogs: [],
+        });
+        const token = await createtoken(user._id as string, user.email);
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: maxage,
+            sameSite: "none",
+            secure: true
+        });
+        console.log("User Registered !");
+        return sendResponse(res, {
+            statusCode: StatusCodes.CREATED,
+            success: true,
+            msg: "User Registered !",
+            data: user
+        })
     } catch (error) {
         console.log(error);
-        return sendError(res , {error});
+        return sendError(res, { error });
     }
 }
 
@@ -96,14 +96,14 @@ export const loginController = async (req: Request, res: Response) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid credentials !" });
         }
         if (req.cookies.token) {
-            res.clearCookie("token" , { httpOnly: true, secure: false, sameSite: "strict" })
+            res.clearCookie("token", { httpOnly: true, secure: false, sameSite: "strict" })
         }
         const token = await createtoken(user._id as string, user.email);
         res.cookie("token", token, {
             httpOnly: true,
-            maxAge: maxage,
-            sameSite: "strict",
-            secure:  process.env.NODE_ENV === "production"
+            maxAge: maxage,               
+            sameSite: "none",            
+            secure: true                 
         });
         return sendResponse(res, {
             statusCode: StatusCodes.OK,
@@ -118,7 +118,7 @@ export const loginController = async (req: Request, res: Response) => {
     }
 }
 
-export const logoutController = async (req:Request , res:Response) => {
+export const logoutController = async (req: Request, res: Response) => {
     try {
         res.clearCookie("token", { httpOnly: true, secure: false, sameSite: "strict" });
         return res.status(StatusCodes.OK).json({ msg: "User Logged Out !" });

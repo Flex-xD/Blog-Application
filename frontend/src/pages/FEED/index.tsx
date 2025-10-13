@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import  { useCallback, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store";
 import { trendingTopics } from "@/constants/dummyData";
-import { CreateBlogCard } from "./components/CreateBlogCard";
+import  CreateBlogCard  from "./components/CreateBlogCard";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
 import { FeedNavbar } from "./components/FeedNavbar";
 import RightSidebar from "./components/RightSidebar";
@@ -10,11 +10,9 @@ import CreateBlogCardModal from "./components/CreateBlogcardModal";
 import CreateAIModal from "./components/AIEnhancerModal";
 import UserFeed from "./components/UserFeedBlogs";
 import FeedTabs from "./components/Tabs";
-import useSuggestedUserData from "@/customHooks/SuggestedUserFetching";
 import useFeedRefresh from "@/customHooks/RefreshFeeds";
 import useFeedData from "@/customHooks/MainFeedData";
 import BlogFormProvider from "@/context";
-import { SuggestedUsersSkeleton } from "../Social";
 
 const Feed = () => {
     const [activeTab, setActiveTab] = useState("for-you");

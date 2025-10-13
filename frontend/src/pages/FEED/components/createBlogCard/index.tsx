@@ -7,7 +7,7 @@ interface CreateBlogCardProps {
     setShowCreateModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const CreateBlogCard = ({
+const CreateBlogCard = ({
     setShowCreateModal,
 }: CreateBlogCardProps) => {
     return (
@@ -55,3 +55,5 @@ export const CreateBlogCard = ({
         </motion.div>
     )
 }
+
+export default CreateBlogCard;

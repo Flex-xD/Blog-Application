@@ -14,10 +14,12 @@ export const useUserProfileData = () => {
         {
             queryKey: ["profile", "me"],
             queryFn: async () => {
+                console.log(AUTH_ENDPOINTS.GET_USER_DATA)
                 const response = await apiClient.get(AUTH_ENDPOINTS.GET_USER_DATA);
                 if (response.data.data) {
                     setIsAuthenticated(true)
                 }
+
                 console.log("THIS IS USER DATA : ",response.data.data)
                 return response.data.data as IUser;
             },

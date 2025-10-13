@@ -1,6 +1,6 @@
 
 // BASE URL for the API
-export const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:4000/api";
+export const BASE_URL = `${import.meta.env.VITE_BASE_URL}/api` || "http://localhost:4000/api";
 
 // AUTH endpoints
 export const AUTH_ENDPOINTS = {

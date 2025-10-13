@@ -34,7 +34,7 @@ const App = () => {
   }, [setIsAuthenticated, setHydrated]);
 
   if (!isHydrated) return null; 
-
+  console.log(import.meta.env.VITE_BASE_URL);
   return (
     <BrowserRouter>
       <Routes>

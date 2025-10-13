@@ -1,5 +1,5 @@
 import usePopularBlogs from "@/customHooks/PopularBlogsFetching";
-import { BlogCard } from "@/pages/Components/BlogCard";
+import { BlogCard } from "@/pages/NormalComponents/BlogCard";
 import type { IBlog, IUser } from "@/types";
 import * as React from "react";
 
@@ -392,8 +392,8 @@ export const popularBlogs: IBlog[] = [
 ];
 
 export const PopularPosts: React.FC = () => {
-        const { data } = usePopularBlogs(1, 10)
-        
+    const { data } = usePopularBlogs(1, 10)
+
     return (
         <div className="space-y-6">
             {data?.data.blogs?.map((post) => (

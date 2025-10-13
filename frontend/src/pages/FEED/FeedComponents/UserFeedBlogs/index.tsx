@@ -1,4 +1,4 @@
-import { BlogCard } from "@/pages/Components/BlogCard";
+import { BlogCard } from "@/pages/NormalComponents/BlogCard";
 import { motion } from "framer-motion";
 import { Loader2, RefreshCw, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, Shield, X } from 'lucide-react';
 import { modalVariants } from '@/types';
-import ModalWrapper from '@/pages/Components/ModelWrapper';
+import ModalWrapper from '@/pages/NormalComponents/ModelWrapper';
 import { backdropVariants } from '@/constants/varients';
 import useEnhanceContentMutation from '@/customHooks/AIEnhancement';
 import { toast } from 'sonner';
@@ -39,7 +39,7 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
     setCustomInstructions,
     setContentToEnhance,
 }) => {
-    const { blogForm, dispatch } = useContext(BlogFormContext)!; 
+    const { blogForm, dispatch } = useContext(BlogFormContext)!;
     const { mutateAsync, isPending, isError, error } = useEnhanceContentMutation();
 
     const handleEnhance = async () => {
@@ -104,11 +104,10 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
                                 <button
                                     key={tone.id}
                                     onClick={() => setSelectedTone(tone.id)}
-                                    className={`p-4 rounded-xl border-2 text-left transition-all duration-150 ${
-                                        selectedTone === tone.id
+                                    className={`p-4 rounded-xl border-2 text-left transition-all duration-150 ${selectedTone === tone.id
                                             ? 'border-indigo-500 bg-indigo-50 shadow-sm'
                                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center space-x-3 mb-2">
                                         <span className="text-2xl">{tone.emoji}</span>

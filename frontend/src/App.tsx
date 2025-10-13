@@ -4,7 +4,7 @@ import HomePage from './pages/Home';
 import Auth from './pages/AUTH';
 import { UserProfilePage } from './pages/PROFILE';
 import Feed from './pages/FEED';
-import WithAuth from './pages/AUTH/components/WithAuthWrapper';
+import WithAuth from './pages/AUTH/AuthComponents/WithAuthWrapper';
 import Social from './pages/Social';
 import { useAppStore } from './store';
 

@@ -7,14 +7,14 @@ import { Pencil, Bookmark, UserPlus, Users, Mail, PenSquare, LucideLogOut, Check
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { BlogCard } from '@/pages/Components/BlogCard';
+import { BlogCard } from '@/pages/NormalComponents/BlogCard';
 import type { IBlog, IUser } from '@/types';
-import Navbar from '@/pages/Components/Navbar';
+import Navbar from '@/pages/NormalComponents/Navbar';
 import apiClient from '@/utility/axiosClient';
 import { AUTH_ENDPOINTS, BLOG_ENDPOINTS } from '@/constants/constants';
 import { toast } from 'sonner';
-import FollowModal from '../components/followersAndFollowingModal';
-import { EditProfileModal } from '../components/EditProfileModal';
+import FollowModal from '../ProfileComponents/followersAndFollowingModal';
+import { EditProfileModal } from '../ProfileComponents/EditProfileModal';
 import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
 import useUnsaveBlogMutation from '@/customHooks/unsaveBlog';
 import { useQuery } from '@tanstack/react-query';

@@ -1,7 +1,7 @@
-import Navbar from "../Components/Navbar"
-import HeroSection from "./components/HeroSection"
-import FeaturesSection from "./components/FeaturesSection"
-import CallToAction from "./components/CTA"
+import Navbar from "../NormalComponents/Navbar"
+import HeroSection from "./HomeComponents/HeroSection"
+import FeaturesSection from "./HomeComponents/FeaturesSection"
+import CallToAction from "./HomeComponents/CTA"
 
 const Home = () => {
   return (

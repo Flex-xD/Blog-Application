@@ -1,15 +1,15 @@
-import  { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store";
 import { trendingTopics } from "@/constants/dummyData";
-import  CreateBlogCard  from "./components/CreateBlogCard";
+import CreateBlogCard from "./FeedComponents/CreateBlogCard";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
-import { FeedNavbar } from "./components/FeedNavbar";
-import RightSidebar from "./components/RightSidebar";
-import CreateBlogCardModal from "./components/CreateBlogcardModal";
-import CreateAIModal from "./components/AIEnhancerModal";
-import UserFeed from "./components/UserFeedBlogs";
-import FeedTabs from "./components/Tabs";
+import { FeedNavbar } from "./FeedComponents/FeedNavbar";
+import RightSidebar from "./FeedComponents/RightSidebar";
+import CreateBlogCardModal from "./FeedComponents/CreateBlogcardModal";
+import CreateAIModal from "./FeedComponents/AIEnhancerModal";
+import UserFeed from "./FeedComponents/UserFeedBlogs";
+import FeedTabs from "./FeedComponents/Tabs";
 import useFeedRefresh from "@/customHooks/RefreshFeeds";
 import useFeedData from "@/customHooks/MainFeedData";
 import BlogFormProvider from "@/context";
@@ -99,11 +99,11 @@ const Feed = () => {
                                 }
                             />
                         </div>
-            
-                            <RightSidebar
-                                trendingTopics={trendingTopics}
-                            />
-                        
+
+                        <RightSidebar
+                            trendingTopics={trendingTopics}
+                        />
+
                     </div>
                 </div>
                 <AnimatePresence>

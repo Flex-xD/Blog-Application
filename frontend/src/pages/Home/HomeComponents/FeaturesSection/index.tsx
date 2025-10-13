@@ -1,5 +1,5 @@
-import type { IFeatures } from "@/pages/Components/FeatureCard";
-import FeatureCard from "@/pages/Components/FeatureCard";
+import type { IFeatures } from "@/pages/NormalComponents/FeatureCard";
+import FeatureCard from "@/pages/NormalComponents/FeatureCard";
 import { motion } from "framer-motion";
 import { Bot, MessageCircle, Users, TrendingUp, BookOpen, Sparkles, PenSquare } from "lucide-react";
 

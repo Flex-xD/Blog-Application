@@ -10,7 +10,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import type { IBlog, IUser } from '@/types';
-import { BlogCard } from '@/pages/Components/BlogCard';
+import { BlogCard } from '@/pages/NormalComponents/BlogCard';
 
 interface ProfileModalProps {
     user: IUser;

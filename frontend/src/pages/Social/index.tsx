@@ -4,7 +4,7 @@ import { Users, TrendingUp, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Navbar from "../Components/Navbar";
+import Navbar from "../NormalComponents/Navbar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,8 +14,8 @@ import useSuggestedUserData from "@/customHooks/SuggestedUserFetching";
 import useFeedData from "@/customHooks/MainFeedData";
 import useFeedRefresh from "@/customHooks/RefreshFeeds";
 
-const ProfileModal = lazy(() => import("./components/UserProfileModal"));
-import UserFeed from "../FEED/components/UserFeedBlogs";
+const ProfileModal = lazy(() => import("./SocialComponents/UserProfileModal"));
+import UserFeed from "../FEED/FeedComponents/UserFeedBlogs";
 import type { IBlog, IUser } from "@/types";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
 

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, UserPlus } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,19 +18,10 @@ const ProfileModal = lazy(() => import("./SocialComponents/UserProfileModal"));
 import UserFeed from "../FEED/FeedComponents/UserFeedBlogs";
 import type { IBlog, IUser } from "@/types";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
+import RightSidebar from "../FEED/FeedComponents/RightSidebar";
+import { trendingTopics } from "@/constants/dummyData";
 
-const topicVariants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-};
 
-const TRENDING_TOPICS = [
-    { id: "1", name: "#ReactJS", postCount: 1250 },
-    { id: "2", name: "#DesignSystems", postCount: 892 },
-    { id: "3", name: "#WebDev", postCount: 756 },
-    { id: "4", name: "#UX", postCount: 654 },
-    { id: "5", name: "#JavaScript", postCount: 543 },
-];
 
 const SuggestedUsers = React.memo(function SuggestedUsers({
     users,
@@ -123,34 +114,6 @@ const SuggestedUsers = React.memo(function SuggestedUsers({
         </Card>
     );
 });
-
-const TrendingTopics = React.memo(() => (
-    <Card>
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                <span>Trending Topics</span>
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-            {TRENDING_TOPICS.map((topic, i) => (
-                <motion.div
-                    key={topic.id}
-                    variants={topicVariants}
-                    initial="initial"
-                    animate="animate"
-                    transition={{ delay: 0.05 * i }}
-                    className="p-3 rounded-lg hover:bg-muted/50 cursor-pointer"
-                >
-                    <p className="font-medium text-primary text-sm">{topic.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                        {topic.postCount.toLocaleString()} posts this week
-                    </p>
-                </motion.div>
-            ))}
-        </CardContent>
-    </Card>
-));
 
 const SocialComponent = () => {
     const { data: userData, isLoading: isUserLoading, refetch: refetchUserData } =
@@ -246,7 +209,7 @@ const SocialComponent = () => {
                                 onFollow={handleFollow}
                                 followedUsers={followedUsers}
                             />
-                            <TrendingTopics />
+                            <RightSidebar />
                         </div>
 
                         {/* Main Content */}

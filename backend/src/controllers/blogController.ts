@@ -284,7 +284,6 @@ async function deleteFromCloudinary(publicId: string) {
     }
 }
 
-
 export const getFeedController = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
@@ -295,6 +294,7 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
                 msg: "You are unauthorized!",
             });
         }
+
         const user: IUser | null = await User.findById(userId).select("following");
         if (!user) {
             return sendResponse(res, {
@@ -304,114 +304,99 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
             });
         }
 
-        const { page = "1", limit = "10" } = req.query as IFeedQuery;
-        const pageNum = parseInt(page, 10);
-        const limitNum = parseInt(limit, 10);
-        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-            return sendResponse(res, {
-                statusCode: StatusCodes.BAD_REQUEST,
-                success: false,
-                msg: "Invalid pagination parameters",
-            });
-        }
+        const { page = "1", limit = "10" } = req.query as { page?: string; limit?: string };
+        const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+        const limitNum = Math.max(parseInt(limit, 10) || 10, 1);
 
+        const followingIds = [...user.following.map(id => new Types.ObjectId(id)), new Types.ObjectId(userId)];
         const followLimit = Math.ceil(limitNum * 0.3);
-        const randomLimit = limitNum - followLimit;
 
-        const following: Types.ObjectId[] = [
-            ...user.following,
-            new Types.ObjectId(userId),
-        ];
+        let followBlogs: IBlogWithAuthor[] = [];
 
-        const followPipeline: PipelineStage[] = [
-            {
-                $match: {
-                    "authorDetails._id": { $in: following },
-                    createdAt: { $lte: new Date() },
-                },
-            },
-            { $sort: { createdAt: -1 } },
-            { $skip: (pageNum - 1) * followLimit },
-            { $limit: followLimit },
-            {
-                $project: {
-                    title: 1,
-                    image: 1,
-                    body: 1,
-                    createdAt: 1,
-                    likes: 1,
-                    comments: 1,
-                    "authorDetails._id": 1,
-                    "authorDetails.username": 1,
-                    "authorDetails.profilePicture": 1,
-                },
-            },
-        ];
-        const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(
-            followPipeline,
-        );
-
-        // Get random blogs only if we're on the first page or if follow blogs are less than expected
-        let randomBlogs: IBlogWithAuthor[] = [];
-        if (pageNum === 1 || followBlogs.length < followLimit) {
-            const actualRandomLimit = pageNum === 1 ? randomLimit : Math.max(0, limitNum - followBlogs.length);
-
-            if (actualRandomLimit > 0) {
-                const randomPipeline: PipelineStage[] = [
-                    {
-                        $match: {
-                            "authorDetails._id": { $nin: following },
-                            createdAt: { $lte: new Date() },
-                        },
+        if (followingIds.length > 0) {
+            const followPipeline: PipelineStage[] = [
+                {
+                    $match: {
+                        "authorDetails._id": { $in: followingIds },
+                        createdAt: { $lte: new Date() },
                     },
-                    { $sample: { size: actualRandomLimit } },
-                    {
-                        $project: {
-                            title: 1,
-                            image: 1,
-                            body: 1,
-                            createdAt: 1,
-                            likes: 1,
-                            comments: 1,
-                            "authorDetails._id": 1,
-                            "authorDetails.username": 1,
-                            "authorDetails.profilePicture": 1,
-                        },
+                },
+                { $sort: { createdAt: -1 } },
+                { $skip: (pageNum - 1) * followLimit },
+                { $limit: followLimit },
+                {
+                    $project: {
+                        title: 1,
+                        image: 1,
+                        body: 1,
+                        createdAt: 1,
+                        likes: 1,
+                        comments: 1,
+                        "authorDetails._id": 1,
+                        "authorDetails.username": 1,
+                        "authorDetails.profilePicture": 1,
                     },
-                ];
-                randomBlogs = await Blog.aggregate<IBlogWithAuthor>(randomPipeline);
-            }
+                },
+            ];
+
+            followBlogs = await Blog.aggregate<IBlogWithAuthor>(followPipeline);
         }
 
-        const blogs = [...followBlogs, ...randomBlogs].sort(
-            () => Math.random() - 0.5,
-        );
+        const neededRandom = limitNum - followBlogs.length;
+        let randomBlogs: IBlogWithAuthor[] = [];
+
+        if (neededRandom > 0) {
+            const randomPipeline: PipelineStage[] = [
+                {
+                    $match: {
+                        "authorDetails._id": { $nin: followingIds },
+                        createdAt: { $lte: new Date() },
+                    },
+                },
+                { $sample: { size: neededRandom } },
+                {
+                    $project: {
+                        title: 1,
+                        image: 1,
+                        body: 1,
+                        createdAt: 1,
+                        likes: 1,
+                        comments: 1,
+                        "authorDetails._id": 1,
+                        "authorDetails.username": 1,
+                        "authorDetails.profilePicture": 1,
+                    },
+                },
+            ];
+
+            randomBlogs = await Blog.aggregate<IBlogWithAuthor>(randomPipeline);
+        }
+
+        const blogs = [...followBlogs, ...randomBlogs].sort(() => Math.random() - 0.5);
 
         const totalFollowBlogs = await Blog.countDocuments({
-            "authorDetails._id": { $in: following },
+            "authorDetails._id": { $in: followingIds },
             createdAt: { $lte: new Date() },
         });
 
-        const totalPages = Math.ceil(totalFollowBlogs / followLimit);
-
-        const responseData = {
-            blogs,
-            pagination: {
-                page: pageNum,
-                limit: limitNum,
-                total: totalFollowBlogs,
-                totalPages,
-                hasMore: pageNum < totalPages,
-                nextPage: pageNum < totalPages ? pageNum + 1 : null,
-                prevPage: pageNum > 1 ? pageNum - 1 : null,
-            },
-        };
+        const totalPages = Math.max(1, Math.ceil(totalFollowBlogs / limitNum));
 
         return sendResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,
             msg: "Feed fetched successfully",
-            data: responseData,
+            data: {
+                blogs,
+                pagination: {
+                    page: pageNum,
+                    limit: limitNum,
+                    total: totalFollowBlogs,
+                    totalPages,
+                    hasMore: pageNum < totalPages,
+                    nextPage: pageNum < totalPages ? pageNum + 1 : null,
+                    prevPage: pageNum > 1 ? pageNum - 1 : null,
+                },
+            },
         });
     } catch (error) {
         return sendError(res, {
@@ -420,6 +405,7 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
         });
     }
 };
+
 
 
 export const saveBlog = async (req: IAuthRequest, res: Response) => {
@@ -565,7 +551,7 @@ export const unsaveBlogController = async (req: IAuthRequest, res: Response) => 
             msg: "Blog unsaved successfully",
             data: responseData,
         });
-    } catch (error:any) {
+    } catch (error: any) {
         return sendError(res, {
             statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
             error: error.message || "Failed to unsave blog",
@@ -621,7 +607,7 @@ export const searchBlogsController = async (req: IAuthRequest, res: Response) =>
         ];
 
         const escapedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-        const regexQuery = new RegExp(`\\b${escapedQuery}\\b`, "i"); 
+        const regexQuery = new RegExp(`\\b${escapedQuery}\\b`, "i");
 
         const followPipeline: PipelineStage[] = [
             {

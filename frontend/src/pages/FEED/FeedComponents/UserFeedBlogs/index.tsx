@@ -145,8 +145,8 @@ function UserFeed({
                     disabled={userFeedDataPending}
                     className="flex items-center gap-2"
                 >
-                    <RefreshCw className={`h-4 w-4 ${userFeedDataPending ? 'animate-spin' : ''}`} />
-                    Refresh
+                    {feedTitle === "Your Feed" &&<RefreshCw className={`h-4 w-4 ${userFeedDataPending ? 'animate-spin' : ''}`} />}
+                {feedTitle === "Your Feed" ? "Refresh" : ""}
                 </Button>
             </div>
 

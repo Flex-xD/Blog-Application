@@ -33,6 +33,7 @@ export const SOCIAL_ENDPOINTS = {
     UNLIKE_BLOG: (blogToUnlikeId: string) => `${BASE_URL}/social/${blogToUnlikeId}/unlike`,
     COMMENT_BLOG: (blogId: string) => `${BASE_URL}/social/${blogId}/comment`,
     UPDATE_PROFILE_PICTURE: `${BASE_URL}/social/update-profile-picture` , 
-    SEARCH_USERS:`${BASE_URL}/social/search-users`
+    SEARCH_USERS:`${BASE_URL}/social/search-users`, 
+    TRENDING_TOPICS:`${BASE_URL}/social/trending-topics`
 }
 

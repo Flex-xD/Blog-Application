@@ -101,7 +101,6 @@ const Feed = () => {
                         </div>
 
                         <RightSidebar
-                            trendingTopics={trendingTopics}
                         />
 
                     </div>

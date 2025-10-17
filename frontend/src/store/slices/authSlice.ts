@@ -5,6 +5,7 @@ export interface IAuthState {
     setIsAuthenticated: (isAuthenticated: boolean) => void;
     isHydrated: boolean; // new
     setHydrated: (hydrated: boolean) => void;
+    logout:() => void
 }
 
 export const authSlice: StateCreator<IAuthState> = (set) => ({
@@ -19,4 +20,8 @@ export const authSlice: StateCreator<IAuthState> = (set) => ({
         }
     },
     setHydrated: (hydrated: boolean) => set({ isHydrated: hydrated }),
+    logout: () => {
+        localStorage.removeItem("authToken");
+        set({ isAuthenticated: false });
+    }
 });

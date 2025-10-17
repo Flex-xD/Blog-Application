@@ -19,6 +19,7 @@ import useFollowOrUnfollowMutation from '@/customHooks/Follow&Unfollow';
 import useUnsaveBlogMutation from '@/customHooks/unsaveBlog';
 import { useQuery } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/constants/queryKeys';
+import { useAppStore } from '@/store';
 
 interface UserProfileProps {
     user: IUser;
@@ -48,6 +49,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     onFollow,
     currentUserId = '',
 }) => {
+    const { logout } = useAppStore();
     const [activeTab, setActiveTab] = useState('blogs');
     const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
     const [modalUsers, setModalUsers] = useState<IUser[]>([]);
@@ -190,9 +192,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     const handleLogout = async () => {
         try {
             await apiClient.post(AUTH_ENDPOINTS.LOGOUT);
-            setTimeout(() => toast.success('Logged out Successfully!'), 1000);
-            window.location.reload();
-        } catch (error) {
+            logout();
+            toast.success('Logged out Successfully!');
+            setTimeout(() => navigate("/auth", { replace: true }), 500);
+        } catch {
             toast.error('Error occurred while logging out!');
         }
     };

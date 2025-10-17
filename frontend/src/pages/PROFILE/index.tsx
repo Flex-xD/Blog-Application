@@ -7,8 +7,8 @@ import type { IBlog } from "@/types";
 export function UserProfilePage() {
 
     const { data: user, isLoading } = useUserProfileData();
-    console.log(user);
     if (isLoading) return <div className=" h-screen w-screen flex items-center justify-center"><Loader /></div>
+    console.log('Before !user check:', user);
     if (!user) return null;
     const userBlogs = user.userBlogs as unknown as IBlog[]
 

@@ -5,6 +5,9 @@ import { Response } from "express";
 import User, { IUser } from "../models/userModel";
 import mongoose, { Types } from "mongoose";
 import { uploadBufferToCloudinary } from "./blogController";
+import Blog, { IBlog } from "../models/blogModel";
+import axios, { AxiosError } from "axios";
+import { logger } from "../utils";
 
 export const followSuggestionForUser = async (req: IAuthRequest, res: Response) => {
     try {
@@ -175,7 +178,146 @@ async function deleteFromCloudinary(publicId: string) {
     } catch (error) {
         console.error('Error deleting from Cloudinary:', error);
     }
+
+    interface TrendingTopic {
+        name: string;
+        postCount: number;
+    }
+
+    interface OpenRouterResponse {
+        choices: Array<{
+            message: {
+                content: string;
+            };
+        }>;
+    }
 }
+
+interface TrendingTopic {
+    name: string;
+    postCount: number;
+}
+
+interface OpenRouterResponse {
+    choices: Array<{
+        message: {
+            content: string;
+        };
+    }>;
+}
+
+
+
+export const llmTrendingTopics = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        // Fetch all blogs, only title and body needed
+        const blogs: IBlog[] = await Blog.find().select("title body").lean();
+
+        if (!blogs?.length) {
+            logger.warn("No blogs found for trending topics analysis");
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                msg: "No blogs available for analysis",
+                success: false,
+            });
+        }
+
+        // Combine all blog content into one string
+        const combinedText = blogs
+            .map((blog) => `${blog.title ?? ""} ${blog.body ?? ""}`.trim())
+            .filter(Boolean)
+            .join("\n\n");
+
+        // Truncate if too long (avoid token limits)
+        const maxContentLength = 50000;
+        const truncatedText =
+            combinedText.length > maxContentLength
+                ? combinedText.slice(0, maxContentLength)
+                : combinedText;
+
+        // Build prompt for AI
+        const prompt = `
+      You are an AI assistant tasked with identifying trending topics from blog content.
+      Analyze the content below and extract the top 10 trending topics (words or short phrases).
+      For each topic, include the approximate number of blogs it appears in.
+      Return ONLY a JSON array in this exact format, without markdown or extra text:
+      [
+        { "name": "topic1", "postCount": 5 },
+        { "name": "topic2", "postCount": 4 }
+      ]
+      Content to analyze:
+      ${truncatedText}
+    `;
+
+        // Call OpenRouter / OpenAI API
+        const response = await axios.post<OpenRouterResponse>(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+                model: "openai/gpt-4o-mini",
+                messages: [
+                    { role: "system", content: "You are a helpful assistant." },
+                    { role: "user", content: prompt },
+                ],
+                max_tokens: 500,
+                temperature: 0.7,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                timeout: 15000, // 15 seconds
+            }
+        );
+
+        // Ensure valid response
+        const aiContent = response.data?.choices?.[0]?.message?.content;
+        if (!aiContent) throw new Error("No content returned from AI service");
+
+        logger.debug("Raw AI response content:", { aiContent });
+
+        // Parse AI response
+        let trendingTopics: TrendingTopic[] = [];
+        try {
+            let cleanContent = aiContent.replace(/```json\n?|```/g, "").trim();
+            trendingTopics = JSON.parse(cleanContent);
+
+            if (!Array.isArray(trendingTopics)) {
+                throw new Error("Parsed AI response is not an array");
+            }
+        } catch (parseError) {
+            logger.error("Failed to parse AI response", { aiContent, parseError });
+            throw new Error("Failed to parse AI response as JSON");
+        }
+
+        // Validate topic objects
+        const validTopics = trendingTopics.filter(
+            (topic): topic is TrendingTopic =>
+                topic &&
+                typeof topic.name === "string" &&
+                typeof topic.postCount === "number"
+        );
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            msg: "Trending topics fetched successfully",
+            data: validTopics,
+            success: true,
+        });
+    } catch (error) {
+        logger.error("Error in llmTrendingTopics controller", {
+            error: error instanceof Error ? error.message : error,
+            stack: error instanceof Error ? error.stack : undefined,
+        });
+
+        const statusCode = error instanceof AxiosError ? StatusCodes.BAD_GATEWAY : StatusCodes.INTERNAL_SERVER_ERROR;
+
+        return sendError(res, {
+            statusCode,
+            msg: error instanceof Error ? error.message : "An unexpected error occurred",
+        });
+    }
+};
 
 export const searchUsersController = async (req: IAuthRequest, res: Response) => {
     try {
@@ -290,4 +432,4 @@ export const searchUsersController = async (req: IAuthRequest, res: Response) =>
             error: error.message || "Internal server error",
         });
     }
-};
+}

@@ -38,10 +38,10 @@ const AuthPage = () => {
 
     const handleAuth = async () => {
         if (!validateAuth(!isLogin)) return;
-        await mutateAsync({ 
-            email: email, 
-            password: password, 
-            username: isLogin ? undefined : username 
+        await mutateAsync({
+            email: email,
+            password: password,
+            username: isLogin ? undefined : username
         });
     };
 
@@ -102,25 +102,25 @@ const AuthPage = () => {
                     className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/20"
                 >
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-                    
+
                     <div className="p-8">
                         {/* Header */}
                         <div className="flex flex-col items-center mb-8 space-y-4">
                             <motion.div
-                                animate={{ 
+                                animate={{
                                     rotate: isLogin ? [0, -5, 0] : [0, 5, 0],
                                     scale: [1, 1.1, 1]
                                 }}
-                                transition={{ 
-                                    duration: 2, 
+                                transition={{
+                                    duration: 2,
                                     repeat: Infinity,
-                                    ease: "easeInOut" 
+                                    ease: "easeInOut"
                                 }}
                                 className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg"
                             >
                                 <BookOpen size={28} className="text-white" />
                             </motion.div>
-                            
+
                             <motion.div
                                 key={isLogin ? "login" : "register"}
                                 initial={{ opacity: 0, y: 10 }}
@@ -245,7 +245,7 @@ const AuthPage = () => {
 
                         {/* Action Button */}
                         <motion.button
-                            whileHover={{ 
+                            whileHover={{
                                 y: -2,
                                 scale: 1.02,
                                 background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)"
@@ -262,10 +262,10 @@ const AuthPage = () => {
                                 {isLoading ? <Loader size={20} /> : <Feather size={20} />}
                             </motion.div>
                             <span>
-                                {isLoading 
-                                    ? "Crafting..." 
-                                    : isLogin 
-                                        ? "Sign In" 
+                                {isLoading
+                                    ? "Crafting..."
+                                    : isLogin
+                                        ? "Sign In"
                                         : "Start Writing"
                                 }
                             </span>

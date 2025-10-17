@@ -1,5 +1,5 @@
 import { useEffect, type JSX } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import HomePage from './pages/Home';
 import Auth from './pages/AUTH';
 import { UserProfilePage } from './pages/PROFILE';
@@ -25,7 +25,7 @@ const routes: IRoute[] = [
 ]
 
 const App = () => {
-  const {  setIsAuthenticated, isHydrated, setHydrated } = useAppStore();
+  const { setIsAuthenticated, isHydrated, setHydrated } = useAppStore();
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -33,7 +33,7 @@ const App = () => {
     setHydrated(true);
   }, [setIsAuthenticated, setHydrated]);
 
-  if (!isHydrated) return null; 
+  if (!isHydrated) return null;
   return (
     <BrowserRouter>
       <Routes>

@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { sendError, sendResponse } from "../utils/helperFunction";
 import { IAuthRequest } from "../middleware/authMiddleware";
-import { Response } from "express";
+import { NextFunction, Response } from "express";
 import User, { IUser } from "../models/userModel";
 import mongoose, { Types } from "mongoose";
 import { uploadBufferToCloudinary } from "./blogController";
@@ -208,7 +208,7 @@ interface OpenRouterResponse {
 
 
 
-export const llmTrendingTopics = async (req: Request, res: Response): Promise<Response> => {
+export const llmTrendingTopics = async (req: Request, res: Response) => {
     try {
         // Fetch all blogs, only title and body needed
         const blogs: IBlog[] = await Blog.find().select("title body").lean();
@@ -314,7 +314,7 @@ export const llmTrendingTopics = async (req: Request, res: Response): Promise<Re
 
         return sendError(res, {
             statusCode,
-            msg: error instanceof Error ? error.message : "An unexpected error occurred",
+            error
         });
     }
 };

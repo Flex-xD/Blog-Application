@@ -11,6 +11,7 @@ socialRoutes.get("/follow-suggestions", verifyToken, followSuggestionForUser);
 // ? LIKE , UNLIKE BLOG
 socialRoutes.post("/:blogToBeLikedId/like", verifyToken, likeOnBlog);
 socialRoutes.get("/search-users" , verifyToken , searchUsersController);
+// @ts-ignore
 socialRoutes.get("/trending-topics", verifyToken, llmTrendingTopics);
 
 socialRoutes.post("/:blogToUnlikeId/unlike", verifyToken, unlikeBlog);

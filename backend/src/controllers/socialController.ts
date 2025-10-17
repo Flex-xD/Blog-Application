@@ -210,7 +210,7 @@ interface OpenRouterResponse {
 
 export const llmTrendingTopics = async (req: Request, res: Response) => {
     try {
-        // Fetch all blogs, only title and body needed
+        // @ts-ignore
         const blogs: IBlog[] = await Blog.find().select("title body").lean();
 
         if (!blogs?.length) {

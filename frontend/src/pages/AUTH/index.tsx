@@ -38,6 +38,7 @@ const AuthPage = () => {
 
     const handleAuth = async () => {
         if (!validateAuth(!isLogin)) return;
+        localStorage.setItem('authToken', 'true');
         await mutateAsync({
             email: email,
             password: password,

@@ -20,6 +20,7 @@ import useUnsaveBlogMutation from '@/customHooks/unsaveBlog';
 import { useQuery } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/constants/queryKeys';
 import { useAppStore } from '@/store';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfileProps {
     user: IUser;
@@ -62,6 +63,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     const [savedBlogs, setSavedBlogs] = useState<IBlog[]>([]);
     const [savedBlogIds, setSavedBlogIds] = useState<string[]>([]);
     const [displayBlogs, setDisplayBlogs] = useState<IBlog[]>(blogs);
+    const navigate = useNavigate();
 
     const { mutateAsync: followAndUnfollowFn } = useFollowOrUnfollowMutation();
     const { data: savedBlogsData, refetch: refetchSavedBlogs } = useSavedBlogs(user._id);

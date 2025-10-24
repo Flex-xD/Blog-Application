@@ -1,11 +1,11 @@
-import type { StateCreator } from "zustand";
+import type { StateCreator } from 'zustand';
 
 export interface IAuthState {
     isAuthenticated: boolean;
     setIsAuthenticated: (isAuthenticated: boolean) => void;
-    isHydrated: boolean; // new
+    isHydrated: boolean;
     setHydrated: (hydrated: boolean) => void;
-    logout:() => void
+    logout: () => void;
 }
 
 export const authSlice: StateCreator<IAuthState> = (set) => ({
@@ -14,14 +14,14 @@ export const authSlice: StateCreator<IAuthState> = (set) => ({
     setIsAuthenticated: (isAuthenticated: boolean) => {
         set({ isAuthenticated });
         if (isAuthenticated) {
-            localStorage.setItem("authToken", "true");
+            localStorage.setItem('authToken', 'true');
         } else {
-            localStorage.removeItem("authToken");
+            localStorage.removeItem('authToken');
         }
     },
     setHydrated: (hydrated: boolean) => set({ isHydrated: hydrated }),
     logout: () => {
-        localStorage.removeItem("authToken");
+        localStorage.removeItem('authToken');
         set({ isAuthenticated: false });
-    }
+    },
 });

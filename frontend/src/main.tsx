@@ -21,7 +21,7 @@ const queryCleint = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryCleint}>
-    <App />
+      <App />
     <Toaster position="top-right" richColors />
   </QueryClientProvider>
 )

@@ -7,7 +7,7 @@ import Feed from './pages/FEED';
 import Social from './pages/Social';
 import WithAuth from './pages/AUTH/AuthComponents/WithAuthWrapper';
 import { useAppStore } from './store';
-
+import Cookies from 'js-cookie';
 interface IRoute {
   path: string;
   isPrivate: boolean;
@@ -28,8 +28,8 @@ const App = () => {
   const { setIsAuthenticated, isHydrated, setHydrated, logout } = useAppStore();
 
   useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    if (authToken === 'true') {
+    const token = Cookies.get('token');
+    if (token !== undefined) {
       setIsAuthenticated(true);
     } else {
       logout(); 

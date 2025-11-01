@@ -38,11 +38,10 @@ const AuthPage = () => {
 
     const handleAuth = async () => {
         if (!validateAuth(!isLogin)) return;
-        localStorage.setItem('authToken', 'true');
         await mutateAsync({
-            email: email,
-            password: password,
-            username: isLogin ? undefined : username
+            email: isLogin ? (email || loginIdentifier) : email,
+            password,
+            username: isLogin ? (username || loginIdentifier) : username,
         });
     };
 

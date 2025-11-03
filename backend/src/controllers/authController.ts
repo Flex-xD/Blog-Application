@@ -61,9 +61,10 @@ export const registerController = async (req: Request, res: Response) => {
         });
         const token = await createtoken(user._id as string, user.email);
         res.cookie("token", token, {
-            httpOnly: false,
-            sameSite: "lax",
-            secure: false,
+            httpOnly: true,
+            secure: true,          
+            sameSite: "none",      
+            maxAge: maxage,
             path: "/",
         });
         console.log("User Registered !");
@@ -96,16 +97,15 @@ export const loginController = async (req: Request, res: Response) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid credentials !" });
         }
         if (req.cookies.token) {
-            res.clearCookie("token", { httpOnly: true, secure: false, sameSite: "strict" })
+            res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "strict" })
         }
         const token = await createtoken(user._id as string, user.email);
         res.cookie("token", token, {
-            httpOnly: false,
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
             maxAge: maxage,
-            sameSite: "lax",
-            secure: false,
             path: "/",
-
         });
         return sendResponse(res, {
             statusCode: StatusCodes.OK,

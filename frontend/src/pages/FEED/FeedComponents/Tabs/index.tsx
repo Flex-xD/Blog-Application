@@ -1,5 +1,4 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, Users, TrendingUp } from "lucide-react";
 import React from "react";
 
 interface FeedTabsProps {
@@ -7,34 +6,20 @@ interface FeedTabsProps {
   setActiveTab: (value: string) => void;
 }
 
+/* No per-view overrides here: the shadcn Tabs default already uses bg-muted for the track
+   and the background paper for the active state, which is exactly the quiet segmentation
+   this view wants. The previous gray-100/white/shadow classes were a second, competing
+   source of truth for the same two colors. */
 function FeedTabs({ activeTab, setActiveTab }: FeedTabsProps) {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-      <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 h-auto rounded-xl">
-        <TabsTrigger
-          value="for-you"
-          className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-        >
-          <Home className="h-4 w-4 mr-2" />
-          For You
-        </TabsTrigger>
-        <TabsTrigger
-          value="following"
-          className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Following
-        </TabsTrigger>
-        <TabsTrigger
-          value="trending"
-          className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-        >
-          <TrendingUp className="h-4 w-4 mr-2" />
-          Trending
-        </TabsTrigger>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-3">
+      <TabsList className="grid h-auto w-full grid-cols-3 p-1">
+        <TabsTrigger value="for-you">For You</TabsTrigger>
+        <TabsTrigger value="following">Following</TabsTrigger>
+        <TabsTrigger value="trending">Trending</TabsTrigger>
       </TabsList>
     </Tabs>
   );
 }
 
-export default React.memo(FeedTabs)
+export default React.memo(FeedTabs);

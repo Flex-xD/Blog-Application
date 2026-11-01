@@ -61,8 +61,8 @@ export const registerController = async (req: Request, res: Response) => {
         });
         const token = await createtoken(user._id as string, user.email);
         res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,          
+            httpOnly: false,
+            secure: false,          
             sameSite: "none",      
             maxAge: maxage,
             path: "/",
@@ -101,8 +101,8 @@ export const loginController = async (req: Request, res: Response) => {
         }
         const token = await createtoken(user._id as string, user.email);
         res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
+            httpOnly: false,
+            secure: false,
             sameSite: "none",
             maxAge: maxage,
             path: "/",

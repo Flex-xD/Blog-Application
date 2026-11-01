@@ -243,6 +243,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     if (isLoading) return <ProfileSkeleton />;
 
     return (
+        <>
+            {/* Full-bleed: a page container must not decide how wide the app bar is. */}
+            <Navbar />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
             <FollowModal
                 currentUser={user}
@@ -256,8 +259,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 onClose={() => setIsEditModalOpen(false)}
                 currentPicture={user.profilePicture?.url}
             />
-
-            <Navbar />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -428,6 +429,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 </AnimatePresence>
             </Tabs>
         </div>
+        </>
     );
 };
 

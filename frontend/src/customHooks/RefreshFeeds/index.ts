@@ -33,7 +33,6 @@ const useFeedRefresh = ({
                 refetchPopular?.();
                 break;
         }
-        window.scrollTo({ top: 0, behavior: "smooth" });
     }, [activeTab, refetchFeed, refetchFollowing, refetchPopular, searchQuery]);
 
     return refreshFeed;

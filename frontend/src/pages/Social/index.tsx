@@ -186,9 +186,9 @@ const SocialComponent = () => {
 
     return (
         <>
+            {/* Full-bleed: a page container must not decide how wide the app bar is. */}
+            <Navbar />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <Navbar />
-
                 <Tabs defaultValue="following" onValueChange={setActiveTab}>
                     <div className="flex items-center justify-center p-2">
                         <TabsList className="grid w-full max-w-md grid-cols-2 bg-gray-100 p-1 rounded-xl sm:max-w-lg">

@@ -1,59 +1,39 @@
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { motion } from "framer-motion";
-import { ImageIcon, Link, PenSquare } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserProfileData } from "@/customHooks/UserDataFetching";
 
 interface CreateBlogCardProps {
-    setShowCreateModal: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowCreateModal: React.Dispatch<
+        React.SetStateAction<boolean>
+    >;
 }
 
 const CreateBlogCard = ({
     setShowCreateModal,
 }: CreateBlogCardProps) => {
+    const { data: userInfo } = useUserProfileData();
+
     return (
-        <motion.div
-            whileHover={{ y: -2 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6"
-        >
-            <div className="flex items-start space-x-3">
-                <Avatar className="h-10 w-10">
-                    <AvatarImage src="https://randomuser.me/api/portraits/men/1.jpg" />
-                    <AvatarFallback>ME</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="w-full text-left bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2 text-gray-600 transition-colors"
-                    >
-                        What's on your mind today?
-                    </button>
-                </div>
-            </div>
-            <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
-                <Button
-                    variant="ghost"
-                    className="text-gray-600 hover:bg-gray-100"
-                    onClick={() => setShowCreateModal(true)}
-                >
-                    <PenSquare className="h-4 w-4 mr-2" />
-                    Write
-                </Button>
-                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100 relative">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    Photo
-                </Button>
-                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100">
-                    <Link className="h-4 w-4 mr-2" />
-                    Link
-                </Button>
-            </div>
-        </motion.div>
-    )
-}
+        <div className="mb-6 flex items-center gap-3">
+            <Avatar className="size-9">
+                <AvatarImage
+                    src={userInfo?.profilePicture?.url}
+                    className="object-cover"
+                    alt=""
+                />
+                <AvatarFallback className="bg-muted text-sm text-muted-foreground">
+                    {(userInfo?.username?.[0] ?? "ME").toUpperCase()}
+                </AvatarFallback>
+            </Avatar>
+
+            <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="h-10 min-w-0 flex-1 rounded-full bg-muted px-4 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+                What's on your mind today?
+            </button>
+        </div>
+    );
+};
 
 export default CreateBlogCard;

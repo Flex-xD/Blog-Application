@@ -1,8 +1,19 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+    Avatar,
+    AvatarImage,
+    AvatarFallback,
+} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, ArrowRight, Bookmark, Clock, Trash } from "lucide-react";
+import {
+    Heart,
+    MessageCircle,
+    ArrowRight,
+    Bookmark,
+    Clock,
+    Trash,
+} from "lucide-react";
 import { useState, useEffect, useCallback, memo } from "react";
 import {
     Dialog,
@@ -23,8 +34,18 @@ export interface BlogCardProps {
     _id: string;
     title: string;
     body: string;
-    image: { url: string; publicId: string; width: number; height: number; format: string };
-    authorDetails: { username: string; _id: string; profilePicture: string };
+    image: {
+        url: string;
+        publicId: string;
+        width: number;
+        height: number;
+        format: string;
+    };
+    authorDetails: {
+        username: string;
+        _id: string;
+        profilePicture: string;
+    };
     likes: string[];
     comments: any[];
     createdAt: Date;
@@ -48,147 +69,298 @@ const BlogCardComponent: React.FC<BlogCardProps> = ({
     isSaveLoading = false,
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+    const [isCommentModalOpen, setIsCommentModalOpen] =
+        useState(false);
     const [isSaved, setIsSaved] = useState(isInitiallySaved);
-    const [currentLikes, setCurrentLikes] = useState<string[]>(likes);
-    const [blogComments, setBlogComments] = useState<any[]>(comments);
+    const [currentLikes, setCurrentLikes] =
+        useState<string[]>(likes);
+    const [blogComments, setBlogComments] =
+        useState<any[]>(comments);
+
     const { data: userInfo } = useUserProfileData();
 
-    useEffect(() => setIsSaved(isInitiallySaved), [isInitiallySaved]);
+    useEffect(() => {
+        setIsSaved(isInitiallySaved);
+    }, [isInitiallySaved]);
 
-    const isLiked = React.useMemo(() => currentLikes.includes(userInfo?._id ?? ""), [currentLikes, userInfo?._id]);
+    const isLiked = React.useMemo(
+        () => currentLikes.includes(userInfo?._id ?? ""),
+        [currentLikes, userInfo?._id]
+    );
 
-    const { mutateAsync: handleBlogLike } = useLikeMutation(userInfo!._id);
-    const { mutateAsync: handleBlogUnlike } = useUnLikeMutation(userInfo!._id);
-    const { mutate: saveBlogMutation, isPending: isSaving } = useSaveBlogMutation(_id, userInfo!._id);
-    const { mutate: unsaveBlogMutation, isPending: isUnsaving } = useUnsaveBlogMutation(_id, userInfo!._id);
-    const { mutate: deleteBlogMutation, isPending: isDeleting } = useDeleteBlogMutation(_id, userInfo!._id);
+    const { mutateAsync: handleBlogLike } =
+        useLikeMutation(userInfo!._id);
+
+    const { mutateAsync: handleBlogUnlike } =
+        useUnLikeMutation(userInfo!._id);
+
+    const {
+        mutate: saveBlogMutation,
+        isPending: isSaving,
+    } = useSaveBlogMutation(_id, userInfo!._id);
+
+    const {
+        mutate: unsaveBlogMutation,
+        isPending: isUnsaving,
+    } = useUnsaveBlogMutation(_id, userInfo!._id);
+
+    const {
+        mutate: deleteBlogMutation,
+        isPending: isDeleting,
+    } = useDeleteBlogMutation(_id, userInfo!._id);
 
     const handleLikeAndUnlike = useCallback(
         async (e: React.MouseEvent) => {
             e.stopPropagation();
+
             if (!userInfo?._id) return;
+
             if (isLiked) {
                 await handleBlogUnlike(_id);
-                setCurrentLikes((prev) => prev.filter((id) => id !== userInfo._id));
+
+                setCurrentLikes((prev) =>
+                    prev.filter((id) => id !== userInfo._id)
+                );
             } else {
                 await handleBlogLike(_id);
-                setCurrentLikes((prev) => [...prev, userInfo._id]);
+
+                setCurrentLikes((prev) => [
+                    ...prev,
+                    userInfo._id,
+                ]);
             }
         },
-        [isLiked, userInfo?._id, handleBlogLike, handleBlogUnlike, _id]
+        [
+            isLiked,
+            userInfo?._id,
+            handleBlogLike,
+            handleBlogUnlike,
+            _id,
+        ]
     );
 
     const handleSave = useCallback(
         (e: React.MouseEvent) => {
             e.stopPropagation();
+
             const newSavedState = !isSaved;
+
             setIsSaved(newSavedState);
 
-            if (newSavedState) saveBlogMutation();
-            else unsaveBlogMutation();
-// ? ADD on Save here and in the dependencies
+            if (newSavedState) {
+                saveBlogMutation();
+            } else {
+                unsaveBlogMutation();
+            }
 
-            window.dispatchEvent(new CustomEvent("blogSaved", { detail: { blogId: _id, isSaved: newSavedState } }));
+            window.dispatchEvent(
+                new CustomEvent("blogSaved", {
+                    detail: {
+                        blogId: _id,
+                        isSaved: newSavedState,
+                    },
+                })
+            );
         },
-        [isSaved, saveBlogMutation, unsaveBlogMutation, _id]
+        [
+            isSaved,
+            saveBlogMutation,
+            unsaveBlogMutation,
+            _id,
+        ]
     );
 
     const handleBlogDelete = useCallback(
         (e?: React.MouseEvent) => {
             e?.stopPropagation();
-            if (!userInfo?._id || userInfo._id !== authorDetails._id) return;
+
+            if (
+                !userInfo?._id ||
+                userInfo._id !== authorDetails._id
+            ) {
+                return;
+            }
 
             deleteBlogMutation(undefined, {
                 onSuccess: () => {
                     setIsExpanded(false);
                     onBlogDeleted?.();
-                    window.dispatchEvent(new CustomEvent("refreshAllFeeds"));
+
+                    window.dispatchEvent(
+                        new CustomEvent("refreshAllFeeds")
+                    );
                 },
             });
         },
-        [userInfo?._id, authorDetails._id, deleteBlogMutation, onBlogDeleted]
+        [
+            userInfo?._id,
+            authorDetails._id,
+            deleteBlogMutation,
+            onBlogDeleted,
+        ]
     );
 
-    const openCommentModal = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setIsCommentModalOpen(true);
-    }, []);
+    const openCommentModal = useCallback(
+        (e: React.MouseEvent) => {
+            e.stopPropagation();
+            setIsCommentModalOpen(true);
+        },
+        []
+    );
 
     const formattedDate = React.useMemo(
-        () => new Date(createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+        () =>
+            new Date(createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            }),
         [createdAt]
     );
 
-    const readingTime = React.useMemo(() => Math.ceil(body.split(" ").length / 200), [body]);
-    const isSaveLoadingCombined = isSaveLoading || isSaving || isUnsaving;
+    const readingTime = React.useMemo(
+        () => Math.ceil(body.split(" ").length / 200),
+        [body]
+    );
+
+    const isSaveLoadingCombined =
+        isSaveLoading || isSaving || isUnsaving;
 
     return (
         <>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -4 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                viewport={{ once: true }}
+            <div
                 onClick={() => setIsExpanded(true)}
                 className="cursor-pointer"
             >
-                <Card className="group overflow-hidden transition-all hover:shadow-lg">
+                <Card className="group overflow-hidden py-0 shadow-none transition-colors hover:border-foreground/25">
                     <div className="flex flex-col md:flex-row">
                         {image && (
-                            <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden">
-                                <motion.img
+                            <div className="relative h-48 w-full overflow-hidden md:h-auto md:w-64">
+                                <img
                                     src={image.url}
                                     alt={title}
-                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.5 }}
+                                    className="h-full w-full object-cover"
                                 />
                             </div>
                         )}
 
-                        <div className="flex-1 p-6 flex flex-col">
-                            <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-1 flex-col p-6">
+                            <div className="mb-4 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8 border-2 border-white shadow overflow-hidden">
-                                        <AvatarImage src={authorDetails.profilePicture} className="h-full w-full object-cover" />
-                                        <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-medium">
-                                            {(authorDetails?.username?.[0] || "").toUpperCase()}
+                                    <Avatar className="size-8 overflow-hidden">
+                                        <AvatarImage
+                                            src={
+                                                authorDetails.profilePicture
+                                            }
+                                            className="h-full w-full object-cover"
+                                            alt=""
+                                        />
+
+                                        <AvatarFallback className="flex items-center justify-center bg-muted font-medium text-muted-foreground">
+                                            {(
+                                                authorDetails?.username?.[0] ||
+                                                ""
+                                            ).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
+
                                     <div>
-                                        <p className="text-sm font-medium">{authorDetails.username}</p>
+                                        <p className="text-sm font-medium">
+                                            {authorDetails.username}
+                                        </p>
+
                                         <div className="flex items-center gap-2">
-                                            <p className="text-xs text-muted-foreground">{formattedDate}</p>
-                                            <span className="text-muted-foreground">•</span>
+                                            <p className="text-xs text-muted-foreground">
+                                                {formattedDate}
+                                            </p>
+
+                                            <span className="text-muted-foreground">
+                                                •
+                                            </span>
+
                                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <Clock className="h-3 w-3" /> {readingTime} min read
+                                                <Clock className="h-3 w-3" />
+                                                {readingTime} min read
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSave} disabled={isSaveLoadingCombined}>
-                                    <Bookmark className={`h-4 w-4 ${isSaved ? "fill-indigo-500 text-indigo-500" : ""}`} />
+
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={handleSave}
+                                    disabled={
+                                        isSaveLoadingCombined
+                                    }
+                                    aria-label={
+                                        isSaved
+                                            ? "Remove from saved"
+                                            : "Save post"
+                                    }
+                                >
+                                    <Bookmark
+                                        className={`h-4 w-4 ${
+                                            isSaved
+                                                ? "fill-foreground text-foreground"
+                                                : "text-muted-foreground"
+                                        }`}
+                                    />
                                 </Button>
                             </div>
 
-                            <h3 className="text-xl font-bold line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">{title}</h3>
-                            <p className="text-muted-foreground line-clamp-2 mb-4">{body}</p>
+                            <h3 className="mb-2 line-clamp-2 text-2xl font-semibold leading-snug">
+                                {title}
+                            </h3>
 
-                            <div className="mt-auto flex justify-between items-center pt-4 border-t border-gray-100">
+                            <p className="mb-4 line-clamp-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
+                                {body}
+                            </p>
+
+                            <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
                                 <div className="flex gap-2">
-                                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-sm rounded-full" onClick={handleLikeAndUnlike}>
-                                        <Heart className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"}`} />
-                                        <span>{currentLikes.length} likes</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 gap-2 rounded-full px-3 text-sm"
+                                        onClick={
+                                            handleLikeAndUnlike
+                                        }
+                                        aria-pressed={isLiked}
+                                    >
+                                        <Heart
+                                            className={`h-5 w-5 ${
+                                                isLiked
+                                                    ? "fill-foreground text-foreground"
+                                                    : "text-muted-foreground"
+                                            }`}
+                                        />
+
+                                        <span>
+                                            {currentLikes.length} likes
+                                        </span>
                                     </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-sm rounded-full" onClick={openCommentModal}>
+
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 gap-2 rounded-full px-3 text-sm"
+                                        onClick={openCommentModal}
+                                    >
                                         <MessageCircle className="h-4 w-4" />
-                                        <span>{blogComments.length}</span>
+
+                                        <span>
+                                            {blogComments.length}
+                                        </span>
                                     </Button>
                                 </div>
-                                <Button variant="outline" size="sm" className="h-8 gap-2 text-sm rounded-full">
+
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 gap-2 rounded-full px-3 text-sm"
+                                >
                                     Read more
                                     <ArrowRight className="h-4 w-4" />
                                 </Button>
@@ -196,59 +368,190 @@ const BlogCardComponent: React.FC<BlogCardProps> = ({
                         </div>
                     </div>
                 </Card>
-            </motion.div>
+            </div>
 
             {/* Expanded Blog Modal */}
-            <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-2xl">
+            <Dialog
+                open={isExpanded}
+                onOpenChange={setIsExpanded}
+            >
+                <DialogContent className="max-w-4xl overflow-hidden p-0">
                     <AnimatePresence>
                         {isExpanded && (
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
-                                {image && <div className="relative h-64 w-full overflow-hidden"><img src={image.url} alt={title} className="object-cover w-full h-full" /></div>}
+                            <motion.div
+                                initial={{
+                                    opacity: 0,
+                                    y: 20,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    y: 0,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    y: -20,
+                                }}
+                                transition={{
+                                    duration: 0.2,
+                                }}
+                            >
+                                {image && (
+                                    <div className="relative h-64 w-full overflow-hidden">
+                                        <img
+                                            src={image.url}
+                                            alt={title}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                )}
 
-                                <div className="p-8 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+                                <div className="max-h-[calc(100vh-300px)] space-y-6 overflow-y-auto p-8">
                                     <DialogHeader>
-                                        <div className="flex items-center justify-between mb-6">
+                                        <div className="mb-6 flex items-center justify-between">
                                             <div className="flex items-center space-x-3">
-                                                <Avatar className="h-8 w-8 border-2 border-white shadow overflow-hidden">
-                                                    <AvatarImage src={authorDetails.profilePicture} className="h-full w-full object-cover" />
-                                                    <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-medium">{(authorDetails?.username?.[0] || "").toUpperCase()}</AvatarFallback>
+                                                <Avatar className="size-8 overflow-hidden">
+                                                    <AvatarImage
+                                                        src={
+                                                            authorDetails.profilePicture
+                                                        }
+                                                        className="h-full w-full object-cover"
+                                                        alt=""
+                                                    />
+
+                                                    <AvatarFallback className="flex items-center justify-center bg-muted font-medium text-muted-foreground">
+                                                        {(
+                                                            authorDetails?.username?.[0] ||
+                                                            ""
+                                                        ).toUpperCase()}
+                                                    </AvatarFallback>
                                                 </Avatar>
+
                                                 <div>
-                                                    <p className="font-medium">{authorDetails.username}</p>
+                                                    <p className="font-medium">
+                                                        {
+                                                            authorDetails.username
+                                                        }
+                                                    </p>
+
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-sm text-muted-foreground">{formattedDate}</p>
-                                                        <span className="text-muted-foreground">•</span>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {
+                                                                formattedDate
+                                                            }
+                                                        </p>
+
+                                                        <span className="text-muted-foreground">
+                                                            •
+                                                        </span>
+
                                                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                                            <Clock className="h-3 w-3" /> {readingTime} min read
+                                                            <Clock className="h-3 w-3" />
+                                                            {
+                                                                readingTime
+                                                            }{" "}
+                                                            min read
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+
                                             <div className="flex gap-2">
-                                                <Button variant="ghost" size="icon" onClick={handleSave} disabled={isSaveLoadingCombined}>
-                                                    <Bookmark className={`h-5 w-5 ${isSaved ? "fill-indigo-500 text-indigo-500" : ""}`} />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={
+                                                        handleSave
+                                                    }
+                                                    disabled={
+                                                        isSaveLoadingCombined
+                                                    }
+                                                    aria-label={
+                                                        isSaved
+                                                            ? "Remove from saved"
+                                                            : "Save post"
+                                                    }
+                                                >
+                                                    <Bookmark
+                                                        className={`h-5 w-5 ${
+                                                            isSaved
+                                                                ? "fill-foreground text-foreground"
+                                                                : "text-muted-foreground"
+                                                        }`}
+                                                    />
                                                 </Button>
-                                                {userInfo?._id === authorDetails._id && (
-                                                    <Button variant="ghost" size="icon" onClick={handleBlogDelete} disabled={isDeleting}>
-                                                        <Trash className="h-5 w-5 text-red-500" />
+
+                                                {userInfo?._id ===
+                                                    authorDetails._id && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={
+                                                            handleBlogDelete
+                                                        }
+                                                        disabled={
+                                                            isDeleting
+                                                        }
+                                                        aria-label="Delete post"
+                                                    >
+                                                        <Trash className="h-5 w-5 text-destructive" />
                                                     </Button>
                                                 )}
                                             </div>
                                         </div>
-                                        <DialogTitle className="text-3xl font-bold mb-4">{title}</DialogTitle>
+
+                                        <DialogTitle className="mb-4 text-3xl font-semibold leading-tight">
+                                            {title}
+                                        </DialogTitle>
                                     </DialogHeader>
 
-                                    <div className="prose prose-lg dark:prose-invert max-w-none">{body.split("\n").map((p, i) => <p key={i} className="mb-4 last:mb-0">{p}</p>)}</div>
+                                    <div className="max-w-[68ch] font-serif text-[1.0625rem] leading-[1.7]">
+                                        {body
+                                            .split("\n")
+                                            .map((p, i) => (
+                                                <p
+                                                    key={i}
+                                                    className="mb-4 last:mb-0"
+                                                >
+                                                    {p}
+                                                </p>
+                                            ))}
+                                    </div>
 
-                                    <div className="flex space-x-4 pt-6 border-t border-gray-200">
-                                        <Button variant="ghost" className="flex items-center space-x-2" onClick={handleLikeAndUnlike}>
-                                            <Heart className={`h-5 w-5 ${isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500"}`} />
-                                            <span>{currentLikes.length} likes</span>
+                                    <div className="flex space-x-4 border-t border-border pt-6">
+                                        <Button
+                                            variant="ghost"
+                                            className="flex items-center space-x-2"
+                                            onClick={
+                                                handleLikeAndUnlike
+                                            }
+                                            aria-pressed={isLiked}
+                                        >
+                                            <Heart
+                                                className={`h-5 w-5 ${
+                                                    isLiked
+                                                        ? "fill-foreground text-foreground"
+                                                        : "text-muted-foreground"
+                                                }`}
+                                            />
+
+                                            <span>
+                                                {currentLikes.length} likes
+                                            </span>
                                         </Button>
-                                        <Button variant="ghost" className="flex items-center space-x-2" onClick={openCommentModal}>
+
+                                        <Button
+                                            variant="ghost"
+                                            className="flex items-center space-x-2"
+                                            onClick={
+                                                openCommentModal
+                                            }
+                                        >
                                             <MessageCircle className="h-5 w-5" />
-                                            <span>{blogComments.length} comments</span>
+
+                                            <span>
+                                                {blogComments.length}{" "}
+                                                comments
+                                            </span>
                                         </Button>
                                     </div>
                                 </div>
@@ -262,7 +565,9 @@ const BlogCardComponent: React.FC<BlogCardProps> = ({
                 <CommentModal
                     userInfo={userInfo}
                     isOpen={isCommentModalOpen}
-                    onClose={() => setIsCommentModalOpen(false)}
+                    onClose={() =>
+                        setIsCommentModalOpen(false)
+                    }
                     setBlogComments={setBlogComments}
                     comments={blogComments}
                     blogId={_id}

@@ -57,7 +57,7 @@ const defaultInstructions =
     "Enhance the provided blog content by improving clarity, coherence, and engagement while preserving the original meaning. Optimize the title to be concise and attention-grabbing. Ensure the body is well-structured and suitable for the intended audience.";
 
 export const llmBlogProcessing = async (req: Request, res: Response) => {
-
+    // ? Put req.body validation into the middleware
     const validationResult = blogInputSchema.safeParse(req.body);
     if (!validationResult.success) {
         logger.error("Input validation failed", { errors: validationResult.error.issues });

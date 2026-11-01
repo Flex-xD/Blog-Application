@@ -1,132 +1,253 @@
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { PenSquare, Search, Users, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/store";
-import { motion } from "framer-motion";
-import { PenSquare, Search, Menu, Home, Users, User } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useUserProfileData } from "@/customHooks/UserDataFetching";
+import { cn } from "@/lib/utils";
 
-const HIDDEN_SEARCH_ROUTES = ["/profile", "/"];
-
-const NavLink = ({
-    to,
-    label,
-    icon: Icon,
-}: {
+interface NavLinkItem {
     to: string;
     label: string;
-    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-}) => {
-    const { pathname } = useLocation();
+}
 
-    return (
-        <Link
-            to={to}
-            className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${pathname === to
-                    ? "bg-indigo-50 text-indigo-700"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-        >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-        </Link>
-    );
-};
+/* Destinations are content, not chrome: labels carry their own meaning, so no
+   icon is needed to decode them. Profile is reached through the avatar below,
+   which keeps this list to the two places a reader actually goes. */
+const NAV_LINKS: NavLinkItem[] = [
+    { to: "/feed", label: "Explore" },
+    { to: "/social", label: "Social" },
+];
 
+/* One navbar for the whole app. It is a bar, not a card: flat paper, hairline
+   border, no blur, no gradient, no motion for its own sake.
 
+   Three jobs, in weight order:
+   1. brand        - the gold mark. The only other gold on this bar is the
+                     primary action, and that is never gold on the public
+                     landing, where the hero owns the accent.
+   2. destinations - labels with a quiet active state (ink, not hue).
+   3. search       - lives in the URL (?q=), so it works from any route and
+                     survives reload. Type here and you land on the feed with
+                     the query applied; on the feed itself it updates live.
+
+   The bar has exactly one hover response (color), one active response (ink
+   weight + a hairline mark) and no page-transition animation. */
 const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { isAuthenticated, setIsCreatingBlog } = useAppStore();
     const { data: userInfo } = useUserProfileData();
 
-    const navigateToFeedAndOpenModal = () => {
+    const routeSearch = searchParams.get("q") ?? "";
+    const [term, setTerm] = useState(routeSearch);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    /* The URL is the source of truth (back/forward, cleared query from a link).
+       Only adopt it when it differs, or we would fight the caret mid-word. */
+    useEffect(() => {
+        if (routeSearch !== term) setTerm(routeSearch);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [routeSearch]);
+
+    const onFeed = location.pathname === "/feed";
+
+    /* Public routes (/) are the one place where this bar must not spend gold:
+       the landing's own CTA is the page's primary action, and two gold buttons
+       in one view means neither reads as primary. */
+    const isPublicRoute = location.pathname === "/";
+
+    const writeTarget = () => {
         setIsCreatingBlog(true);
         navigate("/feed");
     };
 
-    const shouldShowSearch = !HIDDEN_SEARCH_ROUTES.includes(location.pathname);
+    const writeLabel = isAuthenticated ? "Write" : "Log in";
+
+    const updateQuery = (value: string) => {
+        setTerm(value);
+        if (!onFeed) return;
+        setSearchParams(
+            (prev) => {
+                if (value) prev.set("q", value);
+                else prev.delete("q");
+                return prev;
+            },
+            { replace: true }
+        );
+    };
+
+    const submitSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        const q = term.trim();
+        const next = q ? `/feed?q=${encodeURIComponent(q)}` : "/feed";
+        if (location.pathname === "/feed") {
+            setSearchParams(
+                (prev) => {
+                    if (q) prev.set("q", q);
+                    else prev.delete("q");
+                    return prev;
+                },
+                { replace: true }
+            );
+        } else {
+            navigate(next);
+        }
+        setMobileSearchOpen(false);
+    };
+
+    const isActive = (to: string) => location.pathname === to;
 
     return (
-        <motion.nav
-            className="w-full px-4 sm:px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-49"
-            initial={{ opacity: 1 }}
-            whileHover={{ opacity: 0.95 }}
-            transition={{ duration: 0.2 }}
-        >
-            <Link to="/" className="flex items-center space-x-2 mr-3 flex-shrink-0">
-                <PenSquare className="h-6 w-6 text-indigo-600" />
-                <span className="text-xl font-bold text-gray-800 hidden sm:block">BlogCraft</span>
-            </Link>
+        <nav className="sticky top-0 z-50 w-full border-b border-border bg-background">
+            <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
+                <Link to="/" className="flex flex-shrink-0 items-center gap-2" aria-label="BlogCraft home">
+                    <PenSquare className="size-5 text-primary" aria-hidden="true" />
+                    <span className="hidden text-base font-semibold sm:block">BlogCraft</span>
+                </Link>
 
-            <div className="hidden md:flex items-center gap-6 space-x-3">
-                <NavLink to="/feed" label="Explore" icon={Home} />
-                <NavLink to="/social" label="Social" icon={Users} />
-            </div>
+                {/* Destinations: labels, always visible. The active page is marked by
+                    ink weight and a hairline underline - never by a hue, because hue
+                    here would compete with the gold action for "notice me". */}
+                <ul className="hidden items-center gap-1 sm:flex">
+                    {NAV_LINKS.map((link) => (
+                        <li key={link.to}>
+                            <Link
+                                to={link.to}
+                                aria-current={isActive(link.to) ? "page" : undefined}
+                                className={cn(
+                                    "flex h-14 items-center border-b-2 px-3 text-sm transition-colors",
+                                    isActive(link.to)
+                                        ? "border-foreground font-medium text-foreground"
+                                        : "border-transparent text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
 
-            {shouldShowSearch && (
-                <div className="flex-1 max-w-xl mx-4 hidden lg:block">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                            type="search"
-                            placeholder="Search for blogs . . ."
-                            className="pl-10 rounded-full bg-gray-100 border-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                            value={""}
-                            onChange={(e) => console.log((e.target.value))}
-                        />
-                    </div>
-                </div>
-            )}
-
-            <div className="hidden sm:flex items-center space-x-4">
-                <Button
-                    variant="default"
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                    onClick={() => isAuthenticated ? navigateToFeedAndOpenModal() : navigate("/auth")}
+                {/* Search. On >= sm it sits in the bar; below sm it takes over the bar
+                    when opened, because a 375px screen cannot hold brand + labels +
+                    a field + an action + an avatar at once. The box writes ?q= only
+                    while on the feed (live filtering); anywhere else it navigates on
+                    submit, so half-typed text never yanks a guest off the landing. */}
+                <form
+                    onSubmit={submitSearch}
+                    role="search"
+                    className={cn(
+                        "relative min-w-0 flex-1 sm:ml-4 sm:max-w-xs sm:flex-none",
+                        mobileSearchOpen ? "block" : "hidden sm:block"
+                    )}
                 >
-                    {isAuthenticated ? "Create Post" : "LOGIN"}
-                </Button>
-                {isAuthenticated && (
-                    <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
-                        <Avatar className="h-8 w-8 border-2 border-indigo-100 overflow-hidden">
-                            <AvatarImage src={userInfo?.profilePicture?.url} className="h-full w-full object-cover" />
-                            <AvatarFallback>ME</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-gray-700 hidden md:inline">{userInfo?.username}</span>
-                    </Link>
-                )}
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <Input
+                        ref={searchInputRef}
+                        type="search"
+                        value={term}
+                        onChange={(e) => updateQuery(e.target.value)}
+                        placeholder="Search blogs..."
+                        aria-label="Search blogs"
+                        className="h-9 rounded-full bg-muted pl-9 text-sm focus-visible:border-ring"
+                    />
+                </form>
+
+                <div className="ml-auto flex items-center gap-1">
+                    {!mobileSearchOpen && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="sm:hidden"
+                            aria-label="Search"
+                            onClick={() => {
+                                setMobileSearchOpen(true);
+                                requestAnimationFrame(() => searchInputRef.current?.focus());
+                            }}
+                        >
+                            <Search className="size-5" />
+                        </Button>
+                    )}
+
+                    {mobileSearchOpen && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="sm:hidden"
+                            aria-label="Close search"
+                            onClick={() => {
+                                setMobileSearchOpen(false);
+                                updateQuery("");
+                            }}
+                        >
+                            <X className="size-5" />
+                        </Button>
+                    )}
+
+                    {/* Authenticated members get the app's one gold button. Guests get
+                        an outline button instead: on this bar "Log in" is a doorway,
+                        not the product's primary creative act. */}
+                    <Button
+                        variant={isPublicRoute || !isAuthenticated ? "outline" : "default"}
+                        size="sm"
+                        className="hidden rounded-full px-4 sm:inline-flex"
+                        onClick={writeTarget}
+                    >
+                        {writeLabel}
+                    </Button>
+
+                    {isAuthenticated ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-1"
+                            aria-label="Your profile"
+                            aria-current={isActive("/profile") ? "page" : undefined}
+                            onClick={() => navigate("/profile")}
+                        >
+                            <Avatar className="size-8">
+                                <AvatarImage src={userInfo?.profilePicture?.url} className="object-cover" alt="" />
+                                <AvatarFallback className="bg-muted text-sm text-muted-foreground">
+                                    {(userInfo?.username?.[0] ?? "ME").toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                        </Button>
+                    ) : (
+                        <Button variant="ghost" size="sm" className="rounded-full px-3" onClick={() => navigate("/auth")}>
+                            Log in
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            <div className="flex items-center space-x-2 sm:hidden">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Open navigation menu">
-                            <Menu className="h-6 w-6" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right" className="w-80">
-                        <div className="flex flex-col h-full">
-                            <div className="space-y-4 py-6">
-                                <NavLink to="/feed" label="Explore" icon={Home} />
-                                <NavLink to="/social" label="Social" icon={Users} />
-                                {isAuthenticated && <NavLink to="/profile" label="Profile" icon={User} />}
-                            </div>
-                            <div className="mt-auto pt-6 border-t">
-                                <Button
-                                    className="w-full mb-4 bg-gradient-to-r from-indigo-600 to-purple-600"
-                                    onClick={() => isAuthenticated ? navigateToFeedAndOpenModal() : navigate("/auth")}
-                                >
-                                    {isAuthenticated ? "Create Post" : "Login"}
-                                </Button>
-                            </div>
-                        </div>
-                    </SheetContent>
-                </Sheet>
-            </div>
-        </motion.nav>
+            {/* Mobile: destinations as a second line rather than a hamburger. A menu
+                behind a tap hides the map; this map is only two items wide, and the
+                whole point of a map is that you can see it. Below sm the bar drops to
+                a single row - destinations move to the Feed's own header row only if
+                this proves too tall on a small phone. */}
+            <ul className="flex items-center gap-1 border-t border-border/60 px-2 sm:hidden">
+                {NAV_LINKS.map((link) => (
+                    <li key={link.to}>
+                        <Link
+                            to={link.to}
+                            aria-current={isActive(link.to) ? "page" : undefined}
+                            className={cn(
+                                "flex items-center border-b-2 px-3 py-2 text-sm transition-colors",
+                                isActive(link.to)
+                                    ? "border-foreground font-medium text-foreground"
+                                    : "border-transparent text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            {link.label}
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </nav>
     );
 };
 

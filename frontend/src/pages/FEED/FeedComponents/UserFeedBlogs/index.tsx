@@ -1,8 +1,7 @@
 import { BlogCard } from "@/pages/NormalComponents/BlogCard";
-import { motion } from "framer-motion";
-import { Loader2, RefreshCw, ArrowUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Loader2, RefreshCw, ArrowUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Pagination } from "../Pagination";
 import type { AxiosError } from "axios";
 
@@ -11,14 +10,14 @@ interface Blog {
     title: string;
     body: string;
     image:
-    | string
-    | {
-        url: string;
-        publicId: string;
-        width: number;
-        height: number;
-        format: string;
-    };
+        | string
+        | {
+              url: string;
+              publicId: string;
+              width: number;
+              height: number;
+              format: string;
+          };
     authorDetails: {
         username: string;
         _id: string;
@@ -52,17 +51,31 @@ interface UserFeedProps {
     userFeedDataError?: AxiosError | Error | null | undefined;
     userDataPending: boolean;
     userFeedDataPending: boolean;
+
+    /* Legacy numbered pagination — still used by the Social page. */
     onPageChange?: (page: number) => void;
+    currentPage?: number;
+
     onRefresh?: () => void;
+
+    /* Feed passes showRefresh=false because it uses the new-post pill. */
+    showRefresh?: boolean;
+
+    /* Infinite-scroll support. */
+    onLoadMore?: () => void;
+    newPostCount?: number;
+    onShowNewPosts?: () => void;
+
     feedTitle?: string;
-    currentPage: number
 }
 
 const getBlogs = (userFeedData?: UserFeedData): Blog[] => {
     return userFeedData?.data?.blogs || [];
 };
 
-const getPagination = (userFeedData?: UserFeedData): PaginationInfo | null => {
+const getPagination = (
+    userFeedData?: UserFeedData
+): PaginationInfo | null => {
     if (!userFeedData?.data?.pagination) return null;
     return userFeedData.data.pagination;
 };
@@ -82,20 +95,34 @@ function UserFeed({
     userFeedDataPending,
     onPageChange,
     onRefresh,
-    feedTitle = "Your Feed",
+    showRefresh = true,
+    onLoadMore,
+    newPostCount = 0,
+    onShowNewPosts,
+    feedTitle,
 }: UserFeedProps) {
     const [showScrollTop, setShowScrollTop] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
 
-    const blogs = useMemo(() => getBlogs(userFeedData), [userFeedData]);
-    const totalPages = useMemo(() => getTotalPages(userFeedData), [userFeedData]);
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+    const blogs = useMemo(
+        () => getBlogs(userFeedData),
+        [userFeedData]
+    );
+
+    const pagination = getPagination(userFeedData);
+
+    const totalPages = useMemo(
+        () => getTotalPages(userFeedData),
+        [userFeedData]
+    );
+
     const feedCurrentPage = getCurrentPage(userFeedData);
 
-    const handleRefresh = () => {
-        if (onRefresh) {
-            onRefresh();
-        }
-    };
+    const hasMore = pagination?.hasMore ?? false;
+
+    const handleRefresh = () => onRefresh?.();
+
     const handlePageChange = (page: number) => {
         if (page < 1 || page > totalPages) return;
         onPageChange?.(page);
@@ -104,7 +131,7 @@ function UserFeed({
     const scrollToTop = () => {
         window.scrollTo({
             top: 0,
-            behavior: 'smooth'
+            behavior: "smooth",
         });
     };
 
@@ -112,53 +139,117 @@ function UserFeed({
         const handleScroll = () => {
             setShowScrollTop(window.scrollY > 400);
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+
+        window.addEventListener("scroll", handleScroll, {
+            passive: true,
+        });
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
     }, []);
 
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
     }, [feedCurrentPage]);
+
+    /*
+     * Infinite scroll:
+     * Watch a sentinel below the last card and request another page
+     * when it comes within 600px of the viewport.
+     */
+    useEffect(() => {
+        if (!onLoadMore || !hasMore) return;
+
+        const node = sentinelRef.current;
+
+        if (!node) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) {
+                    onLoadMore();
+                }
+            },
+            {
+                rootMargin: "600px 0px",
+            }
+        );
+
+        observer.observe(node);
+
+        return () => observer.disconnect();
+    }, [onLoadMore, hasMore, blogs.length]);
 
     if (userDataPending && blogs.length === 0) {
         return (
-            <div className="h-screen w-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+                <Loader2
+                    className="size-6 animate-spin"
+                    aria-hidden="true"
+                />
+                <p className="text-sm">Loading feed…</p>
             </div>
         );
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6"
-            ref={containerRef}
-        >
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">{feedTitle}</h2>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={userFeedDataPending}
-                    className="flex items-center gap-2"
-                >
-                    {feedTitle === "Your Feed" &&<RefreshCw className={`h-4 w-4 ${userFeedDataPending ? 'animate-spin' : ''}`} />}
-                {feedTitle === "Your Feed" ? "Refresh" : ""}
-                </Button>
-            </div>
+        <div className="space-y-4">
+            {feedTitle && (
+                <div className="flex items-center justify-between gap-3">
+                    <h2 className="font-serif text-lg font-semibold">
+                        {feedTitle}
+                    </h2>
+
+                    {showRefresh && onRefresh && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRefresh}
+                            disabled={userFeedDataPending}
+                            className="flex items-center gap-2"
+                        >
+                            <RefreshCw
+                                className={`h-4 w-4 ${
+                                    userFeedDataPending
+                                        ? "animate-spin"
+                                        : ""
+                                }`}
+                                aria-hidden="true"
+                            />
+                            Refresh
+                        </Button>
+                    )}
+                </div>
+            )}
 
             {userFeedDataError && (
-                <div className="text-center py-8">
-                    <p className="text-destructive mb-4">
-                        Error loading feed: {userFeedDataError.message || "Unknown error"}
-                        {(userFeedDataError as AxiosError)?.response?.status && (
-                            <span> (Status: {(userFeedDataError as AxiosError).response!.status})</span>
+                <div className="py-8 text-center">
+                    <p className="mb-4 text-sm text-destructive">
+                        Error loading feed:{" "}
+                        {userFeedDataError.message || "Unknown error"}
+
+                        {(userFeedDataError as AxiosError)?.response
+                            ?.status && (
+                            <span>
+                                {" "}
+                                (Status:{" "}
+                                {
+                                    (userFeedDataError as AxiosError)
+                                        .response!.status
+                                }
+                                )
+                            </span>
                         )}
                     </p>
-                    <Button onClick={handleRefresh}>
+
+                    <Button
+                        variant="outline"
+                        onClick={handleRefresh}
+                    >
                         Retry
                     </Button>
                 </div>
@@ -168,33 +259,63 @@ function UserFeed({
                 <>
                     {blogs.length > 0 ? (
                         <>
+                            {newPostCount > 0 && onShowNewPosts && (
+                                <button
+                                    type="button"
+                                    onClick={onShowNewPosts}
+                                    className="sticky top-14 z-30 mx-auto flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                                >
+                                    <ArrowUp
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
+                                    {newPostCount} new{" "}
+                                    {newPostCount === 1
+                                        ? "post"
+                                        : "posts"}
+                                </button>
+                            )}
+
                             <div className="space-y-6">
                                 {blogs.map((blog, index) => (
-                                    <motion.div
-                                        key={blog._id || `blog-${index}`}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{
-                                            duration: 0.4,
-                                            delay: Math.min(index * 0.05, 0.3),
-                                            ease: "easeOut"
+                                    <BlogCard
+                                        key={
+                                            blog._id ||
+                                            `blog-${index}`
+                                        }
+                                        {...blog}
+                                        image={
+                                            typeof blog.image ===
+                                            "string"
+                                                ? {
+                                                      url: blog.image,
+                                                      publicId: "",
+                                                      width: 0,
+                                                      height: 0,
+                                                      format: "",
+                                                  }
+                                                : blog.image
+                                        }
+                                        authorDetails={{
+                                            ...blog.authorDetails,
                                         }}
-                                    >
-                                        <BlogCard
-                                            {...blog}
-                                            image={
-                                                typeof blog.image === "string"
-                                                    ? { url: blog.image, publicId: "", width: 0, height: 0, format: "" }
-                                                    : blog.image
-                                            }
-                                            authorDetails={{ ...blog.authorDetails }}
-                                        />
-                                    </motion.div>
+                                    />
                                 ))}
                             </div>
 
-                            {/* Pagination Component */}
-                            {totalPages > 1 && (
+                            {onLoadMore && (
+                                <div
+                                    ref={sentinelRef}
+                                    className="flex h-12 items-center justify-center"
+                                    aria-hidden="true"
+                                >
+                                    {userFeedDataPending && (
+                                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                                    )}
+                                </div>
+                            )}
+
+                            {onPageChange && totalPages > 1 && (
                                 <Pagination
                                     currentPage={feedCurrentPage}
                                     totalPages={totalPages}
@@ -204,12 +325,18 @@ function UserFeed({
                             )}
                         </>
                     ) : userFeedDataPending ? (
-                        <div className="h-64 flex items-center justify-center">
-                            <Loader2 className="h-8 w-8 animate-spin" />
+                        <div className="flex h-64 items-center justify-center">
+                            <Loader2
+                                className="size-8 animate-spin text-muted-foreground"
+                                aria-hidden="true"
+                            />
                         </div>
                     ) : (
-                        <div className="text-center py-12">
-                            <p className="text-muted-foreground">No blogs available</p>
+                        <div className="py-12 text-center">
+                            <p className="text-muted-foreground">
+                                No blogs available
+                            </p>
+
                             <Button
                                 variant="outline"
                                 onClick={handleRefresh}
@@ -223,22 +350,22 @@ function UserFeed({
             )}
 
             {showScrollTop && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="fixed bottom-6 left-6 z-50"
-                >
+                <div className="fixed bottom-6 left-6 z-50">
                     <Button
                         onClick={scrollToTop}
                         size="icon"
-                        className="rounded-full shadow-lg h-12 w-12 bg-primary hover:bg-primary/90"
+                        variant="outline"
+                        aria-label="Scroll back to top"
+                        className="size-12 rounded-full bg-card"
                     >
-                        <ArrowUp className="h-5 w-5" />
+                        <ArrowUp
+                            className="size-5"
+                            aria-hidden="true"
+                        />
                     </Button>
-                </motion.div>
+                </div>
             )}
-        </motion.div>
+        </div>
     );
 }
 

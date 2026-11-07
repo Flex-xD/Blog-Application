@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store";
 
@@ -7,56 +6,34 @@ const CallToAction = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAppStore();
 
-    const handleGetStarted = () => {
-        if (isAuthenticated) {
-            navigate("/feed");
-        } else {
-            navigate("/auth");
-        }
-    };
-
     return (
-        <section className="py-16 md:py-24">
-            <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 md:p-12 text-white overflow-hidden relative"
-            >
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl"></div>
+        <section
+            id="how"
+            aria-labelledby="how-heading"
+            className="border-t border-border py-12 md:py-16"
+        >
+            <div className="mx-auto max-w-2xl text-center">
+                <h2 id="how-heading" className="text-2xl md:text-3xl">
+                    How it works
+                </h2>
 
-                <div className="relative z-10 text-center max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Share Your Story?</h2>
-                    <p className="text-xl mb-8">
-                        Join our community of writers and readers. Create, connect, and inspire with every post.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button
-                            size="lg"
-                            variant="secondary"
-                            className="px-8 shadow-lg font-medium"
-                            onClick={handleGetStarted}
-                        >
-                            Start Writing Now
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="px-8 bg-transparent text-white hover:bg-white/10 border-white/20 hover:border-white/30"
-                            onClick={() => navigate("/feed")}
-                        >
-                            Explore Community
-                        </Button>
-                    </div>
-                    <p className="text-sm mt-6 text-white/80">
-                        Free forever • No credit card required • Join thousands of writers
-                    </p>
-                </div>
-            </motion.div>
+                <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+                    You write in a plain composer and hit publish. Your post lands in the feed,
+                    where readers can like it and answer in the comments. Anything you save stays
+                    with your profile, ready for the next time you sit down to write.
+                </p>
+
+                <Button
+                    variant="outline"
+                    size="lg"
+                    className="mt-7 px-8"
+                    onClick={() => navigate(isAuthenticated ? "/feed" : "/auth")}
+                >
+                    {isAuthenticated ? "Go to your feed" : "Create an account"}
+                </Button>
+            </div>
         </section>
-    )
-}
+    );
+};
 
-export default CallToAction
+export default CallToAction;

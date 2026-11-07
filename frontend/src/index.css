@@ -4,22 +4,19 @@
 /* Dark theme: REMOVED (light-only product). */
 @custom-variant dark (&:is(.dark *));
 
-/* TYPE SYSTEM — serif for titles + article body, sans for UI chrome. */
+/* TYPE SYSTEM */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
 }
 
-/*
- * Tailwind v4 / shadcn semantic mappings.
- * These connect utilities such as:
- * border-border, bg-background, text-foreground, ring-ring, etc.
- */
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Consistent sharp 4px shape system */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -64,40 +61,25 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
- * ============================================================
- * BLOGCRAFT COLOR SYSTEM
- *
- * Creative-dominant / playful / trustworthy / calm
- *
- * Strategy:
- * warm paper + ink neutrals + ONE gold accent
- * + restrained semantic colors.
- *
- * Components inherit these tokens.
- * No hardcoded brand hues.
- * ============================================================
- */
-
 :root {
-  --radius: 0.625rem;
+  --radius: 0.25rem;
 
-  /* JOB 1 — page surface + text */
+  /* Page surface + text */
   --background: oklch(0.972 0.008 88);
   --foreground: oklch(0.235 0.018 70);
 
-  /* Cards / popovers — brighter sheet on the paper */
+  /* Cards / popovers */
   --card: oklch(0.995 0.004 90);
   --card-foreground: oklch(0.235 0.018 70);
 
   --popover: oklch(0.995 0.004 90);
   --popover-foreground: oklch(0.235 0.018 70);
 
-  /* JOB 2 — brand + primary actions + active state */
+  /* Brand + primary actions */
   --primary: oklch(0.8 0.135 76);
   --primary-foreground: oklch(0.25 0.03 70);
 
-  /* JOB 3 — quiet fills */
+  /* Quiet fills */
   --secondary: oklch(0.945 0.012 88);
   --secondary-foreground: oklch(0.235 0.018 70);
 
@@ -107,7 +89,7 @@
   --accent: oklch(0.945 0.012 88);
   --accent-foreground: oklch(0.235 0.018 70);
 
-  /* JOB 4 — semantics only */
+  /* Semantic colors */
   --destructive: oklch(0.55 0.21 25);
 
   /* Borders & focus */
@@ -115,14 +97,14 @@
   --input: oklch(0.885 0.01 88);
   --ring: oklch(0.58 0.13 70);
 
-  /* Charts — currently unused */
+  /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Sidebar — mirrors the main palette */
+  /* Sidebar */
   --sidebar: oklch(0.995 0.004 90);
   --sidebar-foreground: oklch(0.235 0.018 70);
 

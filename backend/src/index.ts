@@ -16,7 +16,6 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 const allowedOrigins = [
-    'https://blog-application-frontend-hety.onrender.com',
     'http://localhost:5173'
 ];
 

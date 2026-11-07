@@ -1,321 +1,305 @@
-import { motion, AnimatePresence } from "framer-motion";
-import React, { useState } from "react";
-import { BookOpen, Feather, Lock, Mail, User, PenTool } from "react-feather";
-import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import type { AxiosError } from "axios";
+import { Button } from "@/components/ui/button";
 import useAuthMutation from "@/customHooks/AuthMutation";
-import { Loader, Sparkles } from "lucide-react";
+import useExhibitPosts from "@/customHooks/ExhibitPosts";
+import { cn } from "@/lib/utils";
+import PostExhibit from "../NormalComponents/PostExhibit";
+
+type FieldName = "identifier" | "email" | "username" | "password";
+type FieldErrors = Partial<Record<FieldName, string>>;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^[a-z_.]+$/;
+const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d)/;
+
+interface FieldProps {
+    id: FieldName;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    autoComplete: string;
+    type?: "text" | "email" | "password";
+    hint?: string;
+    error?: string;
+    disabled?: boolean;
+}
+
+const Field = ({
+    id,
+    label,
+    value,
+    onChange,
+    autoComplete,
+    type = "text",
+    hint,
+    error,
+    disabled,
+}: FieldProps) => {
+    const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+
+    return (
+        <div>
+            <label htmlFor={id} className="block text-sm font-medium">
+                {label}
+            </label>
+            <input
+                id={id}
+                name={id}
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                autoComplete={autoComplete}
+                disabled={disabled}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy}
+                className={cn(
+                    "mt-2 w-full rounded-md border bg-card px-3 py-2.5 text-[15px] outline-none transition-colors duration-150",
+                    "focus:border-ring focus:ring-[3px] focus:ring-ring/20",
+                    "disabled:opacity-60",
+                    error ? "border-destructive" : "border-input"
+                )}
+            />
+            {error ? (
+                <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm text-destructive">
+                    {error}
+                </p>
+            ) : hint ? (
+                <p id={`${id}-hint`} className="mt-1.5 text-sm text-muted-foreground">
+                    {hint}
+                </p>
+            ) : null}
+        </div>
+    );
+};
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
-    const [activeField, setActiveField] = useState<string | null>(null);
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [username, setUsername] = useState<string>("");
-    const [loginIdentifier, setLoginIdentifier] = useState<string>("");
+    const [identifier, setIdentifier] = useState("");
+    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [errors, setErrors] = useState<FieldErrors>({});
 
-    const { mutateAsync, isPending: isLoading } = useAuthMutation(!isLogin);
+    const { mutateAsync, isPending: isLoading, error: mutationError } = useAuthMutation(!isLogin);
 
-    const validateAuth = (isSignup: boolean = false) => {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!isSignup ? !email.length && !username.length : !email.length) {
-            toast.error("All fields are required!");
-            return false;
-        }
-        if (!isSignup ? !username.length && !emailPattern.test(email) : !emailPattern.test(email)) {
-            toast.error("Please enter a valid email address!");
-            return false;
-        }
-        if (!password.length) {
-            toast.error("Password is required!");
-            return false;
-        }
-        if (isSignup && !username.length) {
-            toast.error("Username is required!");
-            return false;
-        }
-        return true;
+    const { posts, isPending: isFeedPending, isSample } = useExhibitPosts(1);
+    const post = posts[0];
+    const showExhibit = isFeedPending || Boolean(post);
+
+    const serverMessage = mutationError
+        ? ((mutationError as AxiosError<{ msg?: string }>).response?.data?.msg ??
+        "Something went wrong. Try again.")
+        : null;
+
+    const clearError = (field: FieldName) => {
+        setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
     };
 
-    const handleAuth = async () => {
-        if (!validateAuth(!isLogin)) return;
-        await mutateAsync({
-            email: isLogin ? (email || loginIdentifier) : email,
-            password,
-            username: isLogin ? (username || loginIdentifier) : username,
-        });
+    const switchMode = () => {
+        setIsLogin((prev) => !prev);
+        setErrors({});
+        setPassword("");
     };
 
-    if (isLoading) return (
-        <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center space-y-4"
-            >
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="p-4 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600"
-                >
-                    <Loader className="text-white" size={32} />
-                </motion.div>
-                <p className="text-lg font-medium text-gray-700">Crafting your experience...</p>
-            </motion.div>
-        </div>
-    );
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const next: FieldErrors = {};
+
+        if (isLogin) {
+            if (!identifier.trim()) next.identifier = "Enter your username or email.";
+            if (!password) next.password = "Enter your password.";
+        } else {
+            if (!email.trim()) next.email = "Enter your email.";
+            else if (!EMAIL_RE.test(email.trim()))
+                next.email = "That doesn't look like an email address.";
+
+            if (!username.trim()) next.username = "Pick a username.";
+            else if (!USERNAME_RE.test(username.trim()))
+                next.username = "Lowercase letters, dots and underscores only.";
+
+            if (!password) next.password = "Choose a password.";
+            else if (!PASSWORD_RE.test(password))
+                next.password = "Include at least one letter and one number.";
+        }
+
+        setErrors(next);
+        if (Object.keys(next).length > 0) return;
+
+        const trimmedIdentifier = identifier.trim();
+        const identifierIsEmail = EMAIL_RE.test(trimmedIdentifier);
+
+        const payload = isLogin
+            ? {
+                  email: identifierIsEmail ? trimmedIdentifier : "",
+                  username: identifierIsEmail ? "" : trimmedIdentifier,
+                  password,
+              }
+            : { email: email.trim(), username: username.trim(), password };
+
+        void mutateAsync(payload).catch(() => undefined);
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Animated background elements */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.5 }}
-                className="absolute inset-0"
-            >
-                {[...Array(3)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        animate={{
-                            y: [0, -30, 0],
-                            x: [0, 15, 0],
-                        }}
-                        transition={{
-                            duration: 4 + i,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: i * 0.5,
-                        }}
-                        className={`absolute ${i === 0 ? 'w-8 h-8 left-1/4 top-1/4' : i === 1 ? 'w-6 h-6 right-1/3 top-1/2' : 'w-10 h-10 right-1/4 bottom-1/3'} bg-gradient-to-r from-indigo-200 to-purple-300 rounded-full opacity-20 blur-sm`}
-                    />
-                ))}
-            </motion.div>
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-full max-w-md relative z-10"
-            >
-                <motion.div
-                    whileHover={{ y: -5 }}
-                    className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/20"
+        <main className="flex min-h-screen flex-col justify-center bg-background">
+            <div className="mx-auto w-full max-w-5xl px-6 py-16 sm:px-8">
+                <div
+                    className={cn(
+                        showExhibit
+                            ? "grid gap-14 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:items-start lg:gap-20"
+                            : "max-w-md"
+                    )}
                 >
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                    <motion.section
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        aria-labelledby="auth-heading"
+                    >
+                        <Link
+                            to="/"
+                            className="font-serif text-xl tracking-tight transition-colors duration-150 hover:text-muted-foreground"
+                        >
+                            Blogcraft
+                        </Link>
 
-                    <div className="p-8">
-                        {/* Header */}
-                        <div className="flex flex-col items-center mb-8 space-y-4">
-                            <motion.div
-                                animate={{
-                                    rotate: isLogin ? [0, -5, 0] : [0, 5, 0],
-                                    scale: [1, 1.1, 1]
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                                className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg"
-                            >
-                                <BookOpen size={28} className="text-white" />
-                            </motion.div>
+                        <h1 id="auth-heading" className="mt-12 text-3xl sm:text-4xl">
+                            {isLogin ? "Welcome back." : "Create your account."}
+                        </h1>
 
-                            <motion.div
-                                key={isLogin ? "login" : "register"}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="text-center"
-                            >
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                                    {isLogin ? "Welcome Back" : "Join BlogCraft"}
-                                </h1>
-                                <p className="text-gray-600 mt-2">
-                                    {isLogin
-                                        ? "Continue your writing journey"
-                                        : "Start crafting amazing stories"}
-                                </p>
-                            </motion.div>
-                        </div>
+                        <p className="mt-3 leading-relaxed text-muted-foreground">
+                            {isLogin
+                                ? "Your drafts and posts are where you left them."
+                                : "A name, an email, and you're in."}
+                        </p>
 
-                        {/* Form Fields */}
-                        <div className="space-y-6">
-                            <AnimatePresence mode="wait">
-                                {!isLogin && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <div className="relative group">
-                                            <motion.div
-                                                animate={{
-                                                    scale: activeField === "email" ? 1.1 : 1,
-                                                    color: activeField === "email" ? "#6366f1" : "#9ca3af"
-                                                }}
-                                                className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                            >
-                                                <Mail size={18} />
-                                            </motion.div>
-                                            <motion.input
-                                                onFocus={() => setActiveField("email")}
-                                                onBlur={() => setActiveField(null)}
-                                                whileFocus={{
-                                                    borderColor: "#6366f1",
-                                                    boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)"
-                                                }}
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                placeholder="your@email.com"
-                                                className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/50 focus:outline-none transition-all group-hover:border-indigo-300"
-                                            />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Username/Email Field */}
-                            <div className="relative group">
-                                <motion.div
-                                    animate={{
-                                        scale: activeField === "username" ? 1.1 : 1,
-                                        color: activeField === "username" ? "#6366f1" : "#9ca3af"
+                        <form onSubmit={handleSubmit} noValidate className="mt-9 space-y-5">
+                            {isLogin ? (
+                                <Field
+                                    id="identifier"
+                                    label="Username or email"
+                                    value={identifier}
+                                    onChange={(value) => {
+                                        setIdentifier(value);
+                                        clearError("identifier");
                                     }}
-                                    className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                >
-                                    <User size={18} />
-                                </motion.div>
-                                <motion.input
-                                    onFocus={() => setActiveField("username")}
-                                    onBlur={() => setActiveField(null)}
-                                    whileFocus={{
-                                        borderColor: "#6366f1",
-                                        boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)"
-                                    }}
-                                    type="text"
-                                    value={isLogin ? loginIdentifier : username}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value;
-                                        setLoginIdentifier(value);
-                                        if (isLogin) {
-                                            if (value.includes("@")) {
-                                                setEmail(value);
-                                                setUsername("");
-                                            } else {
-                                                setUsername(value);
-                                                setEmail("");
-                                            }
-                                        } else {
+                                    autoComplete="username"
+                                    error={errors.identifier}
+                                    disabled={isLoading}
+                                />
+                            ) : (
+                                <>
+                                    <Field
+                                        id="email"
+                                        label="Email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(value) => {
+                                            setEmail(value);
+                                            clearError("email");
+                                        }}
+                                        autoComplete="email"
+                                        error={errors.email}
+                                        disabled={isLoading}
+                                    />
+                                    <Field
+                                        id="username"
+                                        label="Username"
+                                        value={username}
+                                        onChange={(value) => {
                                             setUsername(value);
-                                        }
-                                    }}
-                                    placeholder={isLogin ? "username or email" : "choose a username"}
-                                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/50 focus:outline-none transition-all group-hover:border-indigo-300"
-                                />
-                            </div>
-
-                            {/* Password Field */}
-                            <div className="relative group">
-                                <motion.div
-                                    animate={{
-                                        scale: activeField === "password" ? 1.1 : 1,
-                                        color: activeField === "password" ? "#6366f1" : "#9ca3af"
-                                    }}
-                                    className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                >
-                                    <Lock size={18} />
-                                </motion.div>
-                                <motion.input
-                                    onFocus={() => setActiveField("password")}
-                                    onBlur={() => setActiveField(null)}
-                                    whileFocus={{
-                                        borderColor: "#6366f1",
-                                        boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.1)"
-                                    }}
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/50 focus:outline-none transition-all group-hover:border-indigo-300"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <motion.button
-                            whileHover={{
-                                y: -2,
-                                scale: 1.02,
-                                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)"
-                            }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-4 rounded-xl font-semibold flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transition-all"
-                            disabled={isLoading}
-                            onClick={handleAuth}
-                        >
-                            <motion.div
-                                animate={{ rotate: isLoading ? 360 : 0 }}
-                                transition={{ duration: 2, repeat: isLoading ? Infinity : 0 }}
-                            >
-                                {isLoading ? <Loader size={20} /> : <Feather size={20} />}
-                            </motion.div>
-                            <span>
-                                {isLoading
-                                    ? "Crafting..."
-                                    : isLogin
-                                        ? "Sign In"
-                                        : "Start Writing"
-                                }
-                            </span>
-                            {!isLogin && !isLoading && (
-                                <Sparkles size={16} className="text-yellow-200" />
+                                            clearError("username");
+                                        }}
+                                        autoComplete="username"
+                                        hint="Lowercase letters, dots and underscores."
+                                        error={errors.username}
+                                        disabled={isLoading}
+                                    />
+                                </>
                             )}
-                        </motion.button>
 
-                        {/* Switch Auth Mode */}
-                        <div className="mt-8 text-center">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setIsLogin(!isLogin)}
-                                className="text-sm text-gray-600 hover:text-indigo-600 font-medium transition-colors"
+                            <Field
+                                id="password"
+                                label="Password"
+                                type="password"
+                                value={password}
+                                onChange={(value) => {
+                                    setPassword(value);
+                                    clearError("password");
+                                }}
+                                autoComplete={isLogin ? "current-password" : "new-password"}
+                                hint={isLogin ? undefined : "At least one letter and one number."}
+                                error={errors.password}
+                                disabled={isLoading}
+                            />
+
+                            {serverMessage && (
+                                <p role="alert" className="text-sm text-destructive">
+                                    {serverMessage}
+                                </p>
+                            )}
+
+                            <Button
+                                type="submit"
+                                size="lg"
+                                className="w-full"
+                                disabled={isLoading}
+                                aria-busy={isLoading}
                             >
-                                {isLogin
-                                    ? "New to BlogCraft? Join our community →"
-                                    : "Already have an account? Sign in →"
-                                }
-                            </motion.button>
-                        </div>
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="animate-spin" aria-hidden="true" />
+                                        {isLogin ? "Signing in…" : "Creating account…"}
+                                    </>
+                                ) : isLogin ? (
+                                    "Sign in"
+                                ) : (
+                                    "Create account"
+                                )}
+                            </Button>
+                        </form>
 
-                        {/* Features Preview */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            className="mt-8 pt-6 border-t border-gray-100"
+                        <p className="mt-8 text-sm text-muted-foreground">
+                            {isLogin ? "No account yet?" : "Already have one?"}{" "}
+                            <button
+                                type="button"
+                                onClick={switchMode}
+                                className="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors duration-150 hover:decoration-foreground"
+                            >
+                                {isLogin ? "Create one" : "Sign in"}
+                            </button>
+                        </p>
+                    </motion.section>
+
+                    {showExhibit && (
+                        <motion.aside
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.25, delay: 0.05 }}
+                            className="lg:mt-20"
                         >
-                            <p className="text-xs text-gray-500 text-center mb-3">Unlock powerful features:</p>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                {["6 Writing Tones", "AI Enhancement", "Save Blogs", "Follow Writers", "Like & Comment", "Custom Styles"].map((feature, index) => (
-                                    <motion.div
-                                        key={feature}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.6 + index * 0.1 }}
-                                        className="flex items-center space-x-1 text-gray-600"
-                                    >
-                                        <PenTool size={10} className="text-indigo-500" />
-                                        <span>{feature}</span>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </div>
-                </motion.div>
-            </motion.div>
-        </div>
+                            <p className="text-sm text-muted-foreground">
+                                {isFeedPending
+                                    ? "Loading the feed…"
+                                    : isSample
+                                      ? "A sample post"
+                                      : "From the feed"}
+                            </p>
+
+                            {post && (
+                                <div className="mt-3">
+                                    <PostExhibit post={post} variant="single" />
+                                </div>
+                            )}
+                        </motion.aside>
+                    )}
+                </div>
+            </div>
+        </main>
     );
 };
 

@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Sparkles, PenSquare, Users, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store";
 
@@ -9,77 +8,46 @@ const HeroSection = () => {
     const { isAuthenticated } = useAppStore();
 
     const handleGetStarted = () => {
-        if (isAuthenticated) {
-            navigate("/feed");
-        } else {
-            navigate("/auth");
-        }
+        navigate(isAuthenticated ? "/feed" : "/auth");
     };
 
     return (
-        <section className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
+        <section className="pb-14 pt-20 text-center md:pb-20 md:pt-28">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-4xl"
+                transition={{ duration: 0.25 }}
+                className="mx-auto max-w-3xl"
             >
-                <motion.span
-                    className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-indigo-100 text-indigo-600 mb-4"
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    Your AI-Powered Writing Companion
-                </motion.span>
-                <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                    Write, Enhance, and <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Connect</span>
+                <h1 className="text-4xl leading-[1.12] md:text-6xl">
+                    Write what you feel.
+                    <br className="hidden sm:block" /> Someone out there feels it too.
                 </h1>
-                <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                    Create stunning blog posts with AI assistance, engage with a community of writers, and share your stories with the world.
+
+                <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+                    Blogcraft is a small publishing space for honest posts. Write in your own words,
+                    publish to your feed, and hear back from the people who read it.
                 </p>
 
-                {/* Feature Highlights */}
-                <div className="flex flex-wrap justify-center gap-6 mb-8">
-                    <div className="flex items-center text-sm text-gray-600">
-                        <PenSquare className="w-4 h-4 mr-2 text-indigo-600" />
-                        AI-Enhanced Writing
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                        <Sparkles className="w-4 h-4 mr-2 text-purple-600" />
-                        6 Content Tones
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                        <Users className="w-4 h-4 mr-2 text-blue-600" />
-                        Social Community
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                        <Heart className="w-4 h-4 mr-2 text-red-600" />
-                        Real-time Engagement
-                    </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="mt-9 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
                     <Button
                         size="lg"
-                        className="px-8 shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600"
+                        className="px-8"
                         onClick={handleGetStarted}
                     >
-                        Start Writing — It's Free
+                        Start writing
                     </Button>
-                    <Button
-                        size="lg"
-                        variant="outline"
-                        className="px-8"
-                        onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+
+                    <a
+                        href="#featured"
+                        className="text-sm font-medium text-muted-foreground underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline"
                     >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        See Features
-                    </Button>
+                        See what people are publishing
+                    </a>
                 </div>
             </motion.div>
         </section>
-    )
-}
+    );
+};
 
-export default HeroSection
+export default HeroSection;

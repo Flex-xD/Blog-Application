@@ -46,7 +46,7 @@ export const followSuggestionForUser = async (req: IAuthRequest, res: Response) 
             {
                 $match: {
                     "secondDegreeConnections._id": {
-                        $nin: [...(user?.following || []), userId] // safe fallback
+                        $nin: [...(user?.following || []), userId] 
                     }
                 }
             },

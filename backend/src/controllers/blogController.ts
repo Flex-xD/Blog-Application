@@ -407,7 +407,6 @@ export const getFeedController = async (req: IAuthRequest, res: Response) => {
 };
 
 
-
 export const saveBlog = async (req: IAuthRequest, res: Response) => {
     try {
         const { userId } = req;
@@ -1095,3 +1094,90 @@ export const commentOnBlog = async (req: IAuthRequest, res: Response) => {
         await session.endSession()
     }
 }
+
+export const getFeaturedBlogs = async (req: Request, res: Response) => {
+    try {
+        const { limit = "3" } = req.query as { limit?: string };
+
+        const limitNum = parseInt(limit, 10);
+
+        if (isNaN(limitNum) || limitNum < 1 || limitNum > 6) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid limit parameter",
+            });
+        }
+
+        const pipeline: PipelineStage[] = [
+            {
+                $addFields: {
+                    likesCount: {
+                        $size: { $ifNull: ["$likes", []] },
+                    },
+                    commentsCount: {
+                        $size: { $ifNull: ["$comments", []] },
+                    },
+                },
+            },
+            {
+                $addFields: {
+                    popularityScore: {
+                        $add: [
+                            {
+                                $multiply: [
+                                    "$likesCount",
+                                    POPULARITY_WEIGHTS.likes,
+                                ],
+                            },
+                            {
+                                $multiply: [
+                                    "$commentsCount",
+                                    POPULARITY_WEIGHTS.comments,
+                                ],
+                            },
+                        ],
+                    },
+                },
+            },
+            {
+                $sort: {
+                    popularityScore: -1,
+                    createdAt: -1,
+                },
+            },
+            {
+                $limit: limitNum,
+            },
+            {
+                $project: {
+                    title: 1,
+                    body: 1,
+                    image: {
+                        $ifNull: ["$image", { url: null }],
+                    },
+                    createdAt: 1,
+                    likesCount: 1,
+                    commentsCount: 1,
+                    "authorDetails._id": 1,
+                    "authorDetails.username": 1,
+                    "authorDetails.profilePicture": 1,
+                },
+            },
+        ];
+
+        const blogs = await Blog.aggregate(pipeline);
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Featured blogs fetched successfully",
+            data: { blogs },
+        });
+    } catch (error) {
+        return sendError(res, {
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            error,
+        });
+    }
+};

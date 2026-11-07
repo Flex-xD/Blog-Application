@@ -1,12 +1,15 @@
 import axios from "axios";
 
+const API_BASE_URL =
+    import.meta.env.VITE_BASE_URL?.trim() || "http://localhost:4000";
+
 const apiClient = axios.create({
-    baseURL:`${import.meta.env.VITE_BASE_URL}/api` || "http://localhost:4000/api" , 
-    withCredentials:true , 
-    timeout:10000 , 
-    headers:{
-        "Content-Type":"application/json" , 
-    }
-})
+    baseURL: `${API_BASE_URL}/api`,
+    withCredentials: true,
+    timeout: 10000,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
 
 export default apiClient;

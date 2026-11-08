@@ -59,7 +59,8 @@ export const registerController = async (req: Request, res: Response) => {
             saves: [],
             userBlogs: [],
         });
-        const token = await createtoken(user._id as string, user.email);
+        // * See if it causes any bugs
+        const token = await createtoken(user._id.toString(), user.email);
         res.cookie("token", token, {
             httpOnly: false,
             secure: false,          
@@ -91,15 +92,13 @@ export const loginController = async (req: Request, res: Response) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "User does not exist !" });
         }
         const match = await bcrypt.compare(password, user.password);
-        console.log(user.password)
-        console.log(match);
         if (!match) {
             return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid credentials !" });
         }
         if (req.cookies.token) {
             res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "strict" })
         }
-        const token = await createtoken(user._id as string, user.email);
+        const token = await createtoken(user._id.toString(), user.email);
         res.cookie("token", token, {
             httpOnly: false,
             secure: false,

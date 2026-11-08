@@ -93,17 +93,17 @@ const ProfileModal = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden"
+                        className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        <div className="flex justify-between items-center p-6 border-b border-border">
+                            <h2 className="font-serif text-2xl">
                                 Profile
                             </h2>
                             <button
                                 onClick={onClose}
-                                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                className="p-2 rounded-full hover:bg-accent transition-colors"
                                 aria-label="Close modal"
                             >
                                 <X size={20} />
@@ -117,7 +117,7 @@ const ProfileModal = ({
                                 <div className="flex flex-col md:flex-row items-start gap-6">
                                     {/* Profile Image */}
                                     <div className="flex-shrink-0">
-                                        <div className="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 overflow-hidden border-2 border-white shadow-sm">
+                                        <div className="h-24 w-24 overflow-hidden rounded-full border border-border bg-muted">
                                             {user.profilePicture ? (
                                                 <img
                                                     src={user.profilePicture.url}
@@ -125,7 +125,7 @@ const ProfileModal = ({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-gray-100 text-indigo-500">
+                                                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
                                                     <UserCheck size={32} />
                                                 </div>
                                             )}
@@ -134,20 +134,20 @@ const ProfileModal = ({
 
                                     {/* User Details */}
                                     <div className="flex-grow">
-                                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                        <h1 className="text-2xl font-bold text-foreground mb-2">
                                             {user.username}
                                         </h1>
 
                                         {user.bio && (
-                                            <p className="text-gray-600 mb-4">{user.bio}</p>
+                                            <p className="text-muted-foreground mb-4">{user.bio}</p>
                                         )}
 
                                         <div className="flex flex-wrap gap-4 mb-4">
-                                            <div className="flex items-center text-gray-500">
+                                            <div className="flex items-center text-muted-foreground">
                                                 <Calendar size={16} className="mr-1" />
                                                 <span className="text-sm">Joined {formatDate(user.createdAt)}</span>
                                             </div>
-                                            <div className="flex items-center text-gray-500">
+                                            <div className="flex items-center text-muted-foreground">
                                                 <BookOpen size={16} className="mr-1" />
                                                 <span className="text-sm">{blogs.length} blogs</span>
                                             </div>
@@ -155,12 +155,12 @@ const ProfileModal = ({
 
                                         <div className="flex gap-6 mb-4">
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900">{user.followers?.length || 0}</span>
-                                                <span className="text-sm text-gray-500">Followers</span>
+                                                <span className="font-semibold text-foreground">{user.followers?.length || 0}</span>
+                                                <span className="text-sm text-muted-foreground">Followers</span>
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900">{user.following?.length || 0}</span>
-                                                <span className="text-sm text-gray-500">Following</span>
+                                                <span className="font-semibold text-foreground">{user.following?.length || 0}</span>
+                                                <span className="text-sm text-muted-foreground">Following</span>
                                             </div>
                                         </div>
 
@@ -168,8 +168,8 @@ const ProfileModal = ({
                                             <button
                                                 onClick={handleOptimisticFollow}
                                                 className={`px-4 py-2 rounded-lg font-medium transition-all ${optimisticFollowing
-                                                    ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
+                                                    ? 'border border-border bg-card text-foreground hover:bg-accent'
+                                                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
                                                     }`}
                                             >
                                                 <div className="flex items-center">
@@ -193,9 +193,9 @@ const ProfileModal = ({
 
                             {/* User's Blogs Section */}
                             {blogs.length > 0 && (
-                                <div className="border-t border-gray-100 p-6">
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                                        <BookOpen size={20} className="mr-2 text-indigo-500" />
+                                <div className="border-t border-border p-6">
+                                    <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
+                                        <BookOpen size={20} className="mr-2 text-muted-foreground" />
                                         Recent Blogs
                                     </h3>
 
@@ -211,9 +211,6 @@ const ProfileModal = ({
                                                 likes={blog.likes}
                                                 comments={blog.comments}
                                                 createdAt={blog.createdAt}
-                                                updatedAt={blog.updatedAt}
-                                                onLike={(id) => console.log(`Liked post with id: ${id}`)}
-                                                onSave={(id) => console.log(`Saved post with id: ${id}`)}
                                             />
                                         ))}
                                     </div>
@@ -224,18 +221,18 @@ const ProfileModal = ({
                                             <button
                                                 onClick={prevPage}
                                                 disabled={currentPage === 0}
-                                                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="p-2 rounded-full hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
                                                 aria-label="Previous page"
                                             >
                                                 <ChevronLeft size={20} />
                                             </button>
-                                            <span className="text-sm text-gray-600">
+                                            <span className="text-sm text-muted-foreground">
                                                 Page {currentPage + 1} of {totalPages}
                                             </span>
                                             <button
                                                 onClick={nextPage}
                                                 disabled={currentPage === totalPages - 1}
-                                                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="p-2 rounded-full hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
                                                 aria-label="Next page"
                                             >
                                                 <ChevronRight size={20} />

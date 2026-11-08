@@ -13,28 +13,11 @@ interface NavLinkItem {
     label: string;
 }
 
-/* Destinations are content, not chrome: labels carry their own meaning, so no
-   icon is needed to decode them. Profile is reached through the avatar below,
-   which keeps this list to the two places a reader actually goes. */
 const NAV_LINKS: NavLinkItem[] = [
     { to: "/feed", label: "Explore" },
-    { to: "/social", label: "Social" },
+    { to: "/social", label: "People" },
 ];
 
-/* One navbar for the whole app. It is a bar, not a card: flat paper, hairline
-   border, no blur, no gradient, no motion for its own sake.
-
-   Three jobs, in weight order:
-   1. brand        - the gold mark. The only other gold on this bar is the
-                     primary action, and that is never gold on the public
-                     landing, where the hero owns the accent.
-   2. destinations - labels with a quiet active state (ink, not hue).
-   3. search       - lives in the URL (?q=), so it works from any route and
-                     survives reload. Type here and you land on the feed with
-                     the query applied; on the feed itself it updates live.
-
-   The bar has exactly one hover response (color), one active response (ink
-   weight + a hairline mark) and no page-transition animation. */
 const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -47,18 +30,13 @@ const Navbar = () => {
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
-    /* The URL is the source of truth (back/forward, cleared query from a link).
-       Only adopt it when it differs, or we would fight the caret mid-word. */
     useEffect(() => {
         if (routeSearch !== term) setTerm(routeSearch);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [routeSearch]);
 
     const onFeed = location.pathname === "/feed";
 
-    /* Public routes (/) are the one place where this bar must not spend gold:
-       the landing's own CTA is the page's primary action, and two gold buttons
-       in one view means neither reads as primary. */
     const isPublicRoute = location.pathname === "/";
 
     const writeTarget = () => {
@@ -110,9 +88,6 @@ const Navbar = () => {
                     <span className="hidden text-base font-semibold sm:block">BlogCraft</span>
                 </Link>
 
-                {/* Destinations: labels, always visible. The active page is marked by
-                    ink weight and a hairline underline - never by a hue, because hue
-                    here would compete with the gold action for "notice me". */}
                 <ul className="hidden items-center gap-1 sm:flex">
                     {NAV_LINKS.map((link) => (
                         <li key={link.to}>
@@ -131,12 +106,6 @@ const Navbar = () => {
                         </li>
                     ))}
                 </ul>
-
-                {/* Search. On >= sm it sits in the bar; below sm it takes over the bar
-                    when opened, because a 375px screen cannot hold brand + labels +
-                    a field + an action + an avatar at once. The box writes ?q= only
-                    while on the feed (live filtering); anywhere else it navigates on
-                    submit, so half-typed text never yanks a guest off the landing. */}
                 <form
                     onSubmit={submitSearch}
                     role="search"
@@ -187,10 +156,6 @@ const Navbar = () => {
                             <X className="size-5" />
                         </Button>
                     )}
-
-                    {/* Authenticated members get the app's one gold button. Guests get
-                        an outline button instead: on this bar "Log in" is a doorway,
-                        not the product's primary creative act. */}
                     <Button
                         variant={isPublicRoute || !isAuthenticated ? "outline" : "default"}
                         size="sm"
@@ -223,12 +188,6 @@ const Navbar = () => {
                     )}
                 </div>
             </div>
-
-            {/* Mobile: destinations as a second line rather than a hamburger. A menu
-                behind a tap hides the map; this map is only two items wide, and the
-                whole point of a map is that you can see it. Below sm the bar drops to
-                a single row - destinations move to the Feed's own header row only if
-                this proves too tall on a small phone. */}
             <ul className="flex items-center gap-1 border-t border-border/60 px-2 sm:hidden">
                 {NAV_LINKS.map((link) => (
                     <li key={link.to}>

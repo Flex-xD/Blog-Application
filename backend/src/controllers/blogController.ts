@@ -7,7 +7,6 @@ import mongoose, { isValidObjectId, ObjectId, PipelineStage, Types } from "mongo
 import { IFeedQuery } from "../types";
 import cloudinary from "../config/cloudinary";
 import streamifier from "streamifier";
-import { logger } from "../utils";
 
 
 export function uploadBufferToCloudinary(
@@ -134,7 +133,7 @@ export const createBlogController = async (req: IAuthRequest, res: Response) => 
             })
 
             await userBlog.save({ session });
-            user.userBlogs.push(userBlog._id as unknown as mongoose.Types.ObjectId);
+            user.userBlogs.push(userBlog._id);
             await user.save({ session });
             await session.commitTransaction();
             console.log("Blog created successfully ! : ", userBlog);
@@ -175,7 +174,7 @@ export const getUserBlogs = async (req: IAuthRequest, res: Response) => {
             statusCode: StatusCodes.OK,
             success: true,
             msg: "User Blogs found !",
-            data: user.userBlogs as unknown as IBlog[]
+            data: user.userBlogs 
         })
     } catch (error) {
         sendError(res, { error });

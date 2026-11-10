@@ -1,12 +1,14 @@
-import React, { useContext } from 'react';
-import { motion } from 'framer-motion';
+import React, { useContext, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Shield, X } from 'lucide-react';
-import { modalVariants } from '@/types';
-import ModalWrapper from '@/pages/NormalComponents/ModelWrapper';
-import { backdropVariants } from '@/constants/varients';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import useEnhanceContentMutation from '@/customHooks/AIEnhancement';
-import { toast } from 'sonner';
 import { BlogFormContext } from '@/context';
 
 interface CreateAIModalProps {
@@ -20,14 +22,18 @@ interface CreateAIModalProps {
     setContentToEnhance: React.Dispatch<React.SetStateAction<string>>;
 }
 
+
 const tones = [
-    { id: 'professional', name: 'Professional', emoji: '💼', description: 'Formal and business-like' },
-    { id: 'casual', name: 'Casual', emoji: '😊', description: 'Friendly and informal' },
-    { id: 'persuasive', name: 'Persuasive', emoji: '🎯', description: 'Convincing and compelling' },
-    { id: 'educational', name: 'Educational', emoji: '📚', description: 'Informative and clear' },
-    { id: 'storytelling', name: 'Storytelling', emoji: '📖', description: 'Narrative and engaging' },
-    { id: 'inspirational', name: 'Inspirational', emoji: '✨', description: 'Motivational and uplifting' },
+    { id: 'professional', name: 'Professional', description: 'Formal and business-like' },
+    { id: 'casual', name: 'Casual', description: 'Friendly and informal' },
+    { id: 'persuasive', name: 'Persuasive', description: 'Convincing and compelling' },
+    { id: 'educational', name: 'Educational', description: 'Informative and clear' },
+    { id: 'storytelling', name: 'Storytelling', description: 'Narrative and engaging' },
+    { id: 'inspirational', name: 'Inspirational', description: 'Motivational and uplifting' },
 ];
+
+const fieldClass =
+    'mt-2 w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm leading-relaxed outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50';
 
 const CreateAIModal: React.FC<CreateAIModalProps> = ({
     show,
@@ -40,9 +46,15 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
     setContentToEnhance,
 }) => {
     const { blogForm, dispatch } = useContext(BlogFormContext)!;
-    const { mutateAsync, isPending, isError, error } = useEnhanceContentMutation();
+    const { mutateAsync, isPending } = useEnhanceContentMutation();
+
+    /* The mutation's own isError never reached the dialog before — the failure
+       surfaced as a toast while the modal sat there looking untouched. */
+    const [failed, setFailed] = useState(false);
 
     const handleEnhance = async () => {
+        setFailed(false);
+
         try {
             const payload = {
                 title: blogForm.title || undefined,
@@ -52,163 +64,186 @@ const CreateAIModal: React.FC<CreateAIModalProps> = ({
             };
 
             const response = await mutateAsync(payload);
+
             if (response.success && response.data) {
-                dispatch({ type: 'SET_TITLE', payload: response.data.title });
-                dispatch({ type: 'SET_BODY', payload: response.data.body });
+                dispatch({
+                    type: 'SET_TITLE',
+                    payload: response.data.title,
+                });
+
+                dispatch({
+                    type: 'SET_BODY',
+                    payload: response.data.body,
+                });
+
                 setContentToEnhance(response.data.body);
                 setShow(false);
+            } else {
+                setFailed(true);
             }
-        } catch (err) {
-            console.log({ err });
-            toast.error("Failed to enhance content, please try again later!");
+        } catch {
+            setFailed(true);
         }
     };
 
     const isButtonDisabled = isPending || !contentToEnhance.trim();
 
     return (
-        <ModalWrapper show={show} backdropVariants={backdropVariants} zIndex={70}>
-            <motion.div
-                variants={modalVariants}
-                initial="closed"
-                animate="open"
-                exit="closed"
-                className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-            >
-                {/* Header - Mobile Optimized */}
-                <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 flex justify-between items-start sm:items-center">
-                    <div className="flex items-start space-x-3 flex-1 min-w-0">
-                        <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex-shrink-0 mt-1">
-                            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
-                                AI Content Enhancement
-                            </h3>
-                            <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
-                                Choose a tone or customize your enhancement
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setShow(false)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 sm:p-2 hover:bg-white rounded-lg flex-shrink-0 ml-2"
-                    >
-                        <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </button>
+        <Dialog
+            open={show}
+            onOpenChange={(open) => !open && setShow(false)}
+        >
+            <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-sm border-border p-0 shadow-none">
+                <div className="border-b border-border px-6 py-4">
+                    <DialogTitle className="font-serif text-2xl leading-tight tracking-tight">
+                        Rewrite with AI
+                    </DialogTitle>
+
+                    <DialogDescription className="mt-1">
+                        Choose a tone, or write the instruction yourself. Enhancing replaces your draft.
+                    </DialogDescription>
                 </div>
 
-                {/* Body - Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                    {/* Tone Selection - Mobile Grid */}
+                <div className="max-h-[60vh] space-y-6 overflow-y-auto px-6 py-5">
                     <div>
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-                            Select Tone
-                        </h4>
-                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                            {tones.map((tone) => (
-                                <button
-                                    key={tone.id}
-                                    onClick={() => setSelectedTone(tone.id)}
-                                    className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all duration-150 min-h-[80px] sm:min-h-[90px] ${selectedTone === tone.id
-                                        ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                                        <span className="text-xl sm:text-2xl">{tone.emoji}</span>
-                                        <span className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                        <div className="flex items-baseline justify-between">
+                            <h3 className="text-sm font-medium">Tone</h3>
+                            <span className="text-xs text-muted-foreground">
+                                Optional
+                            </span>
+                        </div>
+
+                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            {tones.map((tone) => {
+                                const selected = selectedTone === tone.id;
+
+                                return (
+                                    <button
+                                        key={tone.id}
+                                        type="button"
+                                        /* Pressing the chosen tone again clears it — otherwise
+                                           there is no way back to "no tone" once you pick one. */
+                                        onClick={() =>
+                                            setSelectedTone(selected ? '' : tone.id)
+                                        }
+                                        aria-pressed={selected}
+                                        className={cn(
+                                            'rounded-sm border px-3 py-2 text-left transition-colors',
+                                            selected
+                                                ? 'border-foreground bg-muted'
+                                                : 'border-border hover:bg-muted/60'
+                                        )}
+                                    >
+                                        <span className="block text-sm font-medium">
                                             {tone.name}
                                         </span>
-                                    </div>
-                                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                                        {tone.description}
-                                    </p>
-                                </button>
-                            ))}
+
+                                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                                            {tone.description}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* Custom Instructions */}
-                    <div className="space-y-3 sm:space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">
-                                Custom Instructions
-                            </h4>
-                            <span className="text-xs sm:text-sm text-gray-500">Optional</span>
-                        </div>
+                    <div>
+                        <label
+                            htmlFor="ai-instructions"
+                            className="text-sm font-medium"
+                        >
+                            Instructions
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                Optional
+                            </span>
+                        </label>
+
                         <textarea
+                            id="ai-instructions"
                             value={customInstructions}
-                            onChange={(e) => setCustomInstructions(e.target.value)}
-                            placeholder="Specify exactly how you want the AI to enhance your content..."
-                            className="w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-150 resize-none placeholder-gray-400 text-sm sm:text-base"
+                            onChange={(event) =>
+                                setCustomInstructions(event.target.value)
+                            }
+                            placeholder="Shorten the opening, keep the examples, cut the adverbs…"
+                            rows={3}
+                            className={fieldClass}
                         />
                     </div>
 
-                    {/* Content Preview */}
-                    <div className="space-y-3 sm:space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">
-                                Content to Enhance
-                            </h4>
-                            <button
-                                onClick={() => setContentToEnhance(blogForm.body)}
-                                className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-150 text-left sm:text-right whitespace-nowrap"
+                    <div>
+                        <div className="flex items-baseline justify-between">
+                            <label
+                                htmlFor="ai-content"
+                                className="text-sm font-medium"
                             >
-                                Use current content
+                                Text to enhance
+                            </label>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setContentToEnhance(blogForm.body)
+                                }
+                                className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                            >
+                                Use current draft
                             </button>
                         </div>
+
                         <textarea
+                            id="ai-content"
                             value={contentToEnhance}
-                            onChange={(e) => setContentToEnhance(e.target.value)}
-                            placeholder="Paste your content here for AI enhancement..."
-                            className="w-full min-h-[120px] sm:min-h-[140px] p-3 sm:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-150 resize-none placeholder-gray-400 text-sm sm:text-base"
+                            onChange={(event) =>
+                                setContentToEnhance(event.target.value)
+                            }
+                            placeholder="Paste the text you want rewritten."
+                            rows={7}
+                            className={fieldClass}
                         />
                     </div>
+
+                    {failed && (
+                        <p role="alert" className="text-sm text-destructive">
+                            That didn&rsquo;t go through. Your draft is unchanged — try again.
+                        </p>
+                    )}
                 </div>
 
-                {/* Footer - Mobile Stacked Layout */}
-                <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50">
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4">
-                        {/* Security Info */}
-                        <div className="flex items-center justify-center sm:justify-start space-x-2 text-xs sm:text-sm text-gray-600">
-                            <Shield className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="text-center sm:text-left">Your content is secure and private</span>
-                        </div>
+                <div className="flex flex-col-reverse gap-2 border-t border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-muted-foreground">
+                        Enhancing sends this text to the AI service.
+                    </p>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col-reverse xs:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShow(false)}
-                                className="w-full sm:w-auto order-2 xs:order-1"
-                                size="sm"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleEnhance}
-                                disabled={isButtonDisabled}
-                                className="w-full sm:w-auto order-1 xs:order-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
-                                size="sm"
-                            >
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-2" />
-                                        <span className="text-xs sm:text-sm">Enhancing...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                                        <span className="text-xs sm:text-sm">Enhance Content</span>
-                                    </>
-                                )}
-                            </Button>
-                        </div>
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShow(false)}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            onClick={handleEnhance}
+                            disabled={isButtonDisabled}
+                            /* Not gold: the gold in this flow belongs to Publish, which is
+                               sitting one layer below this dialog. */
+                            className="bg-foreground text-background hover:bg-foreground/90"
+                        >
+                            {isPending && (
+                                <Loader2
+                                    className="size-4 animate-spin"
+                                    aria-hidden="true"
+                                />
+                            )}
+
+                            {isPending ? 'Enhancing' : 'Enhance draft'}
+                        </Button>
                     </div>
                 </div>
-            </motion.div>
-        </ModalWrapper>
+            </DialogContent>
+        </Dialog>
     );
 };
 

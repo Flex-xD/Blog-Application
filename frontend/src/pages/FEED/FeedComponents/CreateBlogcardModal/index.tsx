@@ -1,149 +1,158 @@
-import React, { useContext, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useContext } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ImageIcon, Sparkles } from "lucide-react";
-import { backdropVariants } from "@/constants/varients";
-import { modalVariants } from "@/types";
-import { useUserProfileData } from "@/customHooks/UserDataFetching";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, ImageIcon, Sparkles, X } from "lucide-react";
 import { BlogFormContext } from "@/context";
 
 interface CreateBlogCardModalProps {
     show: boolean;
     setShow: React.Dispatch<React.SetStateAction<boolean>>;
     setShowAIModal: React.Dispatch<React.SetStateAction<boolean>>;
-    // Removed postingBlogPending prop; get from context
-    // Removed onClearImage prop; handle with dispatch inside
-    onPostSuccess: () => void; // New prop to call refreshFeed after successful post
+    onPostSuccess: () => void;
 }
 
 const CreateBlogCardModal: React.FC<CreateBlogCardModalProps> = ({
     show,
     setShow,
     setShowAIModal,
-    onPostSuccess
+    onPostSuccess,
 }) => {
-    const handleClose = () => {
-        setShow(false);
-        // No need for onClearImage; clear on close if desired, but already handled in parent effect or elsewhere
-    };
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const { data: userInfo } = useUserProfileData();
-    const { blogForm, handleImageUpload, handleBlogPost, dispatch, postBlogPending } = useContext(BlogFormContext)!; // Add postBlogPending here
+    const handleClose = () => setShow(false);
+
+    const {
+        blogForm,
+        handleImageUpload,
+        handleBlogPost,
+        dispatch,
+        postBlogPending,
+    } = useContext(BlogFormContext)!;
+
     return (
-        <AnimatePresence>
-            {show && (
-                <motion.div
-                    key="create-modal"
-                    initial="closed"
-                    animate="open"
-                    exit="closed"
-                    variants={backdropVariants}
-                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                >
-                    <motion.div
-                        variants={modalVariants}
-                        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-                    >
-                        {/* Header */}
-                        <div className="p-4 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">Create New Blog</h3>
-                                <button
-                                    onClick={handleClose}
-                                    className="text-gray-500 hover:text-gray-700 transition-colors duration-150"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
+        <Dialog
+            open={show}
+            onOpenChange={(open) => !open && handleClose()}
+        >
+            <DialogContent className="max-w-2xl gap-0 overflow-hidden rounded-sm border-border p-0 shadow-none">
+                <DialogTitle className="sr-only">New post</DialogTitle>
 
-                        <div className="flex-1 overflow-y-auto p-4">
-                            <div className="space-y-4">
-                                {blogForm.imagePreview && (
-                                    <div className="relative float-left mr-4 mb-2">
-                                        <img
-                                            src={blogForm.imagePreview}
-                                            alt="Preview"
-                                            className="w-32 h-32 object-cover rounded-lg"
-                                        />
-                                        <button
-                                            onClick={() => dispatch({ type: "SET_IMAGE", payload: { file: null, preview: null } })} // Handle clear directly with dispatch
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors duration-150"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                )}
+                <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+                    <input
+                        value={blogForm.title}
+                        onChange={(event) =>
+                            dispatch({
+                                type: "SET_TITLE",
+                                payload: event.target.value,
+                            })
+                        }
+                        placeholder="Title"
+                        aria-label="Title"
+                        className="w-full bg-transparent font-serif text-2xl tracking-tight outline-none placeholder:text-muted-foreground/70"
+                    />
 
-                                <Input
-                                    value={blogForm.title}
-                                    onChange={(e) => dispatch({ type: "SET_TITLE", payload: e.target.value })}
-                                    placeholder="Blog Title"
-                                    className="text-xl font-bold border-none focus-visible:ring-0"
-                                />
+                    <textarea
+                        value={blogForm.body}
+                        onChange={(event) =>
+                            dispatch({
+                                type: "SET_BODY",
+                                payload: event.target.value,
+                            })
+                        }
+                        placeholder="Write it down…"
+                        aria-label="Body"
+                        className="mt-3 min-h-[240px] w-full resize-none bg-transparent text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground/70"
+                    />
 
-                                <div className="flex items-center space-x-3 clear-both">
-                                    <Avatar className="h-10 w-10 overflow-hidden">
-                                        <AvatarImage
-                                            src={userInfo?.profilePicture?.url}
-                                            className="object-cover h-full w-full"
-                                        />
-                                        <AvatarFallback>ME</AvatarFallback>
-                                    </Avatar>
-                                </div>
+                    {blogForm.imagePreview && (
+                        <div className="relative mt-4 inline-block">
+                            <img
+                                src={blogForm.imagePreview}
+                                alt="Selected cover"
+                                className="max-h-40 rounded-sm border border-border object-cover"
+                            />
 
-                                <textarea
-                                    value={blogForm.body}
-                                    onChange={(e) => dispatch({ type: "SET_BODY", payload: e.target.value })}
-                                    placeholder="Write your blog content here..."
-                                    className="w-full min-h-[200px] p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-
-                                <div className="flex items-center gap-2">
-                                    <Button variant="ghost" className="relative">
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        />
-                                        <ImageIcon className="h-4 w-4 mr-2" />
-                                        Add Image
-                                    </Button>
-                                    <Button variant="ghost" onClick={() => setShowAIModal(true)}>
-                                        <Sparkles className="h-4 w-4 mr-2" />
-                                        AI
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 border-t border-gray-200 flex justify-end gap-3">
-                            <Button variant="outline" onClick={handleClose}>
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={async () => {
-                                    await handleBlogPost(); // Await the post
-                                    onPostSuccess(); // Refresh feed
-                                    setShow(false); // Close modal after success
-                                }}
-                                disabled={postBlogPending}
-                                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    dispatch({
+                                        type: "SET_IMAGE",
+                                        payload: {
+                                            file: null,
+                                            preview: null,
+                                        },
+                                    })
+                                }
+                                aria-label="Remove image"
+                                className="absolute -right-2 -top-2 rounded-full border border-border bg-background p-1 text-muted-foreground transition-colors hover:text-foreground"
                             >
-                                {postBlogPending && (
-                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                )}
-                                Publish
-                            </Button>
+                                <X
+                                    className="size-3"
+                                    aria-hidden="true"
+                                />
+                            </button>
                         </div>
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 border-t border-border px-4 py-2.5">
+                    <div className="flex items-center gap-1">
+                        <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-within:ring-[3px] focus-within:ring-ring/50">
+                            <ImageIcon
+                                className="size-4"
+                                aria-hidden="true"
+                            />
+                            Image
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="sr-only"
+                            />
+                        </label>
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAIModal(true)}
+                        >
+                            <Sparkles
+                                className="size-4"
+                                aria-hidden="true"
+                            />
+                            Enhance
+                        </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleClose}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            onClick={async () => {
+                                await handleBlogPost();
+                                onPostSuccess();
+                                setShow(false);
+                            }}
+                            disabled={postBlogPending}
+                        >
+                            {postBlogPending && (
+                                <Loader2
+                                    className="size-4 animate-spin"
+                                    aria-hidden="true"
+                                />
+                            )}
+                            Publish
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 };
 

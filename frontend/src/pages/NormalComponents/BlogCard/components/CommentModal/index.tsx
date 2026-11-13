@@ -5,31 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Send } from 'lucide-react';
 import useCommentMutation from '@/customHooks/CommentOnBlog';
-import type { IUser } from '@/types';
-
-interface CommentAuthor {
-  _id: string;
-  profilePicture?: string;
-  username: string;
-}
-
-interface Comment {
-  _id?: string;
-  commentAuthor: CommentAuthor;
-  body: string;
-  date: string;
-}
+import type { IUser, TUserComment } from '@/types';
 
 interface CommentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  comments: Comment[];
+  comments: TUserComment[];
   blogId: string;
   userInfo: IUser;
-  setBlogComments: React.Dispatch<SetStateAction<Comment[]>>;
+  setBlogComments: React.Dispatch<SetStateAction<TUserComment[]>>;
 }
 
-const formatCommentDate = (value: string) => {
+const formatCommentDate = (value: Date | string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -64,16 +51,14 @@ const CommentModalComponent: React.FC<CommentModalProps> = ({
         setNewComment('');
 
         if (response?.data) {
-          const newCommentObj: Comment = {
+          const newCommentObj: TUserComment = {
             commentAuthor: {
               _id: response.data.commentAuthor._id,
               username: response.data.commentAuthor.username,
               profilePicture: response.data.commentAuthor.profilePicture || ''
             },
             body: response.data.body || '',
-            date: typeof response.data.date === 'string'
-              ? response.data.date
-              : response.data.date.toISOString()
+            date: new Date(response.data.date)
           };
 
           setBlogComments(prev => [...prev, newCommentObj]);
@@ -104,13 +89,11 @@ const CommentModalComponent: React.FC<CommentModalProps> = ({
               No comments yet. Say the first thing.
             </p>
           ) : (
-            /* No entrance animation per row. A comment list is read, not performed —
-               and the old per-row fade ran on a list, which reads as delay. */
             <ul className="divide-y divide-border">
               {comments.map((comment, index) => {
                 const posted = formatCommentDate(comment.date);
                 return (
-                  <li key={comment._id || index} className="flex items-start gap-3 py-4">
+                  <li key={index} className="flex items-start gap-3 py-4">
                     <Avatar className="size-8 shrink-0">
                       <AvatarImage src={comment.commentAuthor?.profilePicture || undefined} alt="" />
                       <AvatarFallback className="bg-muted text-xs text-muted-foreground">

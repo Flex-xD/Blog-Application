@@ -294,20 +294,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         }
     };
 
-    const handleBlogDeleted = useCallback((deletedBlogId: string) => {
-        setDisplayBlogs(prev =>
-            prev.filter(blog => blog._id !== deletedBlogId)
-        );
-
-        setSavedBlogs(prev =>
-            prev.filter(blog => blog._id !== deletedBlogId)
-        );
-
-        setSavedBlogIds(prev =>
-            prev.filter(id => id !== deletedBlogId)
-        );
-    }, []);
-
     const savedBlogIdSet = useMemo(
         () => new Set(savedBlogIds),
         [savedBlogIds]
@@ -356,7 +342,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 onSave={isSaved ? handleUnsave : undefined}
                 isInitiallySaved={isSaved}
                 isSaveLoading={unsaveMutation.isPending}
-                onBlogDeleted={() => handleBlogDeleted(blog._id)}
             />
         );
     };
@@ -665,7 +650,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     );
 };
 
-// Skeleton placeholder
+
 const ProfileSkeleton = () => (
     <>
         <Navbar />

@@ -5,6 +5,7 @@ import Auth from './pages/AUTH';
 import { UserProfilePage } from './pages/PROFILE';
 import Feed from './pages/FEED';
 import Social from './pages/Social';
+import PostPage from './pages/POST';
 import WithAuth from './pages/AUTH/AuthComponents/WithAuthWrapper';
 import { useAppStore } from './store';
 import Cookies from 'js-cookie';
@@ -53,8 +54,13 @@ const App = () => {
       redirectTo: '/auth',
       element: <Social />
     },
+    {
+      path: '/blog/:id',
+      isPrivate: false,
+      redirectTo: '/auth',
+      element: <PostPage />
+    },
   ];
-
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -63,16 +69,12 @@ const App = () => {
 
         if (token) {
           useAppStore.getState().setIsAuthenticated(true);
-
         } else {
           useAppStore.getState().setIsAuthenticated(false);
-
         }
       } catch (error) {
-
         useAppStore.getState().setIsAuthenticated(false);
       } finally {
-
         useAppStore.getState().setHydrated(true);
       }
     };
@@ -82,8 +84,12 @@ const App = () => {
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div
+          role="status"
+          aria-label="Loading"
+          className="size-8 animate-spin rounded-full border-2 border-border border-t-foreground"
+        />
       </div>
     );
   }
@@ -106,7 +112,7 @@ const App = () => {
             }
           />
         ))}
-        <Route path='*' element={<Navigate to='/' replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

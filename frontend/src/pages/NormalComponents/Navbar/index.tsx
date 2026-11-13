@@ -46,6 +46,8 @@ const Navbar = () => {
 
     const writeLabel = isAuthenticated ? "Write" : "Log in";
 
+    console.log("Is Authenticated : " , isAuthenticated);
+
     const updateQuery = (value: string) => {
         setTerm(value);
         if (!onFeed) return;
@@ -156,14 +158,16 @@ const Navbar = () => {
                             <X className="size-5" />
                         </Button>
                     )}
-                    <Button
+                    {
+                        isAuthenticated ?  <Button
                         variant={isPublicRoute || !isAuthenticated ? "outline" : "default"}
                         size="sm"
                         className="hidden rounded-full px-4 sm:inline-flex"
                         onClick={writeTarget}
                     >
-                        {writeLabel}
-                    </Button>
+                        Write
+                    </Button> : ""
+                    }
 
                     {isAuthenticated ? (
                         <Button

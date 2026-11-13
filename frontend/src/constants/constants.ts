@@ -18,6 +18,7 @@ export const BLOG_ENDPOINTS = {
     AI_ENHCANCEMENT: `${BASE_URL}/llm/ai-enhancing`,
     SAVE_BLOG: (blogId: string) => `${BASE_URL}/blog/${blogId}/save-blog`,
     POPULAR: `${BASE_URL}/blog/popular-blogs`,
+    SINGLE_BLOG:(blogId:string) => `${BASE_URL}/blog/${blogId}` ,
 
     // Public endpoint for the landing page
     FEATURED: `${BASE_URL}/blog/featured`,

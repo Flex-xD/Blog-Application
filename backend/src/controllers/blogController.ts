@@ -607,41 +607,7 @@ export const searchBlogsController = async (req: IAuthRequest, res: Response) =>
         const escapedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
         const regexQuery = new RegExp(`\\b${escapedQuery}\\b`, "i");
 
-        const followPipeline: PipelineStage[] = [
-            {
-                $match: {
-                    "authorDetails._id": { $in: following },
-                    createdAt: { $lte: new Date() },
-                    $or: [
-                        { title: { $regex: regexQuery } },
-                        { body: { $regex: regexQuery } },
-                    ],
-                },
-            },
-            {
-                $addFields: {
-                    sortPriority: {
-                        $cond: [{ $regexMatch: { input: "$title", regex: regexQuery } }, 1, 2],
-                    },
-                },
-            },
-            { $sort: { sortPriority: 1, createdAt: -1 } },
-            { $skip: (pageNum - 1) * followLimit },
-            { $limit: followLimit },
-            {
-                $project: {
-                    title: 1,
-                    image: 1,
-                    body: 1,
-                    createdAt: 1,
-                    likes: 1,
-                    comments: 1,
-                    "authorDetails._id": 1,
-                    "authorDetails.username": 1,
-                    "authorDetails.profilePicture": 1,
-                },
-            },
-        ];
+       3
         const followBlogs: IBlogWithAuthor[] = await Blog.aggregate<IBlogWithAuthor>(followPipeline);
 
         let randomBlogs: IBlogWithAuthor[] = [];
@@ -1178,5 +1144,38 @@ export const getFeaturedBlogs = async (req: Request, res: Response) => {
             statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
             error,
         });
+    }
+};
+
+export const getSingleBlogController = async (req: Request, res: Response) => {
+    try {
+        const { blogId } = req.params;
+
+        if (!isValidObjectId(blogId)) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.BAD_REQUEST,
+                success: false,
+                msg: "Invalid post id",
+            });
+        }
+
+        const blog = await Blog.findById(blogId).lean();
+
+        if (!blog) {
+            return sendResponse(res, {
+                statusCode: StatusCodes.NOT_FOUND,
+                success: false,
+                msg: "Post not found",
+            });
+        }
+
+        return sendResponse(res, {
+            statusCode: StatusCodes.OK,
+            success: true,
+            msg: "Post fetched successfully",
+            data: blog,
+        });
+    } catch (error) {
+        return sendError(res, { error });
     }
 };

@@ -20,7 +20,7 @@ export const blogs: IBlog[] = [
             profilePicture: "https://randomuser.me/api/portraits/men/45.jpg"
         },
         likes: ["u2", "u3", "u4"],
-        comments: ["c1", "c2", "c3"],
+        comments: [],
         createdAt: new Date("2023-06-20T14:30:00Z"),
         updatedAt: new Date("2023-06-25T10:00:00Z")
     },
@@ -41,7 +41,7 @@ export const blogs: IBlog[] = [
             profilePicture: "https://randomuser.me/api/portraits/women/32.jpg"
         },
         likes: ["u1", "u3", "u5"],
-        comments: ["c4", "c5"],
+        comments: [],
         createdAt: new Date("2023-05-15T09:15:00Z"),
         updatedAt: new Date("2023-05-18T12:00:00Z")
     },
@@ -62,7 +62,7 @@ export const blogs: IBlog[] = [
             profilePicture: "https://randomuser.me/api/portraits/men/21.jpg"
         },
         likes: ["u1", "u2", "u4"],
-        comments: ["c6"],
+        comments: [],
         createdAt: new Date("2024-01-08T12:45:00Z"),
         updatedAt: new Date("2024-01-10T10:30:00Z")
     },
@@ -83,7 +83,7 @@ export const blogs: IBlog[] = [
             profilePicture: "https://randomuser.me/api/portraits/women/68.jpg"
         },
         likes: ["u1", "u2", "u3", "u5"],
-        comments: ["c7", "c8"],
+        comments: [],
         createdAt: new Date("2024-12-03T16:00:00Z"),
         updatedAt: new Date("2024-12-05T11:00:00Z")
     },
@@ -104,7 +104,7 @@ export const blogs: IBlog[] = [
             profilePicture: "https://randomuser.me/api/portraits/men/54.jpg"
         },
         likes: ["u2", "u4", "u3"],
-        comments: ["c9", "c10", "c11"],
+        comments: [],
         createdAt: new Date("2025-07-10T11:00:00Z"),
         updatedAt: new Date("2025-07-12T09:30:00Z")
     }

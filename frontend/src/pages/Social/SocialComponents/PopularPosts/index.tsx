@@ -1,3 +1,4 @@
+
 import usePopularBlogs from "@/customHooks/PopularBlogsFetching";
 import { BlogCard } from "@/pages/NormalComponents/BlogCard";
 import type { IBlog, IUser } from "@/types";
@@ -196,7 +197,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/john_doe.jpg"
         },
         likes: ["user2", "user3"],
-        comments: ["comment1", "comment2"],
+        comments: [],
         createdAt: new Date("2025-01-15T10:00:00Z"),
         updatedAt: new Date("2025-09-01T12:00:00Z")
     },
@@ -217,7 +218,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/jane_smith.png"
         },
         likes: ["user1", "user4"],
-        comments: ["comment3"],
+        comments: [],
         createdAt: new Date("2025-02-20T14:00:00Z"),
         updatedAt: new Date("2025-09-02T15:00:00Z")
     },
@@ -229,7 +230,7 @@ export const popularBlogs: IBlog[] = [
             format: "jpg",
             height: 600,
             width: 800,
-            url: "https://imgs.search.brave.com/4-C5b0_ZU7sx7vJaTZxdc7ZvInOr-0E8BaWpXMLVDuw/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMjE1/NTc2OTU1NS9waG90/by9hcnRpZmljaWFs/LWludGVsbGlnZW5j/ZS1jb25jZXB0LWNw/dS1xdWFudHVtLWNv/bXB1dGluZy5qcGc_/cz02MTJ4NjEyJnc9/MCZrPTIwJmM9WXR4/RnVkc01YOVpDVmpk/Yml4ZERFTTRjSjV4/b3RNbjVnNWdnR0Jl/amdmcz0",
+            url: "https://imgs.search.brave.com/4-C5b0_ZU7sx7vJaTZxdc7ZvInOr-0E8BaWpXMLVDuw/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRpYS5nZXR0eWltYWdlcy5jb20vaWQvMjE1NTc2OTU1NS9waG90by9hcnRpZmljaWFsLWludGVsbGlnZW5jZS1jb25jZXB0LWNwdS1xdWFudHVtLWNvbXB1dGluZy5qcGc_cz02MTJ4NjEyJnc9MCZrPTIwJmM9WXR4RnVkc01YOVpDVmpkYml4ZERFTTRjSjV4b3RNbjVnNWdnR0JlYWdmcz0",
             publicId: "blog_healthy_recipes"
         },
         authorDetails: {
@@ -238,7 +239,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/alex_wilson.jpg"
         },
         likes: ["user2", "user5"],
-        comments: ["comment4", "comment5"],
+        comments: [],
         createdAt: new Date("2025-03-25T09:00:00Z"),
         updatedAt: new Date("2025-09-03T10:00:00Z")
     },
@@ -250,7 +251,7 @@ export const popularBlogs: IBlog[] = [
             format: "png",
             height: 600,
             width: 800,
-            url: "https://imgs.search.brave.com/INjvDnGLeKWlv3jg-t8-lU3I896__gQ9Xmeu0tpaKGY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTUw/ODc4MDY3MS9waG90/by90b3VjaGluZy1t/ZXRhdmVyc2UuanBn/P3M9NjEyeDYxMiZ3/PTAmaz0yMCZjPTgw/YnA0NE1jM1VBNFFw/NVlrYmxBZUpmalhC/cWJ6clRUa2hQbjYt/b3JPLWM9",
+            url: "https://imgs.search.brave.com/INjvDnGLeKWlv3jg-t8-lU3I896__gQ9Xmeu0tpaKGY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRpYS5nZXR0eWltYWdlcy5jb20vaWQvMTUwODc4MDY3MS9waG90by90b3VjaGluZy1tZXRhdmVyc2UuanBnP3M9NjEyeDYxMiZ3PTAmaz0yMCZjPTgwYnA0NE1jM1VBNFFwNVlrYmxBZUpmalhC/cWJ6clRUa2hQbjYt/b3JPLWM9",
             publicId: "blog_fitness_tips"
         },
         authorDetails: {
@@ -259,7 +260,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/emma_brown.jpg"
         },
         likes: ["user1", "user6"],
-        comments: ["comment6"],
+        comments: [],
         createdAt: new Date("2025-04-15T11:00:00Z"),
         updatedAt: new Date("2025-09-04T12:00:00Z")
     },
@@ -271,7 +272,7 @@ export const popularBlogs: IBlog[] = [
             format: "jpg",
             height: 600,
             width: 800,
-            url: "https://imgs.search.brave.com/KxK8qHvgPXvlKdCh8l5h_3GZwrV5LfGfI6SfQZR-BmM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzczLzQ5/Lzk5LzczNDk5OTdh/NGQwN2ZiYjk3MTgw/YzlhNTI2ZmI4OGZm/LmpwZw",
+            url: "https://imgs.search.brave.com/KxK8qHvgPXvlKdCh8l5h_3GZwrV5LfGfI6SfQZR-BmM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzczLzQ5/Lzk5LzczNDk5OTdh/NGQwN2ZiYjk3MTgwYzlhNTI2ZmI4OGZmLmpwZw",
             publicId: "blog_gaming_trends"
         },
         authorDetails: {
@@ -280,7 +281,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/mike_jones.jpg"
         },
         likes: ["user3", "user7"],
-        comments: ["comment7", "comment8"],
+        comments: [],
         createdAt: new Date("2025-05-10T16:00:00Z"),
         updatedAt: new Date("2025-09-05T14:00:00Z")
     },
@@ -301,7 +302,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/sarah_lee.png"
         },
         likes: ["user4", "user8"],
-        comments: ["comment9"],
+        comments: [],
         createdAt: new Date("2025-06-15T13:00:00Z"),
         updatedAt: new Date("2025-09-06T11:00:00Z")
     },
@@ -322,7 +323,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/david_kim.jpg"
         },
         likes: ["user5", "user9"],
-        comments: ["comment10"],
+        comments: [],
         createdAt: new Date("2025-07-05T15:00:00Z"),
         updatedAt: new Date("2025-09-07T09:00:00Z")
     },
@@ -343,7 +344,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/lisa_wong.jpg"
         },
         likes: ["user6", "user10"],
-        comments: ["comment11", "comment12"],
+        comments: [],
         createdAt: new Date("2025-08-12T17:00:00Z"),
         updatedAt: new Date("2025-09-07T10:00:00Z")
     },
@@ -364,7 +365,7 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/chris_evans.jpg"
         },
         likes: ["user7", "user10"],
-        comments: ["comment13"],
+        comments: [],
         createdAt: new Date("2025-08-18T12:00:00Z"),
         updatedAt: new Date("2025-09-07T11:00:00Z")
     },
@@ -385,14 +386,14 @@ export const popularBlogs: IBlog[] = [
             profilePicture: "https://example.com/profiles/anna_taylor.png"
         },
         likes: ["user8", "user9"],
-        comments: ["comment14", "comment15"],
+        comments: [],
         createdAt: new Date("2025-08-25T14:00:00Z"),
         updatedAt: new Date("2025-09-07T12:00:00Z")
     }
 ];
 
 export const PopularPosts: React.FC = () => {
-    const { data } = usePopularBlogs(1, 10)
+    const { data } = usePopularBlogs(1, 10);
 
     return (
         <div className="space-y-6">

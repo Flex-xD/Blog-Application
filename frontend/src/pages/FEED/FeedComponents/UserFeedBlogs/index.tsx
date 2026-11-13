@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Pagination } from "../Pagination";
 import type { AxiosError } from "axios";
+import type { TUserComment } from "@/types";
 
 interface Blog {
     _id: string;
@@ -24,7 +25,7 @@ interface Blog {
         profilePicture: string;
     };
     likes: string[];
-    comments: string[];
+    comments: TUserComment[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -52,16 +53,14 @@ interface UserFeedProps {
     userDataPending: boolean;
     userFeedDataPending: boolean;
 
-    /* Legacy numbered pagination — still used by the Social page. */
     onPageChange?: (page: number) => void;
     currentPage?: number;
 
     onRefresh?: () => void;
 
-    /* Feed passes showRefresh=false because it uses the new-post pill. */
     showRefresh?: boolean;
 
-    /* Infinite-scroll support. */
+
     onLoadMore?: () => void;
     newPostCount?: number;
     onShowNewPosts?: () => void;
@@ -156,11 +155,6 @@ function UserFeed({
         });
     }, [feedCurrentPage]);
 
-    /*
-     * Infinite scroll:
-     * Watch a sentinel below the last card and request another page
-     * when it comes within 600px of the viewport.
-     */
     useEffect(() => {
         if (!onLoadMore || !hasMore) return;
 

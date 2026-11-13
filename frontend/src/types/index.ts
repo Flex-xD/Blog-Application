@@ -38,7 +38,7 @@ export interface IBlog {
         profilePicture: string
     };
     likes: string[];
-    comments: string[];
+    comments: TUserComment[];
     createdAt: Date;
     updatedAt: Date;
 }
